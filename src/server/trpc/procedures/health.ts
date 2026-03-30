@@ -1,6 +1,6 @@
-import { publicProcedure } from "../index";
+import { createTRPCRouter, publicProcedure } from "../index";
 
-export const healthRouter = {
+export const healthRouter = createTRPCRouter({
   check: publicProcedure.query(() => {
     return {
       status: "ok",
@@ -8,4 +8,4 @@ export const healthRouter = {
       message: "CHP Platform API is running smoothly",
     };
   }),
-};
+});
