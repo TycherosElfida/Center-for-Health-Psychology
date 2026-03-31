@@ -14,6 +14,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Next.js auto-generated type validation files (intentionally use `any`)
     "types/**",
+    "DesignReference/**",
   ]),
 ]);
 

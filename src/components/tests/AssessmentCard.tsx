@@ -2,20 +2,25 @@
 
 import { useRef, type MouseEvent } from "react";
 import Link from "next/link";
-import {
-  Clock,
-  Users,
-  ArrowRight,
-  BadgeCheck,
-  Brain,
-} from "lucide-react";
+import { Clock, Users, ArrowRight, BadgeCheck, Brain } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import type { TestMeta, TestStatus } from "@/lib/data/tests";
 import { ICON_MAP, STATUS_STYLES } from "@/lib/data/tests";
 
 /** Resolve icon from the map; falls back to Brain if key is unknown */
-function resolveIcon(iconName: string) {
-  return ICON_MAP[iconName] ?? Brain;
+function TestIcon({
+  name,
+  size,
+  color,
+  className,
+}: {
+  name: string;
+  size?: number;
+  color?: string;
+  className?: string;
+}) {
+  const IconComponent = ICON_MAP[name] ?? Brain;
+  return <IconComponent size={size} color={color} className={className} />;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -30,7 +35,6 @@ interface AssessmentCardProps {
 
 export function AssessmentCard({ test, index }: AssessmentCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const Icon = resolveIcon(test.iconName);
   const sts = STATUS_STYLES[test.status as TestStatus];
 
   /** 3D perspective tilt — follows cursor position over the card */
@@ -105,7 +109,7 @@ export function AssessmentCard({ test, index }: AssessmentCardProps) {
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
               style={{ background: `${test.color}14` }}
             >
-              <Icon size={22} color={test.color} />
+              <TestIcon name={test.iconName} size={22} color={test.color} />
             </div>
             <div className="min-w-0">
               <h3 className="font-heading text-lg font-bold leading-tight text-foreground">
@@ -140,10 +144,7 @@ export function AssessmentCard({ test, index }: AssessmentCardProps) {
           {/* Validation note */}
           {test.validationNote && (
             <div className="mb-4 flex items-start gap-2">
-              <BadgeCheck
-                size={14}
-                className="mt-0.5 shrink-0 text-primary"
-              />
+              <BadgeCheck size={14} className="mt-0.5 shrink-0 text-primary" />
               <p className="text-[11.5px] leading-snug text-muted-foreground">
                 {test.validationNote}
               </p>
@@ -183,9 +184,7 @@ export function AssessmentCard({ test, index }: AssessmentCardProps) {
 function StatItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex-1 text-center">
-      <p className="font-heading text-sm font-bold leading-tight text-foreground">
-        {value}
-      </p>
+      <p className="font-heading text-sm font-bold leading-tight text-foreground">{value}</p>
       <p className="mt-0.5 text-[10.5px] text-muted-foreground">{label}</p>
     </div>
   );

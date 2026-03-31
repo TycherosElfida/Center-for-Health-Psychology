@@ -46,8 +46,19 @@ import {
 } from "@/lib/data/tests";
 
 /** Resolve icon from the map; falls back to Brain if key is unknown */
-function resolveIcon(iconName: string) {
-  return ICON_MAP[iconName] ?? Brain;
+function TestIcon({
+  name,
+  size,
+  color,
+  className,
+}: {
+  name: string;
+  size?: number;
+  color?: string;
+  className?: string;
+}) {
+  const IconComponent = ICON_MAP[name] ?? Brain;
+  return <IconComponent size={size} color={color} className={className} />;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -73,7 +84,7 @@ export function AssessmentCatalog() {
 
   const filtered = useMemo(
     () => filterAndSortTests(searchQuery, activeCategory, sortBy),
-    [searchQuery, activeCategory, sortBy],
+    [searchQuery, activeCategory, sortBy]
   );
 
   const clearFilters = useCallback(() => {
@@ -82,107 +93,6 @@ export function AssessmentCatalog() {
   }, []);
 
   const hasActiveFilters = searchQuery !== "" || activeCategory !== "All";
-
-  /* ── Shared filter controls (rendered inline on desktop, inside Drawer on mobile) ── */
-  function FilterControls({ onDone }: { onDone?: () => void }) {
-    return (
-      <div className="flex flex-col gap-4">
-        {/* Category pills */}
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Category
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
-            {ALL_CATEGORIES.map((cat) => {
-              const isActive = activeCategory === cat;
-              const CatIcon = CATEGORY_ICONS[cat] || Tag;
-              const count =
-                cat === "All"
-                  ? TESTS.length
-                  : TESTS.filter((t) => t.primaryCategory === cat).length;
-              return (
-                <button
-                  key={cat}
-                  onClick={() => {
-                    setActiveCategory(cat);
-                    onDone?.();
-                  }}
-                  className="flex min-h-11 items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] font-medium transition-all active:scale-95"
-                  style={{
-                    border: isActive
-                      ? "1.5px solid var(--primary)"
-                      : "1.5px solid var(--border)",
-                    background: isActive
-                      ? "oklch(0.55 0.14 185 / 12%)"
-                      : "var(--card)",
-                    color: isActive
-                      ? "var(--primary)"
-                      : "var(--muted-foreground)",
-                    fontWeight: isActive ? 600 : 450,
-                  }}
-                >
-                  <CatIcon
-                    size={14}
-                    className={isActive ? "text-primary" : "text-muted-foreground"}
-                  />
-                  {cat}
-                  <span
-                    className="ml-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold leading-none"
-                    style={{
-                      background: isActive
-                        ? "oklch(0.55 0.14 185 / 20%)"
-                        : "var(--secondary)",
-                      color: isActive
-                        ? "var(--primary)"
-                        : "var(--muted-foreground)",
-                    }}
-                  >
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Sort */}
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Sort by
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {SORT_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => {
-                  setSortBy(opt.value);
-                  onDone?.();
-                }}
-                className="min-h-11 rounded-lg border px-4 py-2 text-sm transition-all active:scale-95"
-                style={{
-                  borderColor:
-                    sortBy === opt.value
-                      ? "var(--primary)"
-                      : "var(--border)",
-                  background:
-                    sortBy === opt.value
-                      ? "oklch(0.55 0.14 185 / 10%)"
-                      : "var(--card)",
-                  color:
-                    sortBy === opt.value
-                      ? "var(--primary)"
-                      : "var(--muted-foreground)",
-                  fontWeight: sortBy === opt.value ? 600 : 400,
-                }}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
@@ -224,10 +134,7 @@ export function AssessmentCatalog() {
               {sortMenuOpen && (
                 <>
                   {/* Backdrop to close */}
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setSortMenuOpen(false)}
-                  />
+                  <div className="fixed inset-0 z-40" onClick={() => setSortMenuOpen(false)} />
                   <div className="absolute right-0 top-[calc(100%+4px)] z-50 min-w-[160px] overflow-hidden rounded-xl border border-border bg-card shadow-xl">
                     {SORT_OPTIONS.map((opt) => (
                       <button
@@ -239,14 +146,10 @@ export function AssessmentCatalog() {
                         className="block w-full px-4 py-2.5 text-left text-[13px] transition-colors hover:bg-secondary/60"
                         style={{
                           background:
-                            sortBy === opt.value
-                              ? "oklch(0.55 0.14 185 / 10%)"
-                              : undefined,
+                            sortBy === opt.value ? "oklch(0.55 0.14 185 / 10%)" : undefined,
                           fontWeight: sortBy === opt.value ? 600 : 400,
                           color:
-                            sortBy === opt.value
-                              ? "var(--primary)"
-                              : "var(--muted-foreground)",
+                            sortBy === opt.value ? "var(--primary)" : "var(--muted-foreground)",
                         }}
                       >
                         {opt.label}
@@ -270,10 +173,7 @@ export function AssessmentCatalog() {
                       viewMode === mode
                         ? "linear-gradient(135deg, var(--primary), oklch(0.45 0.12 185))"
                         : "var(--secondary)",
-                    color:
-                      viewMode === mode
-                        ? "white"
-                        : "var(--muted-foreground)",
+                    color: viewMode === mode ? "white" : "var(--muted-foreground)",
                     fontWeight: viewMode === mode ? 600 : 400,
                   }}
                 >
@@ -285,7 +185,12 @@ export function AssessmentCatalog() {
 
             {/* Mobile filter trigger (< sm) */}
             <MobileFilterDrawer>
-              <FilterControls />
+              <FilterControls
+                activeCategory={activeCategory}
+                setActiveCategory={setActiveCategory}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+              />
             </MobileFilterDrawer>
           </div>
 
@@ -304,34 +209,22 @@ export function AssessmentCatalog() {
                   onClick={() => setActiveCategory(cat)}
                   className="flex min-h-11 items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] transition-all active:scale-95"
                   style={{
-                    border: isActive
-                      ? "1.5px solid var(--primary)"
-                      : "1.5px solid var(--border)",
-                    background: isActive
-                      ? "oklch(0.55 0.14 185 / 12%)"
-                      : "var(--card)",
-                    color: isActive
-                      ? "var(--primary)"
-                      : "var(--muted-foreground)",
+                    border: isActive ? "1.5px solid var(--primary)" : "1.5px solid var(--border)",
+                    background: isActive ? "oklch(0.55 0.14 185 / 12%)" : "var(--card)",
+                    color: isActive ? "var(--primary)" : "var(--muted-foreground)",
                     fontWeight: isActive ? 600 : 450,
                   }}
                 >
                   <CatIcon
                     size={14}
-                    className={
-                      isActive ? "text-primary" : "text-muted-foreground"
-                    }
+                    className={isActive ? "text-primary" : "text-muted-foreground"}
                   />
                   {cat}
                   <span
                     className="ml-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold leading-none"
                     style={{
-                      background: isActive
-                        ? "oklch(0.55 0.14 185 / 20%)"
-                        : "var(--secondary)",
-                      color: isActive
-                        ? "var(--primary)"
-                        : "var(--muted-foreground)",
+                      background: isActive ? "oklch(0.55 0.14 185 / 20%)" : "var(--secondary)",
+                      color: isActive ? "var(--primary)" : "var(--muted-foreground)",
                     }}
                   >
                     {count}
@@ -347,18 +240,12 @@ export function AssessmentCatalog() {
       <div className="mx-auto max-w-[1120px] px-4 pt-5 sm:px-6">
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing{" "}
-            <span className="font-semibold text-foreground">
-              {filtered.length}
-            </span>{" "}
-            of {TESTS.length} instruments
+            Showing <span className="font-semibold text-foreground">{filtered.length}</span> of{" "}
+            {TESTS.length} instruments
             {activeCategory !== "All" && (
               <span>
                 {" "}
-                in{" "}
-                <span className="font-semibold text-primary">
-                  {activeCategory}
-                </span>
+                in <span className="font-semibold text-primary">{activeCategory}</span>
               </span>
             )}
           </p>
@@ -377,11 +264,7 @@ export function AssessmentCatalog() {
       {/* ── Content Area ── */}
       <section className="mx-auto max-w-[1120px] px-4 pb-16 pt-5 sm:px-6 pb-safe">
         {filtered.length === 0 ? (
-          <EmptyState
-            query={searchQuery}
-            category={activeCategory}
-            onClear={clearFilters}
-          />
+          <EmptyState query={searchQuery} category={activeCategory} onClear={clearFilters} />
         ) : viewMode === "card" ? (
           <CardGrid tests={filtered} />
         ) : viewMode === "list" ? (
@@ -408,16 +291,10 @@ function MobileFilterDrawer({ children }: { children: ReactNode }) {
       </DrawerTrigger>
       <DrawerContent className="pb-safe">
         <DrawerHeader>
-          <DrawerTitle className="font-heading">
-            Filters & Sorting
-          </DrawerTitle>
-          <DrawerDescription>
-            Refine the instrument catalog
-          </DrawerDescription>
+          <DrawerTitle className="font-heading">Filters & Sorting</DrawerTitle>
+          <DrawerDescription>Refine the instrument catalog</DrawerDescription>
         </DrawerHeader>
-        <div className="max-h-[60vh] overflow-y-auto px-4 pb-4">
-          {children}
-        </div>
+        <div className="max-h-[60vh] overflow-y-auto px-4 pb-4">{children}</div>
         <DrawerFooter>
           <DrawerClose asChild>
             <button className="w-full rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 active:scale-[0.98]">
@@ -427,6 +304,100 @@ function MobileFilterDrawer({ children }: { children: ReactNode }) {
         </DrawerFooter>
       </DrawerContent>
     </Drawer>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════
+   Shared filter controls (used inside MobileFilterDrawer)
+   ═══════════════════════════════════════════════════════ */
+function FilterControls({
+  activeCategory,
+  setActiveCategory,
+  sortBy,
+  setSortBy,
+  onDone,
+}: {
+  activeCategory: string;
+  setActiveCategory: (cat: string) => void;
+  sortBy: SortBy;
+  setSortBy: (sort: SortBy) => void;
+  onDone?: () => void;
+}) {
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Category pills */}
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Category
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          {ALL_CATEGORIES.map((cat) => {
+            const isActive = activeCategory === cat;
+            const CatIcon = CATEGORY_ICONS[cat] || Tag;
+            const count =
+              cat === "All" ? TESTS.length : TESTS.filter((t) => t.primaryCategory === cat).length;
+            return (
+              <button
+                key={cat}
+                onClick={() => {
+                  setActiveCategory(cat);
+                  onDone?.();
+                }}
+                className="flex min-h-11 items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] font-medium transition-all active:scale-95"
+                style={{
+                  border: isActive ? "1.5px solid var(--primary)" : "1.5px solid var(--border)",
+                  background: isActive ? "oklch(0.55 0.14 185 / 12%)" : "var(--card)",
+                  color: isActive ? "var(--primary)" : "var(--muted-foreground)",
+                  fontWeight: isActive ? 600 : 450,
+                }}
+              >
+                <CatIcon
+                  size={14}
+                  className={isActive ? "text-primary" : "text-muted-foreground"}
+                />
+                {cat}
+                <span
+                  className="ml-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold leading-none"
+                  style={{
+                    background: isActive ? "oklch(0.55 0.14 185 / 20%)" : "var(--secondary)",
+                    color: isActive ? "var(--primary)" : "var(--muted-foreground)",
+                  }}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Sort */}
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Sort by
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {SORT_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => {
+                setSortBy(opt.value);
+                onDone?.();
+              }}
+              className="min-h-11 rounded-lg border px-4 py-2 text-sm transition-all active:scale-95"
+              style={{
+                borderColor: sortBy === opt.value ? "var(--primary)" : "var(--border)",
+                background: sortBy === opt.value ? "oklch(0.55 0.14 185 / 10%)" : "var(--card)",
+                color: sortBy === opt.value ? "var(--primary)" : "var(--muted-foreground)",
+                fontWeight: sortBy === opt.value ? 600 : 400,
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -456,7 +427,6 @@ function ListView({ tests }: { tests: TestMeta[] }) {
   return (
     <div className="flex flex-col gap-5">
       {tests.map((test, i) => {
-        const Icon = resolveIcon(test.iconName);
         const sts = STATUS_STYLES[test.status as TestStatus];
         return (
           <div
@@ -503,7 +473,7 @@ function ListView({ tests }: { tests: TestMeta[] }) {
                     className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
                     style={{ background: `${test.color}18` }}
                   >
-                    <Icon size={28} color={test.color} />
+                    <TestIcon name={test.iconName} size={28} color={test.color} />
                   </div>
                   <h2 className="font-heading text-[22px] font-bold text-foreground">
                     {test.shortName}
@@ -515,9 +485,17 @@ function ListView({ tests }: { tests: TestMeta[] }) {
                 </div>
 
                 <div className="mt-6 flex flex-col gap-2.5">
-                  <StatRow icon={CheckCircle2} color={test.color} text={`${test.itemCount} items`} />
+                  <StatRow
+                    icon={CheckCircle2}
+                    color={test.color}
+                    text={`${test.itemCount} items`}
+                  />
                   <StatRow icon={Clock} color={test.color} text={test.duration} />
-                  <StatRow icon={Users} color={test.color} text={`${(test.respondentCount ?? 0).toLocaleString("id-ID")} respondents`} />
+                  <StatRow
+                    icon={Users}
+                    color={test.color}
+                    text={`${(test.respondentCount ?? 0).toLocaleString("id-ID")} respondents`}
+                  />
                   <StatRow icon={Sparkles} color={test.color} text={`α = ${test.alpha ?? "—"}`} />
                 </div>
               </div>
@@ -525,9 +503,7 @@ function ListView({ tests }: { tests: TestMeta[] }) {
               {/* Right content */}
               <div className="col-span-1 flex flex-col justify-between p-6 md:col-span-3">
                 <div>
-                  <p className="mb-1 text-[13px] text-muted-foreground">
-                    {test.name}
-                  </p>
+                  <p className="mb-1 text-[13px] text-muted-foreground">{test.name}</p>
                   <p className="mb-5 text-[15px] leading-relaxed text-foreground/80">
                     {test.longDescription}
                   </p>
@@ -573,7 +549,8 @@ function ListView({ tests }: { tests: TestMeta[] }) {
 
                   {/* Validation */}
                   {test.validationNote && (
-                    <div className="mb-5 flex items-start gap-2 rounded-xl border bg-primary/[0.03] px-4 py-3"
+                    <div
+                      className="mb-5 flex items-start gap-2 rounded-xl border bg-primary/[0.03] px-4 py-3"
                       style={{ borderColor: `oklch(0.55 0.14 185 / 18%)` }}
                     >
                       <BadgeCheck size={15} className="mt-0.5 shrink-0 text-primary" />
@@ -614,21 +591,18 @@ function CompactView({ tests }: { tests: TestMeta[] }) {
         className="hidden items-center gap-3 border-b border-border/50 bg-secondary/30 px-5 py-3 md:grid"
         style={{ gridTemplateColumns: "2fr 1fr 80px 90px 70px 80px 100px" }}
       >
-        {["Instrument", "Category", "Items", "Duration", "α", "Status", ""].map(
-          (h) => (
-            <span
-              key={h}
-              className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
-            >
-              {h}
-            </span>
-          ),
-        )}
+        {["Instrument", "Category", "Items", "Duration", "α", "Status", ""].map((h) => (
+          <span
+            key={h}
+            className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+          >
+            {h}
+          </span>
+        ))}
       </div>
 
       {/* Rows */}
       {tests.map((test, i) => {
-        const Icon = resolveIcon(test.iconName);
         const sts = STATUS_STYLES[test.status as TestStatus];
         return (
           <div
@@ -641,8 +615,7 @@ function CompactView({ tests }: { tests: TestMeta[] }) {
               className="hidden items-center gap-3 px-5 py-4 transition-colors hover:bg-secondary/20 md:grid"
               style={{
                 gridTemplateColumns: "2fr 1fr 80px 90px 70px 80px 100px",
-                borderBottom:
-                  i < tests.length - 1 ? "1px solid var(--border)" : "none",
+                borderBottom: i < tests.length - 1 ? "1px solid var(--border)" : "none",
               }}
             >
               <div className="flex items-center gap-3">
@@ -650,7 +623,7 @@ function CompactView({ tests }: { tests: TestMeta[] }) {
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
                   style={{ background: `${test.color}12` }}
                 >
-                  <Icon size={18} color={test.color} />
+                  <TestIcon name={test.iconName} size={18} color={test.color} />
                 </div>
                 <div className="min-w-0">
                   <p className="font-heading text-sm font-semibold text-foreground">
@@ -674,7 +647,9 @@ function CompactView({ tests }: { tests: TestMeta[] }) {
               </span>
               <span className="text-[13px] font-medium text-foreground/70">{test.itemCount}</span>
               <span className="text-[13px] text-foreground/70">{test.duration}</span>
-              <span className="font-heading text-[13px] font-semibold text-foreground">{test.alpha ?? "—"}</span>
+              <span className="font-heading text-[13px] font-semibold text-foreground">
+                {test.alpha ?? "—"}
+              </span>
               <span
                 className="w-fit rounded-full px-2.5 py-1 text-[11px] font-semibold"
                 style={{
@@ -698,14 +673,12 @@ function CompactView({ tests }: { tests: TestMeta[] }) {
             </div>
 
             {/* Mobile compact card (< md) */}
-            <div
-              className="flex items-center gap-3 border-b border-border/40 px-4 py-3 md:hidden"
-            >
+            <div className="flex items-center gap-3 border-b border-border/40 px-4 py-3 md:hidden">
               <div
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
                 style={{ background: `${test.color}14` }}
               >
-                <Icon size={20} color={test.color} />
+                <TestIcon name={test.iconName} size={20} color={test.color} />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-heading text-sm font-semibold text-foreground">
@@ -733,15 +706,7 @@ function CompactView({ tests }: { tests: TestMeta[] }) {
 /* ═══════════════════════════════════════════════════════
    Shared Helpers
    ═══════════════════════════════════════════════════════ */
-function StatRow({
-  icon: Icon,
-  color,
-  text,
-}: {
-  icon: typeof Clock;
-  color: string;
-  text: string;
-}) {
+function StatRow({ icon: Icon, color, text }: { icon: typeof Clock; color: string; text: string }) {
   return (
     <div className="flex items-center gap-2">
       <Icon size={14} color={color} />
@@ -762,9 +727,7 @@ function EmptyState({
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card py-20">
       <Search size={40} className="text-muted-foreground/30" strokeWidth={1.5} />
-      <h3 className="mt-4 font-heading text-xl font-bold text-foreground">
-        No instruments found
-      </h3>
+      <h3 className="mt-4 font-heading text-xl font-bold text-foreground">No instruments found</h3>
       <p className="mt-2 max-w-[400px] text-center text-sm text-muted-foreground">
         {query
           ? `No results for "${query}"${category !== "All" ? ` in ${category}` : ""}`

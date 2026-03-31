@@ -2,16 +2,9 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  User,
-  Calendar,
-  Users,
-  MapPin,
-  ArrowRight,
-  Shield,
-} from "lucide-react";
+import { User, Calendar, Users, MapPin, ArrowRight, Shield } from "lucide-react";
 import {
   personalInfoSchema,
   type PersonalInfoInput,
@@ -44,7 +37,7 @@ export function PersonalInfoForm({
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     resetField,
     formState: { errors, isValid, touchedFields },
   } = useForm<PersonalInfoInput, unknown, PersonalInfoFormData>({
@@ -60,10 +53,8 @@ export function PersonalInfoForm({
   });
 
   /* ── Cascading: reset city when province changes ── */
-  const selectedProvince = watch("province");
-  const cities = selectedProvince
-    ? getCitiesByProvince(selectedProvince)
-    : [];
+  const selectedProvince = useWatch({ control, name: "province" }) as string;
+  const cities = selectedProvince ? getCitiesByProvince(selectedProvince) : [];
 
   useEffect(() => {
     if (selectedProvince) {
@@ -73,23 +64,17 @@ export function PersonalInfoForm({
 
   /* ── Submit handler ── */
   function onSubmit(data: PersonalInfoFormData) {
-    localStorage.setItem(
-      `chp_personal_${testSlug}`,
-      JSON.stringify(data),
-    );
+    localStorage.setItem(`chp_personal_${testSlug}`, JSON.stringify(data));
     router.push(`/test/${testSlug}`);
   }
 
   /* ── Field state helpers ── */
-  const nameVal = watch("name");
-  const ageVal = watch("age");
-  const sexVal = watch("sex");
-  const cityVal = watch("city");
+  const nameVal = useWatch({ control, name: "name" }) as string;
+  const ageVal = useWatch({ control, name: "age" }) as string;
+  const sexVal = useWatch({ control, name: "sex" }) as string;
+  const cityVal = useWatch({ control, name: "city" }) as string;
 
-  function borderColor(
-    filled: boolean,
-    hasError: boolean,
-  ): string {
+  function borderColor(filled: boolean, hasError: boolean): string {
     if (hasError) return "1.5px solid #FC8181";
     if (filled) return `1.5px solid ${testColor}45`;
     return "1.5px solid oklch(0.91 0.008 220)";
@@ -124,22 +109,14 @@ export function PersonalInfoForm({
             border: `1px solid ${testColor}18`,
           }}
         >
-          <Shield
-            size={16}
-            className="mt-0.5 shrink-0"
-            style={{ color: testColor }}
-          />
+          <Shield size={16} className="mt-0.5 shrink-0" style={{ color: testColor }} />
           <p className="m-0 text-[13px] leading-relaxed text-muted-foreground">
-            Your information is used solely to personalise your results and is
-            never shared with third parties.
+            Your information is used solely to personalise your results and is never shared with
+            third parties.
           </p>
         </div>
 
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-col gap-5"
-          noValidate
-        >
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" noValidate>
           {/* ── Name ── */}
           <FieldWrapper
             icon={<User size={15} style={{ color: nameVal ? testColor : undefined }} />}
@@ -203,17 +180,10 @@ export function PersonalInfoForm({
                         : "1.5px solid oklch(0.91 0.008 220)",
                       background: selected ? `${testColor}10` : "white",
                       color: selected ? testColor : "oklch(0.50 0.02 240)",
-                      boxShadow: selected
-                        ? `0 2px 8px ${testColor}20`
-                        : "none",
+                      boxShadow: selected ? `0 2px 8px ${testColor}20` : "none",
                     }}
                   >
-                    <input
-                      type="radio"
-                      value={option}
-                      {...register("sex")}
-                      className="sr-only"
-                    />
+                    <input type="radio" value={option} {...register("sex")} className="sr-only" />
                     {option}
                   </label>
                 );
@@ -233,7 +203,10 @@ export function PersonalInfoForm({
               {...register("province")}
               className="w-full cursor-pointer appearance-none rounded-[14px] bg-no-repeat px-4 py-3 pr-10 text-sm outline-none transition-colors"
               style={{
-                border: borderColor(!!selectedProvince, !!errors.province && !!touchedFields.province),
+                border: borderColor(
+                  !!selectedProvince,
+                  !!errors.province && !!touchedFields.province
+                ),
                 background: bgColor(!!selectedProvince),
                 color: selectedProvince ? undefined : "oklch(0.50 0.02 240)",
                 backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
@@ -289,9 +262,7 @@ export function PersonalInfoForm({
                 ? `linear-gradient(135deg, ${testColor}, ${testColor}CC)`
                 : "oklch(0.93 0.02 260)",
               color: isValid ? "white" : "oklch(0.70 0.03 260)",
-              boxShadow: isValid
-                ? `0 8px 28px ${testColor}35`
-                : "none",
+              boxShadow: isValid ? `0 8px 28px ${testColor}35` : "none",
             }}
           >
             Continue to Assessment
@@ -299,8 +270,7 @@ export function PersonalInfoForm({
           </button>
 
           <p className="mt-1 text-center text-xs text-muted-foreground">
-            Required fields are marked with{" "}
-            <span style={{ color: testColor }}>*</span>
+            Required fields are marked with <span style={{ color: testColor }}>*</span>
           </p>
         </form>
       </div>
@@ -334,19 +304,13 @@ function FieldWrapper({
       <label className="mb-2 flex items-center gap-2 text-[13px] font-semibold text-muted-foreground">
         {icon}
         {label}
-        {required && (
-          <span style={{ color, fontSize: 14, lineHeight: 1 }}>*</span>
-        )}
+        {required && <span style={{ color, fontSize: 14, lineHeight: 1 }}>*</span>}
         {optional && (
-          <span className="text-xs font-normal text-muted-foreground/60">
-            (Optional)
-          </span>
+          <span className="text-xs font-normal text-muted-foreground/60">(Optional)</span>
         )}
       </label>
       {children}
-      {error && (
-        <p className="mt-1.5 text-xs text-destructive">{error}</p>
-      )}
+      {error && <p className="mt-1.5 text-xs text-destructive">{error}</p>}
     </div>
   );
 }
