@@ -10,7 +10,7 @@ export default withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
-  org: "krida-wacana-christian-univers",
+  org: "krida-wacana-christian-university",
 
   project: "center-for-health-psychology",
 

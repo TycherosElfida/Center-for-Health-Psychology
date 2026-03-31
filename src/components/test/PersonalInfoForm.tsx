@@ -26,11 +26,7 @@ interface PersonalInfoFormProps {
    Component
    ═══════════════════════════════════════════════════════ */
 
-export function PersonalInfoForm({
-  testSlug,
-  testColor,
-  testShortName: _testShortName,
-}: PersonalInfoFormProps) {
+export function PersonalInfoForm({ testSlug, testColor }: PersonalInfoFormProps) {
   const router = useRouter();
   const provinces = getProvinces();
 
@@ -207,7 +203,7 @@ export function PersonalInfoForm({
                   !!selectedProvince,
                   !!errors.province && !!touchedFields.province
                 ),
-                background: bgColor(!!selectedProvince),
+                backgroundColor: bgColor(!!selectedProvince),
                 color: selectedProvince ? undefined : "oklch(0.50 0.02 240)",
                 backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
                 backgroundPosition: "right 14px center",
@@ -236,7 +232,7 @@ export function PersonalInfoForm({
               className="w-full cursor-pointer appearance-none rounded-[14px] bg-no-repeat px-4 py-3 pr-10 text-sm outline-none transition-colors disabled:cursor-not-allowed disabled:opacity-50"
               style={{
                 border: borderColor(!!cityVal, !!errors.city && !!touchedFields.city),
-                background: bgColor(!!cityVal),
+                backgroundColor: bgColor(!!cityVal),
                 color: cityVal ? undefined : "oklch(0.50 0.02 240)",
                 backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
                 backgroundPosition: "right 14px center",

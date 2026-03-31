@@ -11,11 +11,13 @@ export function computeScore(input: ScoringInput): ScoringResult {
     const rawVal = input.answers[q.id];
 
     // For Likert or numeric slider responses, the value might simply be a number,
-    // or it might be stored as an object { selected: 3 }
-    let val = typeof rawVal === "object" && rawVal !== null ? rawVal.selected : rawVal;
+    const extractedVal =
+      typeof rawVal === "object" && rawVal !== null && "selected" in rawVal
+        ? (rawVal as Record<string, unknown>).selected
+        : rawVal;
 
     // If val is not a valid number (e.g. string or undefined), default to 0
-    val = Number(val) || 0;
+    const val = Number(extractedVal) || 0;
 
     const finalVal = val * q.weight;
 

@@ -190,3 +190,62 @@
     @apply outline-2 outline-offset-2 outline-ring;
   }
 }
+
+/* ─── Assessment Engine Animations ────────────────────────── */
+/* Migrated from runtime injection to globals for SSR compat  */
+
+@keyframes surveyFadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes surveyPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes surveyCheckPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes surveyShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+.survey-fade-in {
+  animation: surveyFadeSlideIn 0.35s ease-out both;
+}
+
+.survey-pulse {
+  animation: surveyPulse 0.3s ease-out;
+}
+
+.survey-check-pop {
+  animation: surveyCheckPop 0.25s ease-out both;
+}
+
+.survey-shake {
+  animation: surveyShake 0.45s ease-out both;
+}
