@@ -1,11 +1,12 @@
 import { createTRPCRouter } from "./index";
 import { healthRouter } from "./procedures/health";
 import { sessionsRouter } from "./procedures/sessions";
+import { resultsRouter } from "./procedures/results";
 
 export const appRouter = createTRPCRouter({
   health: healthRouter,
   sessions: sessionsRouter,
-  // We will add tests and admin routers here later
+  results: resultsRouter,
 });
 
 export type AppRouter = typeof appRouter;
