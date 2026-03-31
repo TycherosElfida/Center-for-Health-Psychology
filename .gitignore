@@ -47,3 +47,10 @@ next-env.d.ts
 
 # Figma Design Reference
 /DesignReference
+
+# Agent Skills
+.agents
+skills-lock.json
+
+AGENTS.md
+CLAUDE.md

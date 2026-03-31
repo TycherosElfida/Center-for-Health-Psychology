@@ -11,6 +11,7 @@ import {
   type PersonalInfoFormData,
 } from "@/lib/schemas/personal-info";
 import { getProvinces, getCitiesByProvince } from "@/lib/data/indonesia-regions";
+import { trpc } from "@/lib/trpc/client";
 
 /* ═══════════════════════════════════════════════════════
    Props
@@ -59,9 +60,18 @@ export function PersonalInfoForm({ testSlug, testColor }: PersonalInfoFormProps)
   }, [selectedProvince, resetField]);
 
   /* ── Submit handler ── */
+  const startSession = trpc.sessions.startSession.useMutation({
+    onSuccess: (data) => {
+      router.push(`/test/${testSlug}?sessionId=${data.sessionId}`);
+    },
+    onError: (err) => {
+      console.error("[PersonalInfoForm] Failed to start session:", err.message);
+    },
+  });
+
   function onSubmit(data: PersonalInfoFormData) {
     localStorage.setItem(`chp_personal_${testSlug}`, JSON.stringify(data));
-    router.push(`/test/${testSlug}`);
+    startSession.mutate({ testSlug });
   }
 
   /* ── Field state helpers ── */

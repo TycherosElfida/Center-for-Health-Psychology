@@ -12,7 +12,7 @@
  * encapsulated in AssessmentForm.
  */
 
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 
 import { getTestMeta } from "@/lib/data/tests";
@@ -25,6 +25,7 @@ import { AssessmentForm } from "@/components/test/AssessmentForm";
 
 interface TestPageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ sessionId?: string }>;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -50,8 +51,9 @@ export async function generateMetadata({ params }: TestPageProps): Promise<Metad
    Page Component (RSC)
    ═══════════════════════════════════════════════════════ */
 
-export default async function TestPage({ params }: TestPageProps) {
+export default async function TestPage({ params, searchParams }: TestPageProps) {
   const { slug } = await params;
+  const { sessionId } = await searchParams;
 
   // ── Validate slug ───────────────────────────────────────
   const testMeta = getTestMeta(slug);
@@ -61,16 +63,12 @@ export default async function TestPage({ params }: TestPageProps) {
     notFound();
   }
 
-  // ── Session ID ──────────────────────────────────────────
-  // For the client-side engine, we generate a deterministic session key
-  // based on the test slug. The actual DB session is created when the
-  // client calls `startSession` via tRPC. This approach avoids making
-  // the page.tsx dependent on DB queries at render time.
-  //
-  // The AssessmentForm will call trpc.sessions.startSession on mount
-  // to get a real UUID session from the server. Until then, the
-  // localStorage key uses this slug-based identifier.
-  const clientSessionKey = `assessment_${slug}`;
+  // ── Session UUID Validation ─────────────────────────────
+  const isValidUUID = (id: string) =>
+    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+  if (!sessionId || !isValidUUID(sessionId)) {
+    redirect(`/test/${slug}/briefing`);
+  }
 
-  return <AssessmentForm testMeta={testMeta} questions={questions} sessionId={clientSessionKey} />;
+  return <AssessmentForm testMeta={testMeta} questions={questions} sessionId={sessionId} />;
 }

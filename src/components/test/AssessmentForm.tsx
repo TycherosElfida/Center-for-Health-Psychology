@@ -53,9 +53,14 @@ export function AssessmentForm({ testMeta, questions, sessionId }: AssessmentFor
   // ── State + auto-save hook ──────────────────────────────
   const { answers, setAnswer, isSaving } = useAssessmentSync(sessionId, restoredAnswers);
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // ── Derived state (cheap — max 29 questions) ────────────
-  const answeredCount = Object.keys(answers).length;
-  const isComplete = answeredCount === questions.length;
+  const answeredCount = mounted ? Object.keys(answers).length : 0;
+  const isComplete = mounted ? answeredCount === questions.length : false;
 
   // ── Focus tracking via IntersectionObserver ──────────────
   const [focusedIdx, setFocusedIdx] = useState(0);
@@ -107,8 +112,8 @@ export function AssessmentForm({ testMeta, questions, sessionId }: AssessmentFor
 
   // ── Answer handler — stable via useCallback ─────────────
   const handleAnswer = useCallback(
-    (questionId: number, value: number) => {
-      setAnswer(String(questionId), value);
+    (questionId: string, value: number) => {
+      setAnswer(questionId, value);
     },
     [setAnswer]
   );
@@ -149,8 +154,8 @@ export function AssessmentForm({ testMeta, questions, sessionId }: AssessmentFor
         <div className="flex flex-col gap-6">
           {questions.map((q, idx) => {
             const isFocused = idx === focusedIdx;
-            const isAnswered = answers[String(q.id)] !== undefined;
-            const selectedValue = answers[String(q.id)] as number | undefined;
+            const isAnswered = mounted ? answers[q.id] !== undefined : false;
+            const selectedValue = mounted ? (answers[q.id] as number | undefined) : undefined;
             const isBinary = q.options.length === 2;
 
             return (
