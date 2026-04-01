@@ -1,4 +1,5 @@
 import { eq, sql } from "drizzle-orm";
+import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
 import { createTRPCRouter, publicProcedure } from "../index";
@@ -150,5 +151,29 @@ export const sessionsRouter = createTRPCRouter({
         .returning({ id: results.id });
 
       return { sessionId, scoreId: result?.id ?? "" };
+    }),
+
+  // Phase 5: requestEmailReport — Lead capture for emailed results
+  // Placeholder: validates input and returns success. Production will
+  // encrypt the email via AES-256-GCM and INSERT into guestLeads.
+  requestEmailReport: publicProcedure
+    .input(
+      z.object({
+        scoreId: z.string().uuid(),
+        email: z.string().email(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      // In production:
+      // 1. Resolve scoreId → sessionId + testId
+      // 2. encrypt(input.email) → encryptedEmail
+      // 3. INSERT INTO guest_leads (sessionId, testId, encryptedEmail)
+      // 4. Enqueue async email delivery job
+      console.info("[requestEmailReport] Lead captured:", {
+        scoreId: input.scoreId,
+        email: input.email,
+      });
+
+      return { success: true as const };
     }),
 });

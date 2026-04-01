@@ -1,17 +1,39 @@
 "use client";
 
 /**
- * ReportRequestForm — Email lead capture for results delivery.
+ * ReportRequestForm — Email lead capture with react-hook-form + zod validation.
  *
- * This replaces the "Download PDF" button from the legacy design.
- * The form validates the email client-side and fires a tRPC mutation
- * to store the guest lead + trigger an async email job.
+ * Kaizen change: NO direct PDF downloads for anonymous users. Instead,
+ * the user submits their email and gets the report delivered asynchronously.
  *
- * CTA text: "Kirim Hasil ke Email Saya" (Send Results to My Email)
+ * Form stack:
+ *   - react-hook-form (controlled form state)
+ *   - @hookform/resolvers/zod (schema validation)
+ *   - trpc.sessions.requestEmailReport (server mutation)
+ *
+ * Typography: Outfit for headings (font-heading), Inter for body.
  */
 
 import { useState, useCallback } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Mail, Send, CheckCircle2, X, Loader2 } from "lucide-react";
+import { trpc } from "@/lib/trpc/client";
+
+/* ═══════════════════════════════════════════════════════
+   Schema
+   ═══════════════════════════════════════════════════════ */
+
+const reportRequestSchema = z.object({
+  email: z.string().min(1, "Masukkan alamat email Anda.").email("Format email tidak valid."),
+});
+
+type ReportRequestValues = z.infer<typeof reportRequestSchema>;
+
+/* ═══════════════════════════════════════════════════════
+   Types
+   ═══════════════════════════════════════════════════════ */
 
 interface ReportRequestFormProps {
   /** UUID of the result record. */
@@ -22,50 +44,49 @@ interface ReportRequestFormProps {
   accentColor: string;
 }
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+/* ═══════════════════════════════════════════════════════
+   Component
+   ═══════════════════════════════════════════════════════ */
 
 export function ReportRequestForm({ scoreId, testShortName, accentColor }: ReportRequestFormProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
-  const [isSending, setIsSending] = useState(false);
   const [isSent, setIsSent] = useState(false);
+  const [sentEmail, setSentEmail] = useState("");
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ReportRequestValues>({
+    resolver: zodResolver(reportRequestSchema),
+    defaultValues: { email: "" },
+  });
+
+  const requestMutation = trpc.sessions.requestEmailReport.useMutation({
+    onSuccess: (_data, variables) => {
+      setIsSent(true);
+      setSentEmail(variables.email);
+    },
+  });
 
   const toggle = useCallback(() => {
     setIsOpen((p) => !p);
-    setEmail("");
-    setError("");
+    reset();
     setIsSent(false);
-  }, []);
+    setSentEmail("");
+  }, [reset]);
 
-  const handleSubmit = useCallback(() => {
-    const trimmed = email.trim();
-    if (!trimmed) {
-      setError("Masukkan alamat email Anda.");
-      return;
-    }
-    if (!EMAIL_RE.test(trimmed)) {
-      setError("Format email tidak valid.");
-      return;
-    }
-
-    setError("");
-    setIsSending(true);
-
-    // Simulated mutation — in production this calls tRPC mutation
-    // that inserts into guestLeads and enqueues an email job.
-    console.info("[ReportRequestForm] Requesting report:", { scoreId, email: trimmed });
-
-    // Simulate server round-trip
-    setTimeout(() => {
-      setIsSending(false);
-      setIsSent(true);
-    }, 1200);
-  }, [email, scoreId]);
+  const onSubmit = useCallback(
+    (values: ReportRequestValues) => {
+      requestMutation.mutate({ scoreId, email: values.email });
+    },
+    [requestMutation, scoreId]
+  );
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Toggle button */}
+      {/* Toggle CTA */}
       <button
         type="button"
         onClick={toggle}
@@ -101,7 +122,7 @@ export function ReportRequestForm({ scoreId, testShortName, accentColor }: Repor
 
           <div className="bg-card p-5 sm:p-6">
             {!isSent ? (
-              <>
+              <form onSubmit={handleSubmit(onSubmit)} noValidate>
                 {/* Header */}
                 <div className="mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -126,34 +147,31 @@ export function ReportRequestForm({ scoreId, testShortName, accentColor }: Repor
 
                 {/* Input row */}
                 <div className="flex gap-2">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setError("");
-                    }}
-                    placeholder="anda@email.com"
-                    className="flex-1 rounded-xl border bg-background px-4 py-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/50"
-                    style={{
-                      borderColor: error
-                        ? "var(--destructive, #e53e3e)"
-                        : email
-                          ? `color-mix(in oklch, ${accentColor} 45%, transparent)`
-                          : "var(--border)",
-                    }}
-                  />
+                  <div className="flex-1">
+                    <input
+                      type="email"
+                      autoComplete="email"
+                      placeholder="anda@email.com"
+                      {...register("email")}
+                      className="w-full rounded-xl border bg-background px-4 py-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/50"
+                      style={{
+                        borderColor: errors.email ? "var(--destructive, #e53e3e)" : "var(--border)",
+                      }}
+                    />
+                    {errors.email && (
+                      <p className="mt-1.5 text-xs text-destructive">{errors.email.message}</p>
+                    )}
+                  </div>
                   <button
-                    type="button"
-                    onClick={handleSubmit}
-                    disabled={isSending}
-                    className="flex shrink-0 items-center gap-2 rounded-xl px-5 py-3 font-heading text-sm font-semibold text-white transition-all disabled:opacity-60"
+                    type="submit"
+                    disabled={requestMutation.isPending}
+                    className="flex shrink-0 items-center gap-2 self-start rounded-xl px-5 py-3 font-heading text-sm font-semibold text-white transition-all disabled:opacity-60"
                     style={{
                       background: `linear-gradient(135deg, ${accentColor}, color-mix(in oklch, ${accentColor} 80%, white))`,
                       boxShadow: `0 4px 16px color-mix(in oklch, ${accentColor} 30%, transparent)`,
                     }}
                   >
-                    {isSending ? (
+                    {requestMutation.isPending ? (
                       <Loader2 size={14} className="animate-spin" />
                     ) : (
                       <Send size={14} />
@@ -162,10 +180,15 @@ export function ReportRequestForm({ scoreId, testShortName, accentColor }: Repor
                   </button>
                 </div>
 
-                {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
-              </>
+                {/* Server error */}
+                {requestMutation.error && (
+                  <p className="mt-2 text-xs text-destructive">
+                    Terjadi kesalahan. Silakan coba lagi.
+                  </p>
+                )}
+              </form>
             ) : (
-              /* Success confirmation */
+              /* ── Success state ── */
               <div className="flex items-center gap-4 py-2">
                 <div
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
@@ -182,7 +205,7 @@ export function ReportRequestForm({ scoreId, testShortName, accentColor }: Repor
                   </p>
                   <p className="text-[13px] text-muted-foreground">
                     Laporan {testShortName} Anda telah dikirim ke{" "}
-                    <strong style={{ color: accentColor }}>{email}</strong>.
+                    <strong style={{ color: accentColor }}>{sentEmail}</strong>.
                   </p>
                 </div>
                 <button type="button" onClick={toggle} className="ml-auto p-1">
