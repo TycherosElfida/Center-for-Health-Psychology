@@ -47,7 +47,7 @@ export const BinaryOptions = React.memo(function BinaryOptions({
             aria-checked={isSelected}
             aria-label={opt.label}
             onClick={() => onChange(opt.value)}
-            className="group flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-none py-7 outline-none transition-all duration-200 hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="group flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-none py-7 outline-none transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_32px_rgba(155,142,196,0.15)] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             style={{
               background: isSelected
                 ? `linear-gradient(135deg, color-mix(in oklch, ${color} 12%, transparent), color-mix(in oklch, ${color} 6%, transparent))`

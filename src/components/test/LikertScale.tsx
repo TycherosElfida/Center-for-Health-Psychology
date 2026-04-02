@@ -82,15 +82,14 @@ export const LikertScale = React.memo(function LikertScale({
                 className="group flex flex-1 cursor-pointer flex-col items-center gap-2 border-none bg-transparent outline-none"
                 style={{
                   padding: "0 2px",
-                  minWidth: isCompact ? 36 : 48,
+                  minWidth: 44,
+                  minHeight: 44,
                 }}
               >
-                {/* Circle */}
+                {/* Circle — Gap #6: WCAG 2.2 min 44×44px touch target */}
                 <div
-                  className="flex shrink-0 items-center justify-center rounded-full transition-all duration-200"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-all duration-200"
                   style={{
-                    width: isSelected ? 42 : 30,
-                    height: isSelected ? 42 : 30,
                     background: isSelected
                       ? `linear-gradient(135deg, ${color}, color-mix(in oklch, ${color} 80%, white))`
                       : "var(--card)",
@@ -100,8 +99,6 @@ export const LikertScale = React.memo(function LikertScale({
                     boxShadow: isSelected
                       ? `0 4px 16px color-mix(in oklch, ${color} 30%, transparent)`
                       : "0 1px 4px rgba(0,0,0,0.04)",
-                    // Group-hover scale effect
-                    transform: isSelected ? "scale(1)" : undefined,
                   }}
                 >
                   {isSelected ? (

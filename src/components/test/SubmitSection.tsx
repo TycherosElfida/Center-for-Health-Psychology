@@ -76,7 +76,7 @@ export function SubmitSection({
           type="button"
           disabled={!isComplete || isSubmitting}
           onClick={onSubmit}
-          className="mt-6 inline-flex h-12 min-w-[200px] items-center justify-center gap-2 rounded-xl px-8 font-heading text-[15px] font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40"
+          className="mt-6 inline-flex h-12 min-w-[200px] items-center justify-center gap-2 rounded-xl px-8 font-heading text-[15px] font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:bg-[var(--brand-primary-light,#EDE9F8)] disabled:text-[var(--brand-primary-mid,#C5BADF)] disabled:shadow-none"
           style={{
             background:
               isComplete && !isSubmitting

@@ -4,14 +4,16 @@
  * ProgressBar — Assessment progress indicator.
  *
  * Stateless. Receives current/total as props and renders:
- *   - Animated fill bar with smooth CSS transition
+ *   - Animated fill bar with brand gradient
  *   - "Question X of Y" label using Outfit font for numerals
  *   - Percentage badge
+ *   - Encouragement text when > 50% complete
  *
  * Touch target: N/A (non-interactive element).
  */
 
 import { useMemo } from "react";
+import { Sparkles } from "lucide-react";
 
 interface ProgressBarProps {
   /** Number of answered questions. */
@@ -63,16 +65,13 @@ export function ProgressBar({ current, total, accentColor }: ProgressBarProps) {
         </span>
       </div>
 
-      {/* Track */}
-      <div className="relative h-[6px] w-full overflow-hidden rounded-full bg-secondary">
+      {/* Track — Gap #2: restyle bg + brand gradient fill */}
+      <div className="relative h-[6px] w-full overflow-hidden rounded-full bg-[#E8EDF8]">
         {/* Fill */}
         <div
-          className="absolute inset-y-0 left-0 rounded-full"
+          className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[var(--brand-primary,#9B8EC4)] to-[var(--brand-primary-dark,#6B5CA0)]"
           style={{
             width: `${percentage}%`,
-            background: accentColor
-              ? `linear-gradient(90deg, ${accentColor}, color-mix(in oklch, ${accentColor} 75%, white))`
-              : "linear-gradient(90deg, var(--primary), color-mix(in oklch, var(--primary) 75%, white))",
             transition: "width 0.45s cubic-bezier(0.4, 0, 0.2, 1)",
           }}
         />
@@ -83,11 +82,19 @@ export function ProgressBar({ current, total, accentColor }: ProgressBarProps) {
             className="absolute inset-y-0 w-8 animate-pulse rounded-full opacity-30"
             style={{
               left: `calc(${percentage}% - 16px)`,
-              background: `radial-gradient(ellipse, ${accentColor ?? "var(--primary)"}, transparent)`,
+              background: `radial-gradient(ellipse, ${accentColor ?? "var(--brand-primary, #9B8EC4)"}, transparent)`,
             }}
           />
         )}
       </div>
+
+      {/* Encouragement text — visible only when > 50% */}
+      {percentage > 50 && (
+        <div className="flex items-center gap-1 text-xs text-[var(--brand-primary,#9B8EC4)]">
+          <Sparkles size={13} />
+          <span>Terus semangat! Kamu sudah hampir selesai.</span>
+        </div>
+      )}
     </div>
   );
 }

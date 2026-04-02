@@ -16,6 +16,7 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "motion/react";
 import type { TestMeta } from "@/lib/data/tests";
 import type { Question } from "@/lib/data/questions";
 import { useAssessmentSync, restoreSessionFromStorage } from "@/hooks/useAssessmentSync";
@@ -66,6 +67,13 @@ export function AssessmentForm({ testMeta, questions, sessionId }: AssessmentFor
   const [focusedIdx, setFocusedIdx] = useState(0);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const observerRef = useRef<IntersectionObserver | null>(null);
+
+  // ── Keyboard hint (Gap #5) ──────────────────────────────
+  const [showKeyboardHint, setShowKeyboardHint] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => setShowKeyboardHint(false), 4000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     // Disconnect previous observer if any
@@ -149,8 +157,21 @@ export function AssessmentForm({ testMeta, questions, sessionId }: AssessmentFor
         </div>
       </div>
 
-      {/* Question cards */}
+      {/* Keyboard hint — Gap #5 */}
       <main className="mx-auto max-w-2xl px-4 pt-6">
+        <AnimatePresence>
+          {showKeyboardHint && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="mb-4 rounded-xl bg-[var(--brand-primary-light,#EDE9F8)] px-4 py-2 text-center text-xs text-[var(--brand-primary,#9B8EC4)]"
+            >
+              💡 Gunakan tombol keyboard 1–5 untuk memilih jawaban lebih cepat
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="flex flex-col gap-6">
           {questions.map((q, idx) => {
             const isFocused = idx === focusedIdx;
@@ -158,15 +179,21 @@ export function AssessmentForm({ testMeta, questions, sessionId }: AssessmentFor
             const selectedValue = mounted ? (answers[q.id] as number | undefined) : undefined;
             const isBinary = q.options.length === 2;
 
+            /* Gap #4 — Opacity states:
+               Active/focused: 1.0
+               Answered but not focused: 0.70
+               Unfocused, unanswered: 0.45 */
+            const cardOpacity = isFocused ? 1 : isAnswered ? 0.7 : 0.45;
+
             return (
               <div
                 key={q.id}
                 ref={(el) => {
                   cardRefs.current[idx] = el;
                 }}
-                className="rounded-2xl border p-6 transition-all duration-300"
+                className="rounded-3xl border p-6 transition-all duration-300"
                 style={{
-                  opacity: isFocused ? 1 : 0.55,
+                  opacity: cardOpacity,
                   transform: isFocused ? "scale(1)" : "scale(0.98)",
                   background: isAnswered
                     ? `linear-gradient(135deg, color-mix(in oklch, ${testMeta.color} 4%, var(--card)), var(--card))`

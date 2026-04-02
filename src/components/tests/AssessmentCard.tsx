@@ -70,13 +70,8 @@ export function AssessmentCard({ test, index }: AssessmentCardProps) {
       }}
     >
       <Card className="relative flex h-full flex-col overflow-hidden border-border/50 bg-card shadow-sm transition-shadow duration-300 group-hover:shadow-xl group-hover:shadow-primary/8">
-        {/* Top colour accent */}
-        <div
-          className="h-1"
-          style={{
-            background: `linear-gradient(90deg, ${test.color}, ${test.color}88)`,
-          }}
-        />
+        {/* Top colour accent — Gap #5: brand-token gradient */}
+        <div className="h-1 w-full rounded-t-3xl bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-primary-dark)]" />
 
         <div className="flex flex-1 flex-col p-5">
           {/* Status + Category badges */}
@@ -132,24 +127,20 @@ export function AssessmentCard({ test, index }: AssessmentCardProps) {
             {test.longDescription}
           </p>
 
-          {/* Stats row */}
-          <div className="mb-4 flex items-center rounded-xl border border-border/60 bg-secondary/30 px-2 py-3">
-            <StatItem label="Items" value={String(test.itemCount)} />
-            <div className="mx-1 h-7 w-px shrink-0 bg-border/60" />
-            <StatItem label="Time" value={test.duration} />
-            <div className="mx-1 h-7 w-px shrink-0 bg-border/60" />
-            <StatItem label="α" value={test.alpha ?? "—"} />
+          {/* Stats row — Gap #6: surface-subtle bg with · dividers */}
+          <div className="mb-4 flex items-center gap-3 rounded-xl bg-[var(--surface-subtle,#F5F3FA)] px-3 py-2 text-xs text-muted-foreground">
+            <span>{test.itemCount} Items</span>
+            <span aria-hidden="true">·</span>
+            <span>{test.duration}</span>
+            <span aria-hidden="true">·</span>
+            <span>α {test.alpha ?? "—"}</span>
           </div>
 
-          {/* Validation note */}
-          {test.validationNote && (
-            <div className="mb-4 flex items-start gap-2">
-              <BadgeCheck size={14} className="mt-0.5 shrink-0 text-primary" />
-              <p className="text-[11.5px] leading-snug text-muted-foreground">
-                {test.validationNote}
-              </p>
-            </div>
-          )}
+          {/* Validation badge — Gap #7: always show with fallback */}
+          <div className="mb-4 flex items-center gap-1.5 text-xs text-[var(--brand-primary)]">
+            <BadgeCheck size={13} />
+            <span>{test.validationNote ?? "Instrumen tervalidasi klinis"}</span>
+          </div>
 
           {/* Footer: meta + CTA */}
           <div className="mt-auto flex items-center justify-between border-t border-border/50 pt-4">
@@ -176,16 +167,6 @@ export function AssessmentCard({ test, index }: AssessmentCardProps) {
           </div>
         </div>
       </Card>
-    </div>
-  );
-}
-
-/* ── Stat Item (internal) ── */
-function StatItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex-1 text-center">
-      <p className="font-heading text-sm font-bold leading-tight text-foreground">{value}</p>
-      <p className="mt-0.5 text-[10.5px] text-muted-foreground">{label}</p>
     </div>
   );
 }

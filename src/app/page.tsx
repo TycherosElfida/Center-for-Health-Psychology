@@ -1,19 +1,59 @@
-import { Navbar } from "@/components/layout/Navbar";
-import { Hero } from "@/components/landing/Hero";
-import { TestCatalogPreview } from "@/components/landing/TestCatalogPreview";
-import { FAQ } from "@/components/landing/FAQ";
-import { Footer } from "@/components/landing/Footer";
+import type { Metadata } from "next";
 
-export default function Home() {
+import { Navbar } from "@/components/layout/Navbar";
+import { HeroSection } from "@/components/landing/Hero";
+import { AboutPreview } from "@/components/landing/AboutPreview";
+import { TestCardGrid } from "@/components/landing/TestCatalogPreview";
+import { FAQSection } from "@/components/landing/FAQ";
+import { CTABanner } from "@/components/landing/CTABanner";
+import { Footer } from "@/components/landing/Footer";
+import { MotionSection } from "@/lib/motion";
+
+/* ═══════════════════════════════════════════════════════
+   SEO Metadata
+   ═══════════════════════════════════════════════════════ */
+
+export const metadata: Metadata = {
+  title: "Center for Health Psychology — Evidence-Based Assessments",
+  description:
+    "Take validated psychological assessments designed to help you gain deeper insight into your personality, stress levels, and mental health.",
+  openGraph: {
+    title: "Center for Health Psychology",
+    description:
+      "Evidence-based psychological assessments for self-discovery and mental health screening.",
+  },
+};
+
+/* ═══════════════════════════════════════════════════════
+   Page Component (Server Component)
+   ═══════════════════════════════════════════════════════ */
+
+export default function HomePage() {
   return (
-    <>
+    <div className="min-h-screen bg-white">
       <Navbar />
-      <main className="flex-1">
-        <Hero />
-        <TestCatalogPreview />
-        <FAQ />
+
+      <main>
+        <HeroSection />
+
+        <MotionSection>
+          <AboutPreview />
+        </MotionSection>
+
+        <MotionSection delay={0.1}>
+          <TestCardGrid />
+        </MotionSection>
+
+        <MotionSection delay={0.15}>
+          <FAQSection />
+        </MotionSection>
+
+        <MotionSection delay={0.2}>
+          <CTABanner />
+        </MotionSection>
       </main>
+
       <Footer />
-    </>
+    </div>
   );
 }
