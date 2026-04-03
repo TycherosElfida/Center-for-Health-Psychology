@@ -3,15 +3,13 @@
 /**
  * AssessmentForm — Client-side orchestrator for the assessment engine.
  *
- * Wires together:
- *   - useAssessmentSync (state + auto-save)
- *   - AssessmentHeader (sticky top bar)
- *   - ProgressBar (progress indicator)
- *   - QuestionCard list (LikertScale / BinaryOptions per question)
- *   - SubmitSection (completion CTA)
- *
- * Focus tracking via IntersectionObserver: the currently visible question
- * card is highlighted while others are dimmed, reducing cognitive load.
+ * Full state machine ported from DesignReference/TestPage.tsx:
+ *   - CSS keyframe injection (surveyFadeIn, surveyPulse, surveyCheckPop, surveyShake)
+ *   - Keyboard navigation (1-5, ↑↓, j/k)
+ *   - Scroll-focus system with questionRefs and auto-advance
+ *   - Warning shake for unanswered questions
+ *   - Opacity states: focused 1.0, answered 0.70, unanswered 0.45, locked 0.28
+ *   - Encouragement text + time remaining for ProgressBar
  */
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
@@ -27,6 +25,80 @@ import { ProgressBar } from "./ProgressBar";
 import { LikertScale } from "./LikertScale";
 import { BinaryOptions } from "./BinaryOptions";
 import { SubmitSection } from "./SubmitSection";
+
+/* ═══════════════════════════════════════════════════════
+   CSS Keyframe Injection (runs once on mount)
+   ═══════════════════════════════════════════════════════ */
+
+const SURVEY_STYLES = `
+  @keyframes surveyFadeSlideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes surveyPulse {
+    0%, 100% { transform: scale(1); }
+    50%       { transform: scale(1.05); }
+  }
+  @keyframes surveyCheckPop {
+    0%   { transform: scale(0); }
+    60%  { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+  @keyframes surveyShake {
+    0%, 100% { transform: scale(1) translateX(0); }
+    15%       { transform: scale(1) translateX(-7px); }
+    35%       { transform: scale(1) translateX( 7px); }
+    55%       { transform: scale(1) translateX(-4px); }
+    75%       { transform: scale(1) translateX( 4px); }
+  }
+  .survey-fade-in  { animation: surveyFadeSlideIn 0.35s ease-out both; }
+  .survey-pulse    { animation: surveyPulse 0.3s ease-out; }
+  .survey-check-pop{ animation: surveyCheckPop 0.25s ease-out both; }
+  .survey-shake    { animation: surveyShake 0.45s ease-out both; }
+  .likert-option:hover .likert-circle {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 4px rgba(155,142,196,0.15);
+  }
+  .likert-option:focus-visible {
+    outline: 2px solid #9B8EC4;
+    outline-offset: 2px;
+    border-radius: 12px;
+  }
+  .binary-option:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(155,142,196,0.18) !important;
+  }
+  .binary-option:focus-visible {
+    outline: 2px solid #9B8EC4;
+    outline-offset: 2px;
+  }
+`;
+
+/* ═══════════════════════════════════════════════════════
+   Encouragement Engine
+   ═══════════════════════════════════════════════════════ */
+
+const ENCOURAGEMENTS = [
+  { min: 0, max: 10, text: "Ambil waktumu — tidak ada jawaban benar atau salah." },
+  { min: 11, max: 25, text: "Awal yang baik! Jawab dengan jujur untuk hasil terbaik." },
+  { min: 26, max: 40, text: "Kemajuan yang luar biasa! Setiap jawabanmu berarti." },
+  { min: 41, max: 55, text: "Sudah setengah jalan. Terus di jalanmu." },
+  { min: 56, max: 70, text: "Lebih dari setengahnya selesai! Kamu melakukannya dengan baik." },
+  { min: 71, max: 85, text: "Hampir selesai — hanya beberapa pertanyaan lagi." },
+  { min: 86, max: 95, text: "Hampir selesai! Wawasanmu hampir siap." },
+  { min: 96, max: 100, text: "Tahap akhir! Terima kasih atas kejujuranmu." },
+];
+
+function getEncouragement(progress: number): string {
+  return ENCOURAGEMENTS.find((e) => progress >= e.min && progress <= e.max)?.text ?? "";
+}
+
+function getTimeRemaining(remaining: number, avgSecondsPerQ = 12): string {
+  const totalSec = remaining * avgSecondsPerQ;
+  if (totalSec < 60) return "< 1 menit lagi";
+  const mins = Math.ceil(totalSec / 60);
+  return `~${mins} menit lagi`;
+}
 
 /* ═══════════════════════════════════════════════════════
    Props
@@ -45,6 +117,17 @@ interface AssessmentFormProps {
 export function AssessmentForm({ testMeta, questions, sessionId }: AssessmentFormProps) {
   const router = useRouter();
 
+  // ── Inject CSS keyframes once ────────────────────────
+  useEffect(() => {
+    const styleId = "survey-anim-styles";
+    if (!document.getElementById(styleId)) {
+      const el = document.createElement("style");
+      el.id = styleId;
+      el.textContent = SURVEY_STYLES;
+      document.head.appendChild(el);
+    }
+  }, []);
+
   // ── Restore answers from localStorage on mount ──────────
   const restoredAnswers = useMemo(() => {
     if (typeof window === "undefined") return {};
@@ -55,80 +138,165 @@ export function AssessmentForm({ testMeta, questions, sessionId }: AssessmentFor
   const { answers, setAnswer, isSaving } = useAssessmentSync(sessionId, restoredAnswers);
 
   const [mounted, setMounted] = useState(false);
+  /* eslint-disable react-hooks/set-state-in-effect -- SSR hydration guard; no alternative pre-React 19 */
   useEffect(() => {
     setMounted(true);
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
-  // ── Derived state (cheap — max 29 questions) ────────────
+  // ── Refs for scroll-focus state machine ─────────────────
+  const questionRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const isAutoScrolling = useRef(false);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const answersRef = useRef(answers);
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
+  const isRedirectingRef = useRef(false);
+
+  // ── Derived state ───────────────────────────────────────
   const answeredCount = mounted ? Object.keys(answers).length : 0;
   const isComplete = mounted ? answeredCount === questions.length : false;
+  const progress = questions.length > 0 ? Math.round((answeredCount / questions.length) * 100) : 0;
 
-  // ── Focus tracking via IntersectionObserver ──────────────
-  const [focusedIdx, setFocusedIdx] = useState(0);
-  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const observerRef = useRef<IntersectionObserver | null>(null);
+  // ── Focus tracking ──────────────────────────────────────
+  const [focusedQ, setFocusedQ] = useState(0);
+  const firstUnansweredIdx = mounted ? questions.findIndex((q) => answers[q.id] === undefined) : 0;
 
-  // ── Keyboard hint (Gap #5) ──────────────────────────────
+  // ── Warning shake state ─────────────────────────────────
+  const [warningQIdx, setWarningQIdx] = useState<number | null>(null);
+  const [warningShakeKey, setWarningShakeKey] = useState(0);
+
+  function triggerWarning(idx: number) {
+    setWarningQIdx(idx);
+    setWarningShakeKey((k) => k + 1);
+  }
+
+  // ── Shake effect: remove + re-add class on warningShakeKey change
+  useEffect(() => {
+    if (warningQIdx === null) return;
+    const el = questionRefs.current[warningQIdx];
+    if (!el) return;
+
+    el.classList.remove("survey-shake");
+    // Force reflow
+    void el.offsetWidth;
+    el.classList.add("survey-shake");
+
+    const timer = setTimeout(() => {
+      el.classList.remove("survey-shake");
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [warningShakeKey, warningQIdx]);
+
+  /* eslint-disable react-hooks/set-state-in-effect -- reactive clear: reset warning when flagged question gets answered */
+  useEffect(() => {
+    if (warningQIdx !== null) {
+      const qId = questions[warningQIdx]?.id;
+      if (qId && answers[qId] !== undefined) {
+        setWarningQIdx(null);
+      }
+    }
+  }, [answers, warningQIdx, questions]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  // ── Auto-clear warning after 4s
+  useEffect(() => {
+    if (warningQIdx === null) return;
+    const timer = setTimeout(() => setWarningQIdx(null), 4000);
+    return () => clearTimeout(timer);
+  }, [warningShakeKey, warningQIdx]);
+
+  // ── Keyboard hint ───────────────────────────────────────
   const [showKeyboardHint, setShowKeyboardHint] = useState(true);
   useEffect(() => {
     const timer = setTimeout(() => setShowKeyboardHint(false), 4000);
     return () => clearTimeout(timer);
   }, []);
 
+  // ── Scroll-to-question ──────────────────────────────────
+  const scrollToQuestion = useCallback((index: number) => {
+    const el = questionRefs.current[index];
+    if (!el) return;
+    isAutoScrolling.current = true;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    scrollTimeoutRef.current = setTimeout(() => {
+      isAutoScrolling.current = false;
+    }, 800);
+  }, []);
+
+  // ── Answer handler with auto-advance ────────────────────
+  const handleAnswer = useCallback(
+    (questionId: string, value: number, currentIdx: number) => {
+      setAnswer(questionId, value);
+
+      // Advance focus to next unanswered
+      const currentAnswers = answersRef.current;
+      const nextUnanswered = questions.findIndex(
+        (q, i) => i > currentIdx && currentAnswers[q.id] === undefined && q.id !== questionId
+      );
+      if (nextUnanswered !== -1) {
+        setFocusedQ(nextUnanswered);
+        setTimeout(() => scrollToQuestion(nextUnanswered), 300);
+      }
+    },
+    [setAnswer, questions, scrollToQuestion, setFocusedQ]
+  );
+
+  // ── Keyboard navigation ─────────────────────────────────
   useEffect(() => {
-    // Disconnect previous observer if any
-    observerRef.current?.disconnect();
+    function handleKey(e: KeyboardEvent) {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        // Find the entry with the highest intersection ratio in viewport center
-        let bestIdx = focusedIdx;
-        let bestRatio = 0;
+      const currentQ = questions[focusedQ];
+      if (!currentQ) return;
 
-        for (const entry of entries) {
-          if (entry.isIntersecting && entry.intersectionRatio > bestRatio) {
-            const idx = cardRefs.current.indexOf(entry.target as HTMLDivElement);
-            if (idx !== -1) {
-              bestIdx = idx;
-              bestRatio = entry.intersectionRatio;
-            }
+      if (e.key >= "1" && e.key <= "5") {
+        const keyNum = parseInt(e.key);
+        const opts = currentQ.options ?? [];
+        const targetOpt = opts[keyNum - 1];
+        if (targetOpt && keyNum <= opts.length) {
+          e.preventDefault();
+          handleAnswer(currentQ.id, targetOpt.value, focusedQ);
+        }
+      }
+
+      // Arrow Down / J: advance focus
+      if (e.key === "ArrowDown" || e.key === "j") {
+        e.preventDefault();
+        const nextIdx = focusedQ + 1;
+        if (nextIdx < questions.length) {
+          if (nextIdx <= firstUnansweredIdx + 1 || firstUnansweredIdx === -1) {
+            setFocusedQ(nextIdx);
+            scrollToQuestion(nextIdx);
+          } else {
+            triggerWarning(firstUnansweredIdx);
+            scrollToQuestion(firstUnansweredIdx);
           }
         }
-
-        if (bestRatio > 0) {
-          setFocusedIdx(bestIdx);
-        }
-      },
-      {
-        // "Focus zone" — the middle 40% of the viewport
-        rootMargin: "-30% 0px -30% 0px",
-        threshold: [0.1, 0.3, 0.5, 0.7, 1.0],
       }
-    );
 
-    observerRef.current = observer;
-
-    // Observe all card refs
-    for (const ref of cardRefs.current) {
-      if (ref) observer.observe(ref);
+      // Arrow Up / K: go back
+      if (e.key === "ArrowUp" || e.key === "k") {
+        e.preventDefault();
+        const prevIdx = focusedQ - 1;
+        if (prevIdx >= 0) {
+          setFocusedQ(prevIdx);
+          scrollToQuestion(prevIdx);
+        }
+      }
     }
 
-    return () => observer.disconnect();
-    // Re-run only when question count changes (not on every render)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [questions.length]);
-
-  // ── Answer handler — stable via useCallback ─────────────
-  const handleAnswer = useCallback(
-    (questionId: string, value: number) => {
-      setAnswer(questionId, value);
-    },
-    [setAnswer]
-  );
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [focusedQ, firstUnansweredIdx, scrollToQuestion, questions, handleAnswer]);
 
   // ── Submit mutation ─────────────────────────────────────
   const submitMutation = trpc.sessions.submitAssessment.useMutation({
     onSuccess: (data) => {
+      isRedirectingRef.current = true;
       router.push(`/results/${data.scoreId}`);
     },
     onError: (err) => {
@@ -153,11 +321,13 @@ export function AssessmentForm({ testMeta, questions, sessionId }: AssessmentFor
             current={answeredCount}
             total={questions.length}
             accentColor={testMeta.color}
+            encouragement={getEncouragement(progress)}
+            timeRemaining={getTimeRemaining(questions.length - answeredCount)}
           />
         </div>
       </div>
 
-      {/* Keyboard hint — Gap #5 */}
+      {/* Keyboard hint */}
       <main className="mx-auto max-w-2xl px-4 pt-6">
         <AnimatePresence>
           {showKeyboardHint && (
@@ -174,24 +344,22 @@ export function AssessmentForm({ testMeta, questions, sessionId }: AssessmentFor
 
         <div className="flex flex-col gap-6">
           {questions.map((q, idx) => {
-            const isFocused = idx === focusedIdx;
             const isAnswered = mounted ? answers[q.id] !== undefined : false;
             const selectedValue = mounted ? (answers[q.id] as number | undefined) : undefined;
             const isBinary = q.options.length === 2;
+            const isFocused = idx === focusedQ;
+            const isLocked = idx > firstUnansweredIdx && firstUnansweredIdx !== -1;
 
-            /* Gap #4 — Opacity states:
-               Active/focused: 1.0
-               Answered but not focused: 0.70
-               Unfocused, unanswered: 0.45 */
-            const cardOpacity = isFocused ? 1 : isAnswered ? 0.7 : 0.45;
+            // Per-card opacity states (from design reference)
+            const cardOpacity = isFocused ? 1 : isAnswered ? 0.7 : isLocked ? 0.28 : 0.45;
 
             return (
               <div
                 key={q.id}
                 ref={(el) => {
-                  cardRefs.current[idx] = el;
+                  questionRefs.current[idx] = el;
                 }}
-                className="rounded-3xl border p-6 transition-all duration-300"
+                className="survey-fade-in rounded-3xl border p-6 transition-all duration-300 cursor-pointer"
                 style={{
                   opacity: cardOpacity,
                   transform: isFocused ? "scale(1)" : "scale(0.98)",
@@ -204,6 +372,13 @@ export function AssessmentForm({ testMeta, questions, sessionId }: AssessmentFor
                   boxShadow: isFocused
                     ? `0 4px 20px color-mix(in oklch, ${testMeta.color} 8%, transparent)`
                     : "0 1px 3px rgba(0,0,0,0.02)",
+                }}
+                onClick={() => {
+                  if (isLocked) {
+                    triggerWarning(firstUnansweredIdx);
+                    return;
+                  }
+                  setFocusedQ(idx);
                 }}
               >
                 {/* Question badge + text */}
@@ -225,14 +400,14 @@ export function AssessmentForm({ testMeta, questions, sessionId }: AssessmentFor
                   <BinaryOptions
                     options={q.options}
                     selectedValue={selectedValue}
-                    onChange={(val) => handleAnswer(q.id, val)}
+                    onChange={(val) => handleAnswer(q.id, val, idx)}
                     accentColor={testMeta.color}
                   />
                 ) : (
                   <LikertScale
                     options={q.options}
                     selectedValue={selectedValue}
-                    onChange={(val) => handleAnswer(q.id, val)}
+                    onChange={(val) => handleAnswer(q.id, val, idx)}
                     accentColor={testMeta.color}
                   />
                 )}

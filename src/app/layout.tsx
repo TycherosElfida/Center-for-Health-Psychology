@@ -37,6 +37,7 @@ export default function RootLayout({
       lang="id"
       data-scroll-behavior="smooth"
       className={`${inter.variable} ${outfit.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
         <TRPCProvider>{children}</TRPCProvider>

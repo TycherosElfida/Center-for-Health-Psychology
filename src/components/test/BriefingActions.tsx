@@ -15,7 +15,7 @@ export function BriefingActions({ slug, color, colorDark }: BriefingActionsProps
 
   return (
     <div
-      className="sticky bottom-0 z-10 flex gap-3 px-6 py-6 sm:px-8 sm:static sm:pb-8"
+      className="sticky bottom-0 z-10 flex flex-col gap-3 px-6 py-6 sm:flex-row sm:gap-4 sm:px-8 sm:static sm:pb-8"
       style={{
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
@@ -25,7 +25,7 @@ export function BriefingActions({ slug, color, colorDark }: BriefingActionsProps
       <button
         type="button"
         onClick={() => router.back()}
-        className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border-[1.5px] border-border bg-white py-3.5 text-[15px] text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
+        className="w-full flex items-center justify-center gap-2 rounded-full border-[1.5px] border-border bg-white px-6 py-4 text-base font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-foreground cursor-pointer sm:w-auto sm:px-8"
       >
         <ArrowLeft size={16} />
         Go Back
@@ -33,7 +33,7 @@ export function BriefingActions({ slug, color, colorDark }: BriefingActionsProps
 
       <Link
         href={`/test/${slug}/personal-info`}
-        className="flex flex-[1.6] items-center justify-center gap-2 rounded-xl py-3.5 text-[15px] font-semibold text-white no-underline transition-all hover:-translate-y-0.5"
+        className="w-full flex items-center justify-center gap-2 rounded-full px-6 py-4 text-base font-semibold text-white no-underline transition-all hover:-translate-y-0.5 sm:w-auto sm:px-8"
         style={{
           background: `linear-gradient(135deg, ${colorDark}, ${color})`,
           boxShadow: `0 4px 14px ${color}40`,

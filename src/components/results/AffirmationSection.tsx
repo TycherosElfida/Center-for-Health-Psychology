@@ -101,7 +101,10 @@ export function AffirmationSection({ severity }: AffirmationSectionProps) {
             </div>
             <div className="flex flex-col gap-2">
               {HOTLINES.map((h) => (
-                <div key={h.number} className="flex items-center justify-between gap-2 text-xs">
+                <div
+                  key={`${h.number}-${h.label}`}
+                  className="flex items-center justify-between gap-2 text-xs"
+                >
                   <span className="text-muted-foreground">{h.label}</span>
                   <a
                     href={`tel:${h.number.replace(/\s+/g, "").replace("ext.", ",")}`}

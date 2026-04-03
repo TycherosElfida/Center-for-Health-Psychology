@@ -3,14 +3,14 @@
 /**
  * LikertScale — Horizontal visual scale for Likert-type questions.
  *
- * Stateless. Receives the question object, current selection, and onChange.
- * Renders as a connected-circle scale with a fill track between the first
- * option and the selected option.
- *
- * Touch targets: each option circle is ≥ 44×44px (WCAG 2.5.5 Level AAA).
- * On compact scales (>6 options), labels are truncated and shown as tooltips.
- *
- * Keyboard: each option is a <button> with proper focus-visible styling.
+ * Premium UX from DesignReference:
+ *   - Unselected circle: 28px, white fill, #DDD7EE border
+ *   - Selected circle: 40px, gradient fill, survey-check-pop animation
+ *   - Connecting track line with gradient fill
+ *   - Endpoint labels row (italic, muted)
+ *   - Spring-like cubic-bezier transition
+ *   - WCAG 2.5.5 Level AAA touch targets (≥ 44px)
+ *   - likert-option class for CSS hover handler
  */
 
 import React from "react";
@@ -34,8 +34,7 @@ export const LikertScale = React.memo(function LikertScale({
   onChange,
   accentColor,
 }: LikertScaleProps) {
-  const isCompact = options.length > 6;
-  const color = accentColor ?? "var(--primary)";
+  const color = accentColor ?? "var(--brand-primary, #9B8EC4)";
   const hasSelection = selectedValue !== undefined;
 
   const selectedIdx = hasSelection ? options.findIndex((o) => o.value === selectedValue) : -1;
@@ -48,7 +47,8 @@ export const LikertScale = React.memo(function LikertScale({
       <div className="relative px-2">
         {/* Background track */}
         <div
-          className="pointer-events-none absolute left-7 right-7 top-[21px] h-[3px] rounded-full bg-secondary"
+          className="pointer-events-none absolute left-7 right-7 top-[21px] h-[3px] rounded-full"
+          style={{ backgroundColor: "#E8EDF8" }}
           aria-hidden="true"
         />
 
@@ -58,7 +58,7 @@ export const LikertScale = React.memo(function LikertScale({
             className="pointer-events-none absolute left-7 top-[21px] h-[3px] rounded-full"
             style={{
               width: `calc((100% - 56px) * ${fillPct / 100})`,
-              background: `linear-gradient(90deg, color-mix(in oklch, ${color} 50%, transparent), ${color})`,
+              background: `linear-gradient(90deg, ${color}, color-mix(in oklch, ${color} 80%, white))`,
               transition: "width 0.3s ease",
             }}
             aria-hidden="true"
@@ -79,38 +79,40 @@ export const LikertScale = React.memo(function LikertScale({
                 aria-checked={isSelected}
                 aria-label={opt.label}
                 onClick={() => onChange(opt.value)}
-                className="group flex flex-1 cursor-pointer flex-col items-center gap-2 border-none bg-transparent outline-none"
+                className="likert-option group flex flex-1 cursor-pointer flex-col items-center gap-2 border-none bg-transparent outline-none"
                 style={{
                   padding: "0 2px",
                   minWidth: 44,
                   minHeight: 44,
                 }}
               >
-                {/* Circle — Gap #6: WCAG 2.2 min 44×44px touch target */}
+                {/* Circle — spring-like transition from design reference */}
                 <div
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-all duration-200"
+                  className="likert-circle flex shrink-0 items-center justify-center rounded-full"
                   style={{
+                    width: isSelected ? 40 : 28,
+                    height: isSelected ? 40 : 28,
                     background: isSelected
                       ? `linear-gradient(135deg, ${color}, color-mix(in oklch, ${color} 80%, white))`
                       : "var(--card)",
                     border: isSelected
                       ? `3px solid ${color}`
-                      : `2.5px solid ${isPassed ? `color-mix(in oklch, ${color} 40%, transparent)` : "var(--border)"}`,
+                      : `2.5px solid ${isPassed ? `color-mix(in oklch, ${color} 40%, transparent)` : "#DDD7EE"}`,
                     boxShadow: isSelected
                       ? `0 4px 16px color-mix(in oklch, ${color} 30%, transparent)`
                       : "0 1px 4px rgba(0,0,0,0.04)",
+                    transition: "all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)",
                   }}
                 >
                   {isSelected ? (
-                    <CheckCircle2
-                      size={18}
-                      className="text-white"
-                      style={{ animation: "surveyCheckPop 0.25s ease-out both" }}
-                    />
+                    <CheckCircle2 size={18} color="#FFFFFF" className="survey-check-pop" />
                   ) : (
                     <span
-                      className="font-heading text-muted-foreground/50 transition-colors group-hover:text-muted-foreground"
-                      style={{ fontSize: isCompact ? 10 : 11, fontWeight: 600 }}
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: "#B3A8D4",
+                      }}
                     >
                       {i + 1}
                     </span>
@@ -121,10 +123,10 @@ export const LikertScale = React.memo(function LikertScale({
                 <span
                   className="text-center leading-tight transition-colors"
                   style={{
-                    fontSize: isCompact ? 10 : 11.5,
+                    fontSize: options.length > 6 ? 10 : 11.5,
                     fontWeight: isSelected ? 600 : i === 0 || i === options.length - 1 ? 500 : 400,
                     color: isSelected ? color : undefined,
-                    maxWidth: isCompact ? 48 : 64,
+                    maxWidth: options.length > 6 ? 48 : 64,
                     wordBreak: "break-word" as const,
                   }}
                 >
@@ -139,11 +141,13 @@ export const LikertScale = React.memo(function LikertScale({
       {/* Endpoint labels */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-1.5">
-          <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "var(--border)" }} />
-          <span className="text-[11px] italic text-muted-foreground">{options[0]?.label}</span>
+          <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#DDD7EE" }} />
+          <span className="text-[11px] italic" style={{ color: "#718096" }}>
+            {options[0]?.label}
+          </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-[11px] italic text-muted-foreground">
+          <span className="text-[11px] italic" style={{ color: "#718096" }}>
             {options[options.length - 1]?.label}
           </span>
           <div

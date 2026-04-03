@@ -146,7 +146,9 @@ export function AssessmentCatalog() {
                         className="block w-full px-4 py-2.5 text-left text-[13px] transition-colors hover:bg-secondary/60"
                         style={{
                           background:
-                            sortBy === opt.value ? "oklch(0.55 0.14 185 / 10%)" : undefined,
+                            sortBy === opt.value
+                              ? "var(--brand-primary-light, #EDE9F8)"
+                              : undefined,
                           fontWeight: sortBy === opt.value ? 600 : 400,
                           color:
                             sortBy === opt.value ? "var(--primary)" : "var(--muted-foreground)",
@@ -171,7 +173,7 @@ export function AssessmentCatalog() {
                   style={{
                     background:
                       viewMode === mode
-                        ? "linear-gradient(135deg, var(--primary), oklch(0.45 0.12 185))"
+                        ? "linear-gradient(135deg, var(--brand-primary, #9B8EC4), var(--brand-primary-dark, #6B5CA0))"
                         : "var(--secondary)",
                     color: viewMode === mode ? "white" : "var(--muted-foreground)",
                     fontWeight: viewMode === mode ? 600 : 400,
@@ -210,7 +212,7 @@ export function AssessmentCatalog() {
                   className="flex min-h-11 items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] transition-all active:scale-95"
                   style={{
                     border: isActive ? "1.5px solid var(--primary)" : "1.5px solid var(--border)",
-                    background: isActive ? "oklch(0.55 0.14 185 / 12%)" : "var(--card)",
+                    background: isActive ? "var(--brand-primary-light, #EDE9F8)" : "var(--card)",
                     color: isActive ? "var(--primary)" : "var(--muted-foreground)",
                     fontWeight: isActive ? 600 : 450,
                   }}
@@ -223,7 +225,9 @@ export function AssessmentCatalog() {
                   <span
                     className="ml-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold leading-none"
                     style={{
-                      background: isActive ? "oklch(0.55 0.14 185 / 20%)" : "var(--secondary)",
+                      background: isActive
+                        ? "color-mix(in srgb, var(--brand-primary, #9B8EC4) 20%, transparent)"
+                        : "var(--secondary)",
                       color: isActive ? "var(--primary)" : "var(--muted-foreground)",
                     }}
                   >
@@ -346,7 +350,7 @@ function FilterControls({
                 className="flex min-h-11 items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] font-medium transition-all active:scale-95"
                 style={{
                   border: isActive ? "1.5px solid var(--primary)" : "1.5px solid var(--border)",
-                  background: isActive ? "oklch(0.55 0.14 185 / 12%)" : "var(--card)",
+                  background: isActive ? "var(--brand-primary-light, #EDE9F8)" : "var(--card)",
                   color: isActive ? "var(--primary)" : "var(--muted-foreground)",
                   fontWeight: isActive ? 600 : 450,
                 }}
@@ -359,7 +363,9 @@ function FilterControls({
                 <span
                   className="ml-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold leading-none"
                   style={{
-                    background: isActive ? "oklch(0.55 0.14 185 / 20%)" : "var(--secondary)",
+                    background: isActive
+                      ? "color-mix(in srgb, var(--brand-primary, #9B8EC4) 20%, transparent)"
+                      : "var(--secondary)",
                     color: isActive ? "var(--primary)" : "var(--muted-foreground)",
                   }}
                 >
@@ -387,7 +393,8 @@ function FilterControls({
               className="min-h-11 rounded-lg border px-4 py-2 text-sm transition-all active:scale-95"
               style={{
                 borderColor: sortBy === opt.value ? "var(--primary)" : "var(--border)",
-                background: sortBy === opt.value ? "oklch(0.55 0.14 185 / 10%)" : "var(--card)",
+                background:
+                  sortBy === opt.value ? "var(--brand-primary-light, #EDE9F8)" : "var(--card)",
                 color: sortBy === opt.value ? "var(--primary)" : "var(--muted-foreground)",
                 fontWeight: sortBy === opt.value ? 600 : 400,
               }}
@@ -551,7 +558,10 @@ function ListView({ tests }: { tests: TestMeta[] }) {
                   {test.validationNote && (
                     <div
                       className="mb-5 flex items-start gap-2 rounded-xl border bg-primary/[0.03] px-4 py-3"
-                      style={{ borderColor: `oklch(0.55 0.14 185 / 18%)` }}
+                      style={{
+                        borderColor:
+                          "color-mix(in srgb, var(--brand-primary, #9B8EC4) 18%, transparent)",
+                      }}
                     >
                       <BadgeCheck size={15} className="mt-0.5 shrink-0 text-primary" />
                       <p className="text-[13px] leading-snug text-foreground/70">
