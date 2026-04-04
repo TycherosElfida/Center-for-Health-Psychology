@@ -24,8 +24,10 @@ import {
   index,
   unique,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { sessionStatusEnum } from "./enums";
 import { tests, questions } from "./tests";
+import { users } from "./users";
 
 // ── testSessions ─────────────────────────────────────────────────────
 // A single assessment attempt by a participant.
@@ -47,12 +49,26 @@ export const testSessions = pgTable(
     }),
     ipHash: text("ip_hash").notNull(),
     userAgentHash: text("user_agent_hash").notNull(),
+    // Phase 2: Auth — nullable FK links anonymous sessions to authenticated users
+    userId: uuid("user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    // Phase 2: Claim token — cryptographic UUID v4, single-use, 72h TTL
+    claimToken: text("claim_token").unique(),
+    claimExpiresAt: timestamp("claim_expires_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
   },
   (t) => [
     index("idx_sessions_test_id").on(t.testId),
     index("idx_sessions_status").on(t.status),
     index("idx_sessions_test_status").on(t.testId, t.status),
     index("idx_sessions_started_at").on(t.startedAt),
+    index("idx_sessions_user_id").on(t.userId),
+    index("idx_sessions_claim_token")
+      .on(t.claimToken)
+      .where(sql`claim_token IS NOT NULL`),
   ]
 );
 

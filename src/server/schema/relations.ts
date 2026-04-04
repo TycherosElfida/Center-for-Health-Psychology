@@ -17,6 +17,9 @@ import { testSessions, answers, results } from "./sessions";
 import { consents, guestLeads } from "./consents";
 import { adminUsers, auditLogs } from "./admin";
 import { users } from "./users";
+import { accounts } from "./accounts";
+import { authSessions } from "./authSessions";
+import { verificationTokens } from "./verificationTokens";
 
 export const relations = defineRelations(
   {
@@ -33,6 +36,9 @@ export const relations = defineRelations(
     adminUsers,
     auditLogs,
     users,
+    accounts,
+    authSessions,
+    verificationTokens,
   },
   (r) => ({
     // ── Test Domain ────────────────────────────────────────────────
@@ -93,6 +99,11 @@ export const relations = defineRelations(
         to: r.consents.sessionId,
       }),
       guestLeads: r.many.guestLeads(),
+      // Phase 2: link sessions to authenticated users
+      user: r.one.users({
+        from: r.testSessions.userId,
+        to: r.users.id,
+      }),
     },
 
     answers: {
@@ -149,5 +160,30 @@ export const relations = defineRelations(
         to: r.adminUsers.id,
       }),
     },
+
+    // ── Auth Domain (Phase 2) ──────────────────────────────────────
+
+    users: {
+      accounts: r.many.accounts(),
+      authSessions: r.many.authSessions(),
+      testSessions: r.many.testSessions(),
+    },
+
+    accounts: {
+      user: r.one.users({
+        from: r.accounts.userId,
+        to: r.users.id,
+      }),
+    },
+
+    authSessions: {
+      user: r.one.users({
+        from: r.authSessions.userId,
+        to: r.users.id,
+      }),
+    },
+
+    // verificationTokens have no FK relations — they are standalone
+    verificationTokens: {},
   })
 );

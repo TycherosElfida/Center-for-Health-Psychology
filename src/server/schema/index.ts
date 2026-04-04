@@ -14,4 +14,7 @@ export * from "./sessions";
 export * from "./consents";
 export * from "./admin";
 export * from "./users";
+export * from "./accounts";
+export * from "./authSessions";
+export * from "./verificationTokens";
 export * from "./relations";

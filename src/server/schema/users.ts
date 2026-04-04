@@ -1,16 +1,15 @@
 /**
- * CHP Platform — Users (Dormant SaaS Table)
+ * CHP Platform — Users
  *
- * This table is NOT activated in Phase 1 (KP MVP).
- * It exists so the schema is SaaS-ready for Phase 2 user registration.
+ * Activated in Phase 2 for Auth.js v5 integration.
+ * Auth.js Drizzle adapter maps to this table for user identity.
  *
- * Phase 2 activation steps:
- * 1. Set isActive default to true
- * 2. Wire Auth.js adapter to this table
- * 3. Add testSessions.userId FK (optional — links sessions to accounts)
- * 4. Implement RLS policies to restrict researcher access
+ * - passwordHash is nullable: null for OAuth-only users, populated for credentials
+ * - role: 'user' (default) | 'admin' — used for route-level authorization
+ * - isActive: defaults to true; can be set false to soft-delete
  */
 import { pgTable, uuid, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -21,6 +20,12 @@ export const users = pgTable("users", {
     mode: "date",
   }),
   image: text("image"),
-  isActive: boolean("is_active").default(false).notNull(),
+  passwordHash: text("password_hash"),
+  role: text("role").default("user").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+    .default(sql`now()`)
+    .notNull()
+    .$onUpdate(() => new Date()),
 });
