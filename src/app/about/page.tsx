@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Users, Award } from "lucide-react";
 
-import { Navbar } from "@/components/layout/Navbar";
+import { NavbarWrapper } from "@/components/layout/NavbarWrapper";
 import { Footer } from "@/components/landing/Footer";
 import { ChpLogo } from "@/components/ui/ChpLogo";
 import { MotionSection } from "@/lib/motion";
@@ -99,7 +99,7 @@ const STATS = [
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
+      <NavbarWrapper />
 
       <main>
         {/* ── Hero ── */}

@@ -1,15 +1,13 @@
 /**
  * CHP Platform — Auth.js Type Augmentation
  *
- * Extends the default NextAuth Session and User types to include
- * the `role` field from our users table. This ensures type-safe
- * access to `session.user.role` throughout the application.
- *
- * Note: `role` is optional on `User` because the DrizzleAdapter
- * returns an `AdapterUser` that doesn't include custom columns.
- * The session callback handles injecting the role at runtime.
+ * Extends the default NextAuth types to include the custom `role`
+ * field from our users table. With JWT strategy, the token carries
+ * `id` and `role` claims that are piped into the session via the
+ * session callback.
  */
 import type { DefaultSession } from "next-auth";
+import type { DefaultJWT } from "next-auth/jwt";
 
 declare module "next-auth" {
   interface Session {
@@ -20,6 +18,13 @@ declare module "next-auth" {
   }
 
   interface User {
+    role?: string;
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT extends DefaultJWT {
+    id?: string;
     role?: string;
   }
 }

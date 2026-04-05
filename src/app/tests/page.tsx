@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { FlaskConical } from "lucide-react";
 
-import { Navbar } from "@/components/layout/Navbar";
+import { NavbarWrapper } from "@/components/layout/NavbarWrapper";
 import { AssessmentCatalog } from "@/components/tests/AssessmentCatalog";
 import { TESTS } from "@/lib/data/tests";
 
@@ -15,8 +15,7 @@ export const metadata: Metadata = {
     "Browse our curated collection of validated psychological instruments. Each assessment is backed by peer-reviewed research and standardized scoring.",
   openGraph: {
     title: "Assessment Instruments | CHP",
-    description:
-      "Evidence-based psychological assessments with psychometric validation.",
+    description: "Evidence-based psychological assessments with psychometric validation.",
   },
 };
 
@@ -34,7 +33,7 @@ export const metadata: Metadata = {
 export default function TestsPage() {
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <NavbarWrapper />
 
       {/* ── Hero Section ── */}
       <section className="bg-gradient-to-br from-secondary via-secondary/60 to-background px-4 pb-12 pt-14 text-center sm:px-6">
@@ -52,9 +51,8 @@ export default function TestsPage() {
           </h1>
 
           <p className="mx-auto mt-3 max-w-[520px] text-base leading-relaxed text-muted-foreground">
-            Browse our curated collection of validated psychological instruments.
-            Each assessment is backed by peer-reviewed research and standardized
-            scoring.
+            Browse our curated collection of validated psychological instruments. Each assessment is
+            backed by peer-reviewed research and standardized scoring.
           </p>
         </div>
       </section>
@@ -64,8 +62,7 @@ export default function TestsPage() {
 
       {/* ── Footer ── */}
       <footer className="border-t border-border bg-card py-6 text-center text-[13px] text-muted-foreground">
-        © 2026 Center for Health Psychology · For educational &amp; screening
-        purposes only
+        © 2026 Center for Health Psychology · For educational &amp; screening purposes only
       </footer>
     </div>
   );

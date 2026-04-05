@@ -58,11 +58,12 @@ export const config = {
     /*
      * Match all request paths except:
      * - api/auth (Auth.js route handler)
+     * - api/trpc (tRPC — has its own auth via protectedProcedure)
      * - _next/static (static files)
      * - _next/image (image optimization)
      * - favicon.ico, sitemap.xml, robots.txt (metadata)
      * - Static assets (.svg, .png, .jpg, .jpeg, .gif, .webp)
      */
-    "/((?!api/auth|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!api/auth|api/trpc|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

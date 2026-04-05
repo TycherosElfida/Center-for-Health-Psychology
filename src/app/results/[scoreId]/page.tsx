@@ -7,7 +7,8 @@
  *   3. Resolve test metadata from the static data layer
  *   4. Compute score interpretation
  *   5. Generate dynamic SEO metadata (noindex — private results)
- *   6. Render the <ResultsDashboard> client island with serialisable props
+ *   6. Check auth state (optional) for ClaimCTA rendering
+ *   7. Render the <ResultsDashboard> client island with serialisable props
  *
  * Zero client JS is shipped from this layer.
  */
@@ -21,6 +22,7 @@ import { results } from "@/server/schema/sessions";
 import { tests } from "@/server/schema/tests";
 import { getTestMeta } from "@/lib/data/tests";
 import { getScoreInterpretation } from "@/lib/scoring/interpretation";
+import { getOptionalSession } from "@/lib/auth/dal";
 import { ResultsDashboard } from "@/components/results/ResultsDashboard";
 
 /* ═══════════════════════════════════════════════════════
@@ -67,10 +69,11 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
     notFound();
   }
 
-  // ── Fetch result from DB ────────────────────────────────
+  // ── Fetch result from DB (include sessionId for claim flow) ────
   const row = await db
     .select({
       id: results.id,
+      sessionId: results.sessionId,
       totalScore: results.totalScore,
       dimensionScores: results.dimensionScores,
       resultLabel: results.resultLabel,
@@ -100,14 +103,20 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
   const interpretation = getScoreInterpretation(testMeta.id, totalScore, maxScore);
   const dimensionScores = (row.dimensionScores ?? {}) as Record<string, number>;
 
+  // ── Auth state — determines whether ClaimCTA is shown ────
+  const session = await getOptionalSession();
+  const isAuthenticated = !!session;
+
   return (
     <ResultsDashboard
       scoreId={row.id}
+      sessionId={row.sessionId}
       testMeta={testMeta}
       totalScore={totalScore}
       dimensionScores={dimensionScores}
       interpretation={interpretation}
       completedAt={row.createdAt.toISOString()}
+      isAuthenticated={isAuthenticated}
     />
   );
 }

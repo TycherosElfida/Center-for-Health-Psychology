@@ -108,13 +108,19 @@ interface AssessmentFormProps {
   testMeta: TestMeta;
   questions: Question[];
   sessionId: string;
+  initialAnswers?: Record<string, unknown>;
 }
 
 /* ═══════════════════════════════════════════════════════
    Component
    ═══════════════════════════════════════════════════════ */
 
-export function AssessmentForm({ testMeta, questions, sessionId }: AssessmentFormProps) {
+export function AssessmentForm({
+  testMeta,
+  questions,
+  sessionId,
+  initialAnswers,
+}: AssessmentFormProps) {
   const router = useRouter();
 
   // ── Inject CSS keyframes once ────────────────────────
@@ -130,9 +136,11 @@ export function AssessmentForm({ testMeta, questions, sessionId }: AssessmentFor
 
   // ── Restore answers from localStorage on mount ──────────
   const restoredAnswers = useMemo(() => {
-    if (typeof window === "undefined") return {};
-    return restoreSessionFromStorage(sessionId) ?? {};
-  }, [sessionId]);
+    if (typeof window === "undefined") return initialAnswers ?? {};
+    const local = restoreSessionFromStorage(sessionId);
+    if (!local) return initialAnswers ?? {};
+    return { ...(initialAnswers ?? {}), ...local };
+  }, [sessionId, initialAnswers]);
 
   // ── State + auto-save hook ──────────────────────────────
   const { answers, setAnswer, isSaving } = useAssessmentSync(sessionId, restoredAnswers);

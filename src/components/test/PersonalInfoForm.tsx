@@ -62,6 +62,17 @@ export function PersonalInfoForm({ testSlug, testColor }: PersonalInfoFormProps)
   /* ── Submit handler ── */
   const startSession = trpc.sessions.startSession.useMutation({
     onSuccess: (data) => {
+      // Phase 2B.1: Persist claim token for later anonymous→authenticated handoff
+      if (data.claimToken) {
+        try {
+          localStorage.setItem(
+            `chp_claim_${data.sessionId}`,
+            JSON.stringify({ sessionId: data.sessionId, claimToken: data.claimToken })
+          );
+        } catch {
+          // localStorage full / blocked — non-critical for assessment flow
+        }
+      }
       router.push(`/test/${testSlug}?sessionId=${data.sessionId}`);
     },
     onError: (err) => {

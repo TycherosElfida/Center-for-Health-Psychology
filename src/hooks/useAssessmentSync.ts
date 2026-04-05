@@ -152,7 +152,11 @@ export function useAssessmentSync(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [answers, sessionId, serverSyncEnabled, serverDebounceMs]);
 
-  // ── Cleanup: flush on unmount via sendBeacon ────────────
+  // ── Cleanup: flush on unmount via fetch(keepalive) ───────
+  // sendBeacon sends the body as an opaque Blob that bypasses tRPC's
+  // internal deserialization. fetch+keepalive gives us full control
+  // over Content-Type and body format so tRPC correctly parses the
+  // payload through its standard mutation path.
   useEffect(() => {
     return () => {
       if (!serverSyncEnabled || !sessionId) return;
@@ -163,13 +167,23 @@ export function useAssessmentSync(
 
       // Best-effort final sync on tab close / navigation
       try {
-        const payload = JSON.stringify({
-          sessionId,
-          answers: current,
+        fetch("/api/trpc/sessions.saveProgress?batch=1", {
+          method: "POST",
+          keepalive: true,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            "0": {
+              json: {
+                sessionId,
+                answers: current,
+              },
+            },
+          }),
+        }).catch(() => {
+          // Silent failure — localStorage has the data.
         });
-        navigator.sendBeacon("/api/trpc/sessions.saveProgress", payload);
       } catch {
-        // sendBeacon not available or failed — localStorage has the data.
+        // fetch not available or failed — localStorage has the data.
       }
     };
   }, [sessionId, serverSyncEnabled]);

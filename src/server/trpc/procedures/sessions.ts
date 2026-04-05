@@ -1,8 +1,9 @@
-import { eq, sql } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { z } from "zod";
+import { randomUUID } from "crypto";
 import { TRPCError } from "@trpc/server";
 
-import { createTRPCRouter, publicProcedure } from "../index";
+import { createTRPCRouter, publicProcedure, protectedProcedure } from "../index";
 import {
   startSessionSchema,
   saveProgressSchema,
@@ -41,7 +42,12 @@ export const sessionsRouter = createTRPCRouter({
     const ipHash = btoa(ip);
     const userAgentHash = btoa(ua);
 
-    // Step 3: Insert into the session database
+    // Step 3: Generate a single-use claim token (UUID v4 — 122 bits entropy)
+    // Allows anonymous users to claim this session after signing up.
+    const claimToken = randomUUID();
+    const claimExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000); // 72h TTL
+
+    // Step 4: Insert into the session database
     const [session] = await ctx.db
       .insert(testSessions)
       .values({
@@ -50,10 +56,15 @@ export const sessionsRouter = createTRPCRouter({
         status: "in_progress",
         ipHash,
         userAgentHash,
+        claimToken,
+        claimExpiresAt,
       })
-      .returning({ id: testSessions.id });
+      .returning({ id: testSessions.id, claimToken: testSessions.claimToken });
 
-    return { sessionId: session?.id ?? "" };
+    return {
+      sessionId: session?.id ?? "",
+      claimToken: session?.claimToken ?? null,
+    };
   }),
 
   // Phase 4F: saveProgress — Batch PostgreSQL UPSERT for storing intermediate answers
@@ -151,6 +162,76 @@ export const sessionsRouter = createTRPCRouter({
         .returning({ id: results.id });
 
       return { sessionId, scoreId: result?.id ?? "" };
+    }),
+
+  // Phase 2B.1: claimSession — Atomic anonymous→authenticated handoff.
+  // Security properties:
+  //   - protectedProcedure → unauthenticated callers rejected
+  //   - Token nullified after claim → single-use, no replay
+  //   - Expiry checked before claim
+  //   - Same-user claim → idempotent success
+  //   - Cross-user claim → FORBIDDEN
+  //   - WHERE clause in UPDATE re-checks token at DB level (race-safe)
+  claimSession: protectedProcedure
+    .input(
+      z.object({
+        sessionId: z.string().uuid(),
+        claimToken: z.string().uuid(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.userId;
+
+      // 1. Fetch the session — must exist
+      const [session] = await ctx.db
+        .select()
+        .from(testSessions)
+        .where(eq(testSessions.id, input.sessionId))
+        .limit(1);
+
+      // 2. Existence check
+      if (!session) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Session tidak ditemukan." });
+      }
+
+      // 3. Token match — fixed-length comparison (UUIDs are 36 chars)
+      if (
+        !session.claimToken ||
+        session.claimToken.length !== input.claimToken.length ||
+        session.claimToken !== input.claimToken
+      ) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Token tidak valid." });
+      }
+
+      // 4. Expiry check
+      if (!session.claimExpiresAt || session.claimExpiresAt < new Date()) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Token telah kadaluarsa." });
+      }
+
+      // 5. Already-claimed check — prevent replay attacks
+      if (session.userId !== null) {
+        // Idempotent success if same user is claiming again
+        if (session.userId === userId) {
+          return { success: true as const, alreadyOwned: true };
+        }
+        // Cross-user claim → reject
+        throw new TRPCError({ code: "FORBIDDEN", message: "Sesi ini sudah diklaim." });
+      }
+
+      // 6. Atomic claim — set userId, destroy token (single-use enforcement)
+      //    WHERE re-checks claimToken at DB level for race-condition safety.
+      await ctx.db
+        .update(testSessions)
+        .set({
+          userId,
+          claimToken: null,
+          claimExpiresAt: null,
+        })
+        .where(
+          and(eq(testSessions.id, input.sessionId), eq(testSessions.claimToken, input.claimToken))
+        );
+
+      return { success: true as const, alreadyOwned: false };
     }),
 
   // Phase 5: requestEmailReport — Lead capture for emailed results

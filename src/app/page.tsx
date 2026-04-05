@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { Navbar } from "@/components/layout/Navbar";
+import { NavbarWrapper } from "@/components/layout/NavbarWrapper";
 import { HeroSection } from "@/components/landing/Hero";
 import { AboutPreview } from "@/components/landing/AboutPreview";
 import { TestCardGrid } from "@/components/landing/TestCatalogPreview";
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-white">
-      <Navbar />
+      <NavbarWrapper />
 
       <main>
         <HeroSection />

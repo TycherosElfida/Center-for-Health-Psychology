@@ -13,8 +13,19 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, FileText, Info, Mail, Menu, X } from "lucide-react";
+import {
+  Home,
+  FileText,
+  Info,
+  Mail,
+  Menu,
+  X,
+  LayoutDashboard,
+  LogIn,
+  UserPlus,
+} from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { SignOutButton } from "@/components/auth/SignOutButton";
 
 import { ChpLogo } from "@/components/ui/ChpLogo";
 
@@ -33,7 +44,13 @@ const NAV_LINKS = [
    Component
    ═══════════════════════════════════════════════════════ */
 
-export function Navbar() {
+export function Navbar({
+  isAuthenticated = false,
+  variant = "default",
+}: {
+  isAuthenticated?: boolean;
+  variant?: "default" | "dashboard";
+}) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -108,30 +125,109 @@ export function Navbar() {
         </Link>
 
         {/* ── Desktop Navigation ── */}
-        <ul className="hidden items-center gap-1 md:flex">
-          {NAV_LINKS.map(({ href, label, icon: Icon }) => {
-            const active = isActive(href);
-            return (
-              <li key={href}>
+        {variant === "default" && (
+          <ul className="hidden items-center gap-1 md:flex">
+            {NAV_LINKS.map(({ href, label, icon: Icon }) => {
+              const active = isActive(href);
+              return (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    aria-current={active ? "page" : undefined}
+                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-200"
+                    style={{
+                      color: active
+                        ? "var(--brand-primary-dark, #6B5CA0)"
+                        : "var(--text-body, #4A5568)",
+                      backgroundColor: active
+                        ? "var(--brand-primary-light, #EDE9F8)"
+                        : "transparent",
+                      fontWeight: active ? 600 : 500,
+                    }}
+                  >
+                    <Icon size={15} strokeWidth={active ? 2.5 : 2} aria-hidden="true" />
+                    {label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        {/* ── Desktop Auth Items ── */}
+        <div className="hidden items-center gap-1 md:flex">
+          {isAuthenticated ? (
+            <>
+              {variant === "dashboard" && (
                 <Link
-                  href={href}
-                  aria-current={active ? "page" : undefined}
+                  href="/"
+                  aria-current={isActive("/") ? "page" : undefined}
                   className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-200"
                   style={{
-                    color: active
+                    color: isActive("/")
                       ? "var(--brand-primary-dark, #6B5CA0)"
                       : "var(--text-body, #4A5568)",
-                    backgroundColor: active ? "var(--brand-primary-light, #EDE9F8)" : "transparent",
-                    fontWeight: active ? 600 : 500,
+                    backgroundColor: isActive("/")
+                      ? "var(--brand-primary-light, #EDE9F8)"
+                      : "transparent",
+                    fontWeight: isActive("/") ? 600 : 500,
                   }}
                 >
-                  <Icon size={15} strokeWidth={active ? 2.5 : 2} aria-hidden="true" />
-                  {label}
+                  <Home size={15} strokeWidth={isActive("/") ? 2.5 : 2} aria-hidden="true" />
+                  Beranda
                 </Link>
-              </li>
-            );
-          })}
-        </ul>
+              )}
+              {variant === "default" && (
+                <Link
+                  href="/dashboard"
+                  aria-current={isActive("/dashboard") ? "page" : undefined}
+                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-200"
+                  style={{
+                    color: isActive("/dashboard")
+                      ? "var(--brand-primary-dark, #6B5CA0)"
+                      : "var(--text-body, #4A5568)",
+                    backgroundColor: isActive("/dashboard")
+                      ? "var(--brand-primary-light, #EDE9F8)"
+                      : "transparent",
+                    fontWeight: isActive("/dashboard") ? 600 : 500,
+                  }}
+                >
+                  <LayoutDashboard
+                    size={15}
+                    strokeWidth={isActive("/dashboard") ? 2.5 : 2}
+                    aria-hidden="true"
+                  />
+                  Dashboard
+                </Link>
+              )}
+              <SignOutButton />
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-200"
+                style={{
+                  color: "var(--text-body, #4A5568)",
+                }}
+              >
+                <LogIn size={15} strokeWidth={2} aria-hidden="true" />
+                Masuk
+              </Link>
+              <Link
+                href="/signup"
+                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-semibold text-white transition-all duration-200"
+                style={{
+                  backgroundColor: "var(--brand-primary, #9B8EC4)",
+                  borderRadius: "10px",
+                }}
+              >
+                <UserPlus size={15} strokeWidth={2} aria-hidden="true" />
+                Daftar
+              </Link>
+            </>
+          )}
+        </div>
 
         {/* ── Mobile Hamburger ── */}
         <button
@@ -163,33 +259,114 @@ export function Navbar() {
               backgroundColor: "rgba(255, 255, 255, 0.98)",
             }}
           >
-            <ul className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-3">
-              {NAV_LINKS.map(({ href, label, icon: Icon }) => {
-                const active = isActive(href);
-                return (
-                  <li key={href}>
+            {variant === "default" && (
+              <ul className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-3">
+                {NAV_LINKS.map(({ href, label, icon: Icon }) => {
+                  const active = isActive(href);
+                  return (
+                    <li key={href}>
+                      <Link
+                        href={href}
+                        onClick={closeMobileMenu}
+                        aria-current={active ? "page" : undefined}
+                        className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all"
+                        style={{
+                          color: active
+                            ? "var(--brand-primary-dark, #6B5CA0)"
+                            : "var(--text-body, #4A5568)",
+                          backgroundColor: active
+                            ? "var(--brand-primary-light, #EDE9F8)"
+                            : "transparent",
+                          fontWeight: active ? 600 : 500,
+                        }}
+                      >
+                        <Icon size={18} strokeWidth={active ? 2.5 : 2} aria-hidden="true" />
+                        {label}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+
+            {/* ── Mobile Auth Items ── */}
+            <div
+              className="border-t px-4 py-3"
+              style={{ borderColor: "var(--border-subtle, #E2DCF0)" }}
+            >
+              {isAuthenticated ? (
+                <div className="flex flex-col gap-1">
+                  {variant === "dashboard" && (
                     <Link
-                      href={href}
+                      href="/"
                       onClick={closeMobileMenu}
-                      aria-current={active ? "page" : undefined}
+                      aria-current={isActive("/") ? "page" : undefined}
                       className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all"
                       style={{
-                        color: active
+                        color: isActive("/")
                           ? "var(--brand-primary-dark, #6B5CA0)"
                           : "var(--text-body, #4A5568)",
-                        backgroundColor: active
+                        backgroundColor: isActive("/")
                           ? "var(--brand-primary-light, #EDE9F8)"
                           : "transparent",
-                        fontWeight: active ? 600 : 500,
+                        fontWeight: isActive("/") ? 600 : 500,
                       }}
                     >
-                      <Icon size={18} strokeWidth={active ? 2.5 : 2} aria-hidden="true" />
-                      {label}
+                      <Home size={18} strokeWidth={isActive("/") ? 2.5 : 2} aria-hidden="true" />
+                      Beranda
                     </Link>
-                  </li>
-                );
-              })}
-            </ul>
+                  )}
+                  {variant === "default" && (
+                    <Link
+                      href="/dashboard"
+                      onClick={closeMobileMenu}
+                      className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all"
+                      style={{
+                        color: isActive("/dashboard")
+                          ? "var(--brand-primary-dark, #6B5CA0)"
+                          : "var(--text-body, #4A5568)",
+                        backgroundColor: isActive("/dashboard")
+                          ? "var(--brand-primary-light, #EDE9F8)"
+                          : "transparent",
+                        fontWeight: isActive("/dashboard") ? 600 : 500,
+                      }}
+                    >
+                      <LayoutDashboard
+                        size={18}
+                        strokeWidth={isActive("/dashboard") ? 2.5 : 2}
+                        aria-hidden="true"
+                      />
+                      Dashboard
+                    </Link>
+                  )}
+                  <SignOutButton className="justify-start" />
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1">
+                  <Link
+                    href="/login"
+                    onClick={closeMobileMenu}
+                    className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all"
+                    style={{ color: "var(--text-body, #4A5568)" }}
+                  >
+                    <LogIn size={18} strokeWidth={2} aria-hidden="true" />
+                    Masuk
+                  </Link>
+                  <Link
+                    href="/signup"
+                    onClick={closeMobileMenu}
+                    className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold transition-all"
+                    style={{
+                      color: "var(--brand-primary-dark, #6B5CA0)",
+                      backgroundColor: "var(--brand-primary-light, #EDE9F8)",
+                    }}
+                  >
+                    <UserPlus size={18} strokeWidth={2} aria-hidden="true" />
+                    Daftar
+                  </Link>
+                </div>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

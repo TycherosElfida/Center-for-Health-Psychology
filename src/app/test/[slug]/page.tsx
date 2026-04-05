@@ -18,6 +18,9 @@ import type { Metadata } from "next";
 import { getTestMeta } from "@/lib/data/tests";
 import { getQuestions } from "@/lib/data/questions";
 import { AssessmentForm } from "@/components/test/AssessmentForm";
+import { db } from "@/server/db";
+import { answers } from "@/server/schema/sessions";
+import { eq } from "drizzle-orm";
 
 /* ═══════════════════════════════════════════════════════
    Types
@@ -70,5 +73,27 @@ export default async function TestPage({ params, searchParams }: TestPageProps) 
     redirect(`/test/${slug}/briefing`);
   }
 
-  return <AssessmentForm testMeta={testMeta} questions={questions} sessionId={sessionId} />;
+  // ── Fetch Resume State ────────────────────────────────
+  let initialAnswers: Record<string, unknown> = {};
+  try {
+    const sessionAnswers = await db.select().from(answers).where(eq(answers.sessionId, sessionId));
+    initialAnswers = sessionAnswers.reduce(
+      (acc, a) => {
+        acc[a.questionId] = a.value;
+        return acc;
+      },
+      {} as Record<string, unknown>
+    );
+  } catch (err) {
+    console.error("[TestPage] Failed to fetch session answers:", err);
+  }
+
+  return (
+    <AssessmentForm
+      testMeta={testMeta}
+      questions={questions}
+      sessionId={sessionId}
+      initialAnswers={initialAnswers}
+    />
+  );
 }

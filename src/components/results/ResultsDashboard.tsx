@@ -27,6 +27,8 @@ import { TESTS } from "@/lib/data/tests";
 import { ScoreVisualizer } from "./ScoreVisualizer";
 import { AffirmationSection } from "./AffirmationSection";
 import { ReportRequestForm } from "./ReportRequestForm";
+import { ClaimCTA } from "./ClaimCTA";
+import { AutoClaim } from "./AutoClaim";
 
 /* ═══════════════════════════════════════════════════════
    Props
@@ -34,11 +36,13 @@ import { ReportRequestForm } from "./ReportRequestForm";
 
 interface ResultsDashboardProps {
   scoreId: string;
+  sessionId: string;
   testMeta: TestMeta;
   totalScore: number;
   dimensionScores: Record<string, number>;
   interpretation: ScoreInterpretation;
   completedAt: string;
+  isAuthenticated: boolean;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -47,11 +51,13 @@ interface ResultsDashboardProps {
 
 export function ResultsDashboard({
   scoreId,
+  sessionId,
   testMeta,
   totalScore,
   dimensionScores,
   interpretation,
   completedAt,
+  isAuthenticated,
 }: ResultsDashboardProps) {
   const maxScore = testMeta.maxScore ?? 100;
   const otherTests = TESTS.filter((t) => t.id !== testMeta.id).slice(0, 4);
@@ -128,6 +134,16 @@ export function ResultsDashboard({
         <div className="mb-6">
           <AffirmationSection severity={interpretation.severity} />
         </div>
+
+        {/* ═══ 2.5. Claim CTA — Save Your Results (anonymous only) ═══ */}
+        {!isAuthenticated && (
+          <div className="mb-6">
+            <ClaimCTA sessionId={sessionId} scoreId={scoreId} accentColor={testMeta.color} />
+          </div>
+        )}
+
+        {/* ═══ 2.6. Auto-Claim — silent claim for authenticated users ═══ */}
+        {isAuthenticated && <AutoClaim sessionId={sessionId} accentColor={testMeta.color} />}
 
         {/* ═══ 3. Clinical Disclaimer ═══ */}
         <div

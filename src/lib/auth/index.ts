@@ -2,14 +2,20 @@
  * CHP Platform — Auth.js v5 Configuration
  *
  * Central auth configuration using NextAuth v5 with:
- * - Custom Drizzle adapter for drizzle-orm 1.0-beta compatibility
- * - Database sessions (NOT JWT) for clinical-grade revocation
+ * - Custom Drizzle adapter (kept for future OAuth providers)
+ * - JWT sessions — required by CredentialsProvider in Auth.js v5
+ *   (database sessions + Credentials throws UnsupportedStrategy)
  * - CredentialsProvider for email+password authentication
  *
  * Security notes:
  * - Passwords are hashed with bcryptjs (cost factor 12)
- * - Sessions are stored server-side; the cookie holds only the sessionToken
+ * - JWT tokens embed userId and role; signed with AUTH_SECRET
  * - Inactive users (isActive=false) are rejected at login
+ *
+ * Revocation strategy (Phase 2C):
+ * - Add `jti` claim → store in `revokedTokens` table
+ * - DAL `verifySession()` checks jti against revoked list
+ * - Gives equivalent revocation to database sessions
  */
 import NextAuth from "next-auth";
 import { CHPDrizzleAdapter } from "@/lib/auth/adapter";
@@ -20,8 +26,10 @@ import { users } from "@/server/schema";
 import { eq } from "drizzle-orm";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: CHPDrizzleAdapter(),
-  session: { strategy: "database" },
+  adapter: CHPDrizzleAdapter(), // kept — used for OAuth flows (future)
+  basePath: "/api/auth",
+  trustHost: true,
+  session: { strategy: "jwt" }, // ← CHANGED from 'database'
   pages: {
     signIn: "/login",
     error: "/login",
@@ -59,11 +67,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async session({ session, user }) {
+    async jwt({ token, user }) {
+      // `user` is only present on first sign-in
       if (user) {
-        session.user.id = user.id;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        session.user.role = (user as any).role ?? "user";
+        token.id = user.id;
+        token.role = (user as typeof user & { role: string }).role ?? "user";
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as string;
       }
       return session;
     },
