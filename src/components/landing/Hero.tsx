@@ -81,17 +81,6 @@ export function HeroSection() {
           >
             Explore Assessments <ArrowRight size={16} aria-hidden="true" />
           </Link>
-          <Link
-            href="/about"
-            className="inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-[15px] font-medium no-underline transition-colors"
-            style={{
-              background: "#FFFFFF",
-              color: "var(--brand-primary-dark, #6B5CA0)",
-              border: "1.5px solid rgba(155, 142, 196, 0.31)",
-            }}
-          >
-            Learn More
-          </Link>
         </div>
 
         {/* Stats bar */}

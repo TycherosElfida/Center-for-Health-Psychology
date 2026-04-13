@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { trpc } from "@/lib/trpc/client";
 
 interface BriefingActionsProps {
   slug: string;
@@ -12,6 +13,35 @@ interface BriefingActionsProps {
 
 export function BriefingActions({ slug, color, colorDark }: BriefingActionsProps) {
   const router = useRouter();
+  const [localSessionId, setLocalSessionId] = useState<string | undefined>(undefined);
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(`chp_active_session_${slug}`);
+      if (stored) setLocalSessionId(stored);
+    } catch { }
+  }, [slug]);
+
+  // Phase 2A: Query for an active session to support Forced-Resume
+  const { data: activeSession, isLoading } = trpc.sessions.getActiveSession.useQuery(
+    { testSlug: slug, localSessionId },
+    { staleTime: 0 }
+  );
+
+  const isResuming = !!activeSession?.sessionId;
+
+  const handleBegin = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isNavigating || isLoading) return;
+    setIsNavigating(true);
+
+    if (isResuming && activeSession.sessionId) {
+      router.push(`/test/${slug}?sessionId=${activeSession.sessionId}`);
+    } else {
+      router.push(`/test/${slug}/personal-info`);
+    }
+  };
 
   return (
     <div
@@ -25,23 +55,31 @@ export function BriefingActions({ slug, color, colorDark }: BriefingActionsProps
       <button
         type="button"
         onClick={() => router.back()}
-        className="w-full flex items-center justify-center gap-2 rounded-full border-[1.5px] border-border bg-white px-6 py-4 text-base font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-foreground cursor-pointer sm:w-auto sm:px-8"
+        disabled={isNavigating}
+        className="w-full flex items-center justify-center gap-2 rounded-full border-[1.5px] border-border bg-white px-6 py-4 text-base font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-foreground cursor-pointer sm:w-auto sm:px-8 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <ArrowLeft size={16} />
         Go Back
       </button>
 
-      <Link
-        href={`/test/${slug}/personal-info`}
-        className="w-full flex items-center justify-center gap-2 rounded-full px-6 py-4 text-base font-semibold text-white no-underline transition-all hover:-translate-y-0.5 sm:w-auto sm:px-8"
+      <button
+        onClick={handleBegin}
+        disabled={isNavigating || isLoading}
+        className="w-full flex items-center justify-center gap-2 rounded-full px-6 py-4 text-base font-semibold text-white no-underline transition-all hover:brightness-110 sm:w-auto sm:px-8 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
         style={{
           background: `linear-gradient(135deg, ${colorDark}, ${color})`,
           boxShadow: `0 4px 14px ${color}40`,
         }}
       >
-        I Understand, Begin Assessment
+        {isLoading || isNavigating ? (
+          <Loader2 size={18} className="animate-spin" />
+        ) : isResuming ? (
+          "Resume Assessment"
+        ) : (
+          "I Understand, Begin Assessment"
+        )}
         <ArrowRight size={18} />
-      </Link>
+      </button>
     </div>
   );
 }

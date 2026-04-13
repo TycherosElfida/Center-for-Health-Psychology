@@ -1,4 +1,4 @@
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, desc } from "drizzle-orm";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import { TRPCError } from "@trpc/server";
@@ -15,6 +15,57 @@ import { testSessions, answers, results } from "@/server/schema/sessions";
 import { computeScore } from "@/server/scoring/engine";
 
 export const sessionsRouter = createTRPCRouter({
+  // Phase 2A: getActiveSession — Looks up in-progress sessions for forced-resume
+  getActiveSession: publicProcedure
+    .input(z.object({ testSlug: z.string(), localSessionId: z.string().optional() }))
+    .query(async ({ input, ctx }) => {
+      const userId = ctx.session?.userId;
+
+      const test = await ctx.db
+        .select()
+        .from(tests)
+        .where(eq(tests.slug, input.testSlug))
+        .limit(1)
+        .then((res) => res[0]);
+
+      if (!test) return null;
+
+      // Try authenticated strategy
+      if (userId) {
+        const session = await ctx.db
+          .select()
+          .from(testSessions)
+          .where(and(
+            eq(testSessions.userId, userId),
+            eq(testSessions.testId, test.id),
+            eq(testSessions.status, "in_progress")
+          ))
+          .orderBy(desc(testSessions.startedAt))
+          .limit(1)
+          .then((res) => res[0]);
+
+        if (session) return { sessionId: session.id };
+      }
+
+      // Try anonymous strategy
+      if (input.localSessionId) {
+        const session = await ctx.db
+          .select()
+          .from(testSessions)
+          .where(and(
+            eq(testSessions.id, input.localSessionId),
+            eq(testSessions.testId, test.id),
+            eq(testSessions.status, "in_progress")
+          ))
+          .limit(1)
+          .then((res) => res[0]);
+
+        if (session) return { sessionId: session.id };
+      }
+
+      return null;
+    }),
+
   // Phase 4F: startSession — Resolves testSlug to testId and creates session tracking row
   startSession: publicProcedure.input(startSessionSchema).mutation(async ({ input, ctx }) => {
     // Step 1: Resolve the test ID via slug
@@ -41,11 +92,13 @@ export const sessionsRouter = createTRPCRouter({
 
     const ipHash = btoa(ip);
     const userAgentHash = btoa(ua);
+    const userId = ctx.session?.userId;
 
     // Step 3: Generate a single-use claim token (UUID v4 — 122 bits entropy)
     // Allows anonymous users to claim this session after signing up.
-    const claimToken = randomUUID();
-    const claimExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000); // 72h TTL
+    // If logged in, no claim token needed
+    const claimToken = userId ? null : randomUUID();
+    const claimExpiresAt = userId ? null : new Date(Date.now() + 72 * 60 * 60 * 1000); // 72h TTL
 
     // Step 4: Insert into the session database
     const [session] = await ctx.db
@@ -56,6 +109,7 @@ export const sessionsRouter = createTRPCRouter({
         status: "in_progress",
         ipHash,
         userAgentHash,
+        userId: userId ?? null, // Instantly attach session to authenticated user
         claimToken,
         claimExpiresAt,
       })

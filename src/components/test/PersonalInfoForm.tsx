@@ -62,6 +62,11 @@ export function PersonalInfoForm({ testSlug, testColor }: PersonalInfoFormProps)
   /* ── Submit handler ── */
   const startSession = trpc.sessions.startSession.useMutation({
     onSuccess: (data) => {
+      // Support anonymous forced resume
+      try {
+        localStorage.setItem(`chp_active_session_${testSlug}`, data.sessionId);
+      } catch {}
+
       // Phase 2B.1: Persist claim token for later anonymous→authenticated handoff
       if (data.claimToken) {
         try {
