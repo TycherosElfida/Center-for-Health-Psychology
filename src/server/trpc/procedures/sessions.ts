@@ -152,7 +152,9 @@ export const sessionsRouter = createTRPCRouter({
     const answerEntries = Object.entries(answerMap).map(([questionId, value]) => ({
       sessionId,
       questionId,
-      value,
+      // Neon HTTP driver requires jsonb values to be serialized strings,
+      // not raw JS primitives — wrap in JSON.stringify for proper casting.
+      value: JSON.stringify(value),
     }));
 
     // Short-circuit to avoid DB trips for empty commits
@@ -160,17 +162,26 @@ export const sessionsRouter = createTRPCRouter({
       return { success: true };
     }
 
-    // Explicit DB level ON CONFLICT constraint logic mapping to schema unique setup
-    await ctx.db
-      .insert(answers)
-      .values(answerEntries)
-      .onConflictDoUpdate({
-        target: [answers.sessionId, answers.questionId],
-        set: {
-          value: sql`EXCLUDED.value`, // Update the jsonb mapping
-          answeredAt: sql`CURRENT_TIMESTAMP`, // Explicitly increment the record modified time
-        },
-      });
+    try {
+      // Explicit DB level ON CONFLICT constraint logic mapping to schema unique setup
+      await ctx.db
+        .insert(answers)
+        .values(answerEntries)
+        .onConflictDoUpdate({
+          target: [answers.sessionId, answers.questionId],
+          set: {
+            value: sql`EXCLUDED.value`, // Update the jsonb mapping
+            answeredAt: sql`CURRENT_TIMESTAMP`, // Explicitly increment the record modified time
+          },
+        });
+    } catch (err) {
+      // Surface the actual PG error for diagnosis
+      const pgErr = err as { code?: string; detail?: string; message?: string };
+      console.error(
+        `[saveProgress] DB error — code: ${pgErr.code}, detail: ${pgErr.detail}, message: ${pgErr.message}`
+      );
+      throw err;
+    }
 
     return { success: true };
   }),
