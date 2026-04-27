@@ -277,8 +277,6 @@ export const sessionsRouter = createTRPCRouter({
       });
 
       // ── Interpretation lookup ──────────────────────────────
-      const interpretation = await lookupInterpretation(session.testId, scoreResult.totalScore);
-
       // Per-dimension interpretations (for instruments like SRQ-29)
       const dimensionInterpretations: Record<
         string,
@@ -290,7 +288,9 @@ export const sessionsRouter = createTRPCRouter({
         }
       > = {};
 
-      if (Object.keys(scoreResult.dimensionScores).length > 0) {
+      const hasDimensions = Object.keys(scoreResult.dimensionScores).length > 0;
+
+      if (hasDimensions) {
         for (const [dimension, dimScore] of Object.entries(scoreResult.dimensionScores)) {
           const dimInterp = await lookupInterpretation(session.testId, dimScore, dimension);
           if (dimInterp) {
@@ -298,6 +298,12 @@ export const sessionsRouter = createTRPCRouter({
           }
         }
       }
+
+      // Total-score interpretation — skip for dimension-only instruments
+      // (e.g. SRQ-29 has no total-score bands, only per-dimension bands)
+      const interpretation = hasDimensions
+        ? null
+        : await lookupInterpretation(session.testId, scoreResult.totalScore);
 
       const enrichedComputedScores = {
         ...scoreResult.computedScores,
