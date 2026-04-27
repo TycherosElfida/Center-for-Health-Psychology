@@ -25,6 +25,9 @@ export interface SessionState {
 
 export const startSessionSchema = z.object({
   testSlug: z.string().min(1),
+  consentAccepted: z.boolean().refine((v) => v === true, {
+    message: "You must accept the terms and consent to proceed.",
+  }),
 });
 
 export const saveProgressSchema = z.object({

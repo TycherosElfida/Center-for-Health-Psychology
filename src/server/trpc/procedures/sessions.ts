@@ -12,6 +12,8 @@ import {
 
 import { tests, questions, options as optionsTable } from "@/server/schema/tests";
 import { testSessions, answers, results } from "@/server/schema/sessions";
+import { consents } from "@/server/schema/consents";
+import { CONSENT_VERSION } from "@/lib/constants/consent";
 import { computeScore } from "@/server/scoring/engine";
 import { lookupInterpretation } from "@/server/scoring/interpretation";
 import { validateAnswerValues, validateCompleteness } from "@/server/scoring/validation";
@@ -122,6 +124,20 @@ export const sessionsRouter = createTRPCRouter({
         claimExpiresAt,
       })
       .returning({ id: testSessions.id, claimToken: testSessions.claimToken });
+
+    // Step 5: Record explicit consent (1:1 with session)
+    // consentAccepted is validated as `true` by Zod schema — this INSERT
+    // only runs when consent was given. Atomic with session creation.
+    if (session?.id) {
+      await ctx.db.insert(consents).values({
+        sessionId: session.id,
+        tosAccepted: true,
+        researchOptIn: true,
+        marketingOptIn: false,
+        consentVersion: CONSENT_VERSION,
+        ipHash,
+      });
+    }
 
     return {
       sessionId: session?.id ?? "",
