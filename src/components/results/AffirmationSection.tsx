@@ -17,14 +17,16 @@ import { Heart, Phone } from "lucide-react";
 
 interface AffirmationSectionProps {
   /** Score severity bucket from interpretation engine */
-  severity: "low" | "moderate" | "high";
+  severity: "low" | "moderate" | "high" | "critical";
 }
 
 /* ═══════════════════════════════════════════════════════
    Copy — Indonesian-language affirmation messages
    ═══════════════════════════════════════════════════════ */
 
-const AFFIRMATION_COPY: Record<"low" | "moderate" | "high", string> = {
+const AFFIRMATION_COPY: Record<"low" | "moderate" | "high" | "critical", string> = {
+  critical:
+    "Kami memahami bahwa hasilnya mungkin membuat Anda khawatir. Ingatlah bahwa ini adalah alat skrining, bukan diagnosis akhir. Mencari bantuan adalah langkah pertama yang berani — dan Anda sudah melakukannya dengan menyelesaikan assessment ini. Anda tidak sendirian.",
   high: "Kami memahami bahwa hasilnya mungkin membuat Anda khawatir. Ingatlah bahwa ini adalah alat skrining, bukan diagnosis akhir. Mencari bantuan adalah langkah pertama yang berani — dan Anda sudah melakukannya dengan menyelesaikan assessment ini. Anda tidak sendirian.",
   moderate:
     "Terima kasih telah meluangkan waktu untuk memahami diri Anda lebih baik. Hasil Anda menunjukkan ada area yang bisa Anda kembangkan. Dengan kesadaran dan usaha, perubahan positif sangat mungkin dicapai.",

@@ -237,7 +237,7 @@ export const sessionsRouter = createTRPCRouter({
       // ── Validation: completeness ───────────────────────────
       const compResult = validateCompleteness(
         answerMap,
-        testQs.map((q) => ({ id: q.id, required: q.isRequired ?? true }))
+        testQs.map((q) => ({ id: q.id, required: q.required ?? true }))
       );
       if (!compResult.valid) {
         throw new TRPCError({
