@@ -54,6 +54,7 @@ export interface ScoringInput {
 
 export interface ScoringResult {
   totalScore: number;
+  maxPossibleScore: number;
   dimensionScores: Record<string, number>;
   rawScores: Record<string, unknown>;
   computedScores: Record<string, unknown>;

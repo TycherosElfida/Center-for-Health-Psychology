@@ -28,6 +28,7 @@ export function reverseScore(rawValue: number, options: { value: number }[]): nu
  */
 export function computeScore(input: ScoringInput): ScoringResult {
   let totalScore = 0;
+  let maxPossibleScore = 0;
   const dimensionScores: Record<string, number> = {};
   const perQuestionComputed: Record<string, number> = {};
 
@@ -52,7 +53,15 @@ export function computeScore(input: ScoringInput): ScoringResult {
 
     perQuestionComputed[q.id] = scoredVal;
 
-    const finalVal = scoredVal * q.weight;
+    // NaN guard: if weight is NaN (e.g. empty string from DB), default to 1.0
+    const safeWeight = Number.isNaN(q.weight) ? 1.0 : q.weight;
+    const finalVal = scoredVal * safeWeight;
+
+    // Accumulate theoretical maximum from option bounds
+    if (q.options && q.options.length > 0) {
+      const maxOptVal = Math.max(...q.options.map((o) => o.value));
+      maxPossibleScore += maxOptVal * safeWeight;
+    }
 
     totalScore += finalVal;
 
@@ -63,6 +72,7 @@ export function computeScore(input: ScoringInput): ScoringResult {
 
   return {
     totalScore,
+    maxPossibleScore,
     dimensionScores,
     rawScores: input.answers,
     computedScores: {
