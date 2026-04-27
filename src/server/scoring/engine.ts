@@ -1,11 +1,35 @@
 import type { ScoringInput, ScoringResult } from "@/lib/types/assessment";
 
 /**
+ * Reverses a score within a given scale.
+ *
+ * Formula: reversedValue = (scaleMax - rawValue) + scaleMin
+ *
+ * This is scale-agnostic: works for Likert-5 (0–4), Likert-7 (0–6),
+ * binary (0–1), or any future scale. Scale bounds are derived from the
+ * question's option values.
+ *
+ * @throws {Error} If options array is empty (cannot determine scale bounds).
+ */
+export function reverseScore(rawValue: number, options: { value: number }[]): number {
+  if (options.length === 0) {
+    throw new Error("reverseScore: options array is empty — cannot determine scale bounds.");
+  }
+
+  const values = options.map((o) => o.value);
+  const scaleMin = Math.min(...values);
+  const scaleMax = Math.max(...values);
+
+  return scaleMax - rawValue + scaleMin;
+}
+
+/**
  * Pure, deterministic functions that compute scores given raw answers and test metadata.
  */
 export function computeScore(input: ScoringInput): ScoringResult {
   let totalScore = 0;
   const dimensionScores: Record<string, number> = {};
+  const perQuestionComputed: Record<string, number> = {};
 
   for (const q of input.questions) {
     const rawVal = input.answers[q.id];
@@ -19,14 +43,16 @@ export function computeScore(input: ScoringInput): ScoringResult {
     // If val is not a valid number (e.g. string or undefined), default to 0
     const val = Number(extractedVal) || 0;
 
-    const finalVal = val * q.weight;
+    // Apply reverse scoring before summation/weighting/dimensional grouping.
+    // A question is reversed when questions.isReversed = true (DB-authoritative).
+    let scoredVal = val;
+    if (q.isReversed && q.options && q.options.length > 0) {
+      scoredVal = reverseScore(val, q.options);
+    }
 
-    // A primitive reverse scoring approach: if isReversed, we logically need scale boundaries.
-    // Without specific scale boundaries (min/max), we do not mathematically reverse
-    // the generic value at this layer. For a completely abstracted scoring engine,
-    // reversal logic requires knowing the option max boundaries or pre-configuring
-    // it in the database `scoringRules` configuration.
-    // For current iteration: we compute deterministic direct mapping.
+    perQuestionComputed[q.id] = scoredVal;
+
+    const finalVal = scoredVal * q.weight;
 
     totalScore += finalVal;
 
@@ -41,6 +67,7 @@ export function computeScore(input: ScoringInput): ScoringResult {
     rawScores: input.answers,
     computedScores: {
       details: "Computed via deterministic summation algorithm",
+      perQuestion: perQuestionComputed,
     },
   };
 }

@@ -13,7 +13,7 @@
  * (slow, debounced) persistence so the UI never blocks on network I/O.
  */
 
-import { useReducer, useEffect, useRef, useCallback } from "react";
+import { useReducer, useEffect, useRef, useCallback, useState } from "react";
 import type { AnswerMap } from "@/lib/types/assessment";
 import { trpc } from "@/lib/trpc/client";
 
@@ -92,14 +92,17 @@ export function useAssessmentSync(
 
   // ── Refs for debounce and save tracking ─────────────────
   const serverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastSavedAtRef = useRef<Date | null>(null);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const answersRef = useRef(answers);
-  answersRef.current = answers;
+
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
 
   // ── tRPC mutation ───────────────────────────────────────
   const saveMutation = trpc.sessions.saveProgress.useMutation({
     onSuccess: () => {
-      lastSavedAtRef.current = new Date();
+      setLastSavedAt(new Date());
     },
     onError: (err) => {
       // Silent failure — localStorage is the safety net.
@@ -193,7 +196,7 @@ export function useAssessmentSync(
     setAnswer,
     restoreAnswers,
     isSaving: saveMutation.isPending,
-    lastSavedAt: lastSavedAtRef.current,
+    lastSavedAt,
   };
 }
 

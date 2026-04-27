@@ -16,6 +16,8 @@ const eslintConfig = defineConfig([
     // Next.js auto-generated type validation files (intentionally use `any`)
     "types/**",
     "DesignReference/**",
+    // Vitest coverage reports (generated JS instrumentation)
+    "coverage/**",
   ]),
 ]);
 

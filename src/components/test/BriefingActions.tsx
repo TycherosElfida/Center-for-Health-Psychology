@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { trpc } from "@/lib/trpc/client";
 
 interface BriefingActionsProps {
@@ -13,15 +13,14 @@ interface BriefingActionsProps {
 
 export function BriefingActions({ slug, color, colorDark }: BriefingActionsProps) {
   const router = useRouter();
-  const [localSessionId, setLocalSessionId] = useState<string | undefined>(undefined);
-  const [isNavigating, setIsNavigating] = useState(false);
-
-  useEffect(() => {
+  const [localSessionId] = useState<string | undefined>(() => {
     try {
-      const stored = localStorage.getItem(`chp_active_session_${slug}`);
-      if (stored) setLocalSessionId(stored);
-    } catch { }
-  }, [slug]);
+      return localStorage.getItem(`chp_active_session_${slug}`) ?? undefined;
+    } catch {
+      return undefined;
+    }
+  });
+  const [isNavigating, setIsNavigating] = useState(false);
 
   // Phase 2A: Query for an active session to support Forced-Resume
   const { data: activeSession, isLoading } = trpc.sessions.getActiveSession.useQuery(

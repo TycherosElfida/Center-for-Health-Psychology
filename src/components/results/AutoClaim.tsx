@@ -83,16 +83,18 @@ export function AutoClaim({ sessionId, accentColor }: AutoClaimProps) {
     hasFired.current = true;
 
     const data = getClaimData(sessionId);
-    if (!data) {
-      setStatus("none");
-      return;
-    }
+    if (!data) return; // Remain "idle", renders null
 
-    setStatus("claiming");
-    claimMutation.mutate({
-      sessionId: data.sessionId,
-      claimToken: data.claimToken,
-    });
+    // Defer state update to avoid synchronous cascade render (react-hooks/set-state-in-effect)
+    const timer = setTimeout(() => {
+      setStatus("claiming");
+      claimMutation.mutate({
+        sessionId: data.sessionId,
+        claimToken: data.claimToken,
+      });
+    }, 0);
+
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- fire-once on mount
   }, [sessionId]);
 

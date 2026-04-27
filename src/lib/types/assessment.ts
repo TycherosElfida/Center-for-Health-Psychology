@@ -47,6 +47,8 @@ export interface ScoringInput {
     dimension: string | null;
     isReversed: boolean;
     weight: number;
+    /** Option values for this question — required for reversed scoring (scale bounds). */
+    options?: { value: number }[];
   }[];
 }
 
