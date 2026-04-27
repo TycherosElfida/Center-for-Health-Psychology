@@ -70,6 +70,12 @@ interface UseAssessmentSyncReturn {
   isSaving: boolean;
   /** Timestamp of last successful server save, or null. */
   lastSavedAt: Date | null;
+  /**
+   * Cancel the debounce timer and immediately push all answers to the server.
+   * Returns a promise that resolves when the save completes (or rejects on error).
+   * Call this before submitting to avoid the race where the debounce hasn't fired yet.
+   */
+  flushToServer: () => Promise<void>;
 }
 
 export function useAssessmentSync(
@@ -191,12 +197,30 @@ export function useAssessmentSync(
     };
   }, [sessionId, serverSyncEnabled]);
 
+  // ── Flush: cancel debounce and immediately sync ──────
+  const flushToServer = useCallback(async () => {
+    if (!serverSyncEnabled || !sessionId) return;
+
+    // Cancel pending debounce
+    if (serverTimerRef.current) {
+      clearTimeout(serverTimerRef.current);
+      serverTimerRef.current = null;
+    }
+
+    const current = answersRef.current;
+    if (Object.keys(current).length === 0) return;
+
+    // Use mutateAsync for awaitable save
+    await saveMutation.mutateAsync({ sessionId, answers: current });
+  }, [serverSyncEnabled, sessionId, saveMutation]);
+
   return {
     answers,
     setAnswer,
     restoreAnswers,
     isSaving: saveMutation.isPending,
     lastSavedAt,
+    flushToServer,
   };
 }
 

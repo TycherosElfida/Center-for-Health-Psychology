@@ -143,7 +143,10 @@ export function AssessmentForm({
   }, [sessionId, initialAnswers]);
 
   // ── State + auto-save hook ──────────────────────────────
-  const { answers, setAnswer, isSaving } = useAssessmentSync(sessionId, restoredAnswers);
+  const { answers, setAnswer, isSaving, flushToServer } = useAssessmentSync(
+    sessionId,
+    restoredAnswers
+  );
 
   const [mounted, setMounted] = useState(false);
   /* eslint-disable react-hooks/set-state-in-effect -- SSR hydration guard; no alternative pre-React 19 */
@@ -312,10 +315,18 @@ export function AssessmentForm({
     },
   });
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     if (!isComplete || submitMutation.isPending) return;
+    // Flush debounced answers to the server before submitting.
+    // Without this, the 1.5s debounce may not have fired yet,
+    // causing the server to see zero answers in the DB.
+    try {
+      await flushToServer();
+    } catch {
+      console.warn("[AssessmentForm] Flush failed, attempting submit anyway");
+    }
     submitMutation.mutate({ sessionId });
-  }, [isComplete, submitMutation, sessionId]);
+  }, [isComplete, submitMutation, sessionId, flushToServer]);
 
   return (
     <div className="min-h-screen bg-background">
