@@ -5,7 +5,7 @@
  *   1. Validate scoreId format (UUID)
  *   2. Fetch result data via direct DB query (Server Component — no tRPC client needed)
  *   3. Resolve test metadata from the static data layer
- *   4. Compute score interpretation
+ *   4. Extract interpretation from stored computedScores (server-authoritative)
  *   5. Generate dynamic SEO metadata (noindex — private results)
  *   6. Check auth state (optional) for ClaimCTA rendering
  *   7. Render the <ResultsDashboard> client island with serialisable props
@@ -21,7 +21,7 @@ import { db } from "@/server/db";
 import { results } from "@/server/schema/sessions";
 import { tests } from "@/server/schema/tests";
 import { getTestMeta } from "@/lib/data/tests";
-import { getScoreInterpretation } from "@/lib/scoring/interpretation";
+import { SEVERITY_COLORS } from "@/lib/types/assessment";
 import { getOptionalSession } from "@/lib/auth/dal";
 import { ResultsDashboard } from "@/components/results/ResultsDashboard";
 
@@ -76,6 +76,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
       sessionId: results.sessionId,
       totalScore: results.totalScore,
       dimensionScores: results.dimensionScores,
+      computedScores: results.computedScores,
       resultLabel: results.resultLabel,
       scoringVersion: results.scoringVersion,
       createdAt: results.createdAt,
@@ -97,10 +98,26 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
     notFound();
   }
 
-  // ── Compute interpretation ──────────────────────────────
+  // ── Extract interpretation from computedScores (server-authoritative) ──
   const totalScore = Number(row.totalScore ?? 0);
-  const maxScore = testMeta.maxScore ?? 100;
-  const interpretation = getScoreInterpretation(testMeta.id, totalScore, maxScore);
+  const computed = (row.computedScores ?? {}) as Record<string, unknown>;
+  const interpData = computed.interpretation as
+    | {
+        label?: string;
+        description?: string;
+        recommendation?: string | null;
+        severity?: string;
+      }
+    | null
+    | undefined;
+
+  const severity = (interpData?.severity as string) ?? "low";
+  const interpretation = {
+    label: interpData?.label ?? row.resultLabel ?? "Assessment Complete",
+    description: interpData?.description ?? "",
+    severity: severity as "low" | "moderate" | "high" | "critical",
+    color: SEVERITY_COLORS[severity] ?? "#2ecc71",
+  };
   const dimensionScores = (row.dimensionScores ?? {}) as Record<string, number>;
 
   // ── Auth state — determines whether ClaimCTA is shown ────

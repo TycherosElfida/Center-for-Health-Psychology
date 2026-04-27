@@ -1,9 +1,14 @@
 import { eq, and, or, isNull, lte, gte } from "drizzle-orm";
 import { db } from "@/server/db";
-import { resultInterpretations, tests } from "@/server/schema/tests";
+import { resultInterpretations } from "@/server/schema/tests";
 import * as Sentry from "@sentry/nextjs";
-import { getScoreInterpretation } from "@/lib/scoring/interpretation";
 
+/**
+ * Authoritative interpretation lookup — queries the result_interpretations table.
+ *
+ * Returns null (not a fallback) if no matching band exists. The caller
+ * decides how to handle a miss. Sentry captures all misses for monitoring.
+ */
 export async function lookupInterpretation(
   testId: string,
   totalScore: number,
@@ -13,7 +18,6 @@ export async function lookupInterpretation(
   description: string;
   recommendation: string | null;
   severity: string;
-  source: "database" | "hardcoded";
 } | null> {
   const scoreStr = totalScore.toString();
 
@@ -36,46 +40,20 @@ export async function lookupInterpretation(
     )
     .limit(1);
 
-  // 2. If a row is found → return it with source: "database"
   if (row) {
     return {
       label: row.label,
       description: row.description,
       recommendation: row.recommendation,
       severity: row.severity,
-      source: "database",
     };
   }
 
-  // 3. If no row → fire Sentry breadcrumb
-  Sentry.addBreadcrumb({
-    category: "scoring",
-    message: `DB interpretation miss: testId=${testId}, score=${totalScore}. Using hardcoded fallback.`,
-    level: "warning",
-  });
+  // No DB match → fire Sentry warning for monitoring
+  Sentry.captureMessage(
+    `Interpretation miss: testId=${testId}, score=${totalScore}, dimension=${dimension ?? "total"}`,
+    { level: "warning" }
+  );
 
-  // Query tests table to find the slug for the hardcoded fallback
-  const [testRow] = await db
-    .select({ slug: tests.slug })
-    .from(tests)
-    .where(eq(tests.id, testId))
-    .limit(1);
-
-  const testSlug = testRow?.slug ?? "unknown";
-
-  // Call existing hardcoded logic
-  const fallback = getScoreInterpretation(testSlug, totalScore);
-
-  // 4. If hardcoded also returns null → return null
-  if (!fallback) {
-    return null;
-  }
-
-  return {
-    label: fallback.label,
-    description: fallback.description,
-    recommendation: null,
-    severity: fallback.severity,
-    source: "hardcoded",
-  };
+  return null;
 }

@@ -54,7 +54,28 @@ export interface ScoringInput {
 
 export interface ScoringResult {
   totalScore: number;
+  maxPossibleScore: number;
   dimensionScores: Record<string, number>;
   rawScores: Record<string, unknown>;
   computedScores: Record<string, unknown>;
 }
+
+/* ═══════════════════════════════════════════════════════
+   Score Interpretation (single source of truth)
+   ═══════════════════════════════════════════════════════ */
+
+export interface ScoreInterpretation {
+  label: string;
+  color: string;
+  description: string;
+  recommendation?: string | null;
+  severity: "low" | "moderate" | "high" | "critical";
+}
+
+/** Maps severity levels to display colours for the results UI. */
+export const SEVERITY_COLORS: Record<string, string> = {
+  low: "#2ecc71",
+  moderate: "#f39c12",
+  high: "#e74c3c",
+  critical: "#c0392b",
+} as const;

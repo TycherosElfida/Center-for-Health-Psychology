@@ -21,7 +21,7 @@
 import Link from "next/link";
 import { CheckCircle2, AlertTriangle, ArrowRight, RefreshCw, Home } from "lucide-react";
 import type { TestMeta } from "@/lib/data/tests";
-import type { ScoreInterpretation } from "@/lib/scoring/interpretation";
+import type { ScoreInterpretation } from "@/lib/types/assessment";
 import { TESTS } from "@/lib/data/tests";
 
 import { ScoreVisualizer } from "./ScoreVisualizer";

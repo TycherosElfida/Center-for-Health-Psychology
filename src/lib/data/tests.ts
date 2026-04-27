@@ -85,28 +85,6 @@ export const STATUS_STYLES: Record<TestStatus, { bg: string; text: string; borde
 
 export const TESTS: TestMeta[] = [
   {
-    id: "mbti",
-    name: "Myers–Briggs Type Indicator (MBTI)",
-    shortName: "MBTI",
-    description:
-      "Widely used in personal development, career counseling, education, and organizational settings.",
-    longDescription:
-      "The Myers-Briggs Type Indicator (MBTI) is one of the world's most widely used personality assessments. It categorizes people into 16 distinct personality types based on four dichotomies: Extraversion/Introversion, Sensing/Intuition, Thinking/Feeling, and Judging/Perceiving.",
-    itemCount: 12,
-    duration: "10–15 min",
-    color: "#8BA3D4",
-    iconName: "Brain",
-    categories: ["E/I", "S/N", "T/F", "J/P"],
-    primaryCategory: "Personality",
-    tags: ["Personality", "Cognitive", "Self-Discovery"],
-    alpha: "0.82",
-    author: "Myers & Briggs",
-    year: 1962,
-    validationNote: "Validated across 50+ countries with millions of respondents",
-    respondentCount: 1247,
-    status: "Active",
-  },
-  {
     id: "srq29",
     name: "Self-Reporting Questionnaire (SRQ-29)",
     shortName: "SRQ-29",
