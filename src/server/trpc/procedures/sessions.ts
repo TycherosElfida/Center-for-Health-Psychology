@@ -14,6 +14,7 @@ import { tests, questions, options as optionsTable } from "@/server/schema/tests
 import { testSessions, answers, results } from "@/server/schema/sessions";
 import { computeScore } from "@/server/scoring/engine";
 import { lookupInterpretation } from "@/server/scoring/interpretation";
+import { validateAnswerValues, validateCompleteness } from "@/server/scoring/validation";
 
 export const sessionsRouter = createTRPCRouter({
   // Phase 2A: getActiveSession — Looks up in-progress sessions for forced-resume
@@ -157,6 +158,7 @@ export const sessionsRouter = createTRPCRouter({
   }),
 
   // Phase 4F: submitAssessment — Marks complete and commits final scores
+  // Hardened: idempotency guard, input validation, transactional atomicity.
   submitAssessment: publicProcedure
     .input(submitAssessmentSchema)
     .mutation(async ({ input, ctx }) => {
@@ -173,7 +175,20 @@ export const sessionsRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Session not found" });
       }
 
-      // Load answers from DB
+      // ── Idempotency guard ──────────────────────────────────
+      // If a result already exists for this session, return it instead of re-scoring.
+      const existingResult = await ctx.db
+        .select({ id: results.id })
+        .from(results)
+        .where(eq(results.sessionId, sessionId))
+        .limit(1)
+        .then((res) => res[0]);
+
+      if (existingResult) {
+        return { sessionId, scoreId: existingResult.id };
+      }
+
+      // ── Load answers from DB ───────────────────────────────
       const sessionAnswers = await ctx.db
         .select()
         .from(answers)
@@ -184,13 +199,12 @@ export const sessionsRouter = createTRPCRouter({
         answerMap[a.questionId] = a.value;
       });
 
-      // Fetch questions properties to evaluate
+      // ── Fetch questions + options ──────────────────────────
       const testQs = await ctx.db
         .select()
         .from(questions)
         .where(eq(questions.testId, session.testId));
 
-      // Fetch all option values for these questions (needed for reversed scoring bounds)
       const questionIds = testQs.map((q) => q.id);
       const allOptions =
         questionIds.length > 0
@@ -208,7 +222,31 @@ export const sessionsRouter = createTRPCRouter({
         optionsByQuestion.set(opt.questionId, arr);
       }
 
-      // Pure engine scoring execution
+      // ── Validation: answer values within option bounds ─────
+      const valResult = validateAnswerValues(
+        answerMap,
+        testQs.map((q) => ({ id: q.id, options: optionsByQuestion.get(q.id) }))
+      );
+      if (!valResult.valid) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Invalid answer values for question(s): ${valResult.invalidQuestionIds.join(", ")}`,
+        });
+      }
+
+      // ── Validation: completeness ───────────────────────────
+      const compResult = validateCompleteness(
+        answerMap,
+        testQs.map((q) => ({ id: q.id, required: q.isRequired ?? true }))
+      );
+      if (!compResult.valid) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Missing answers for required question(s): ${compResult.missingQuestionIds.join(", ")}`,
+        });
+      }
+
+      // ── Pure engine scoring ────────────────────────────────
       const scoreResult = computeScore({
         answers: answerMap,
         questions: testQs.map((q) => ({
@@ -220,7 +258,7 @@ export const sessionsRouter = createTRPCRouter({
         })),
       });
 
-      // Wire interpretation lookup
+      // ── Interpretation lookup ──────────────────────────────
       const interpretation = await lookupInterpretation(session.testId, scoreResult.totalScore);
 
       // Per-dimension interpretations (for instruments like SRQ-29)
@@ -231,7 +269,6 @@ export const sessionsRouter = createTRPCRouter({
           description: string;
           recommendation: string | null;
           severity: string;
-          source: "database" | "hardcoded";
         }
       > = {};
 
@@ -246,42 +283,43 @@ export const sessionsRouter = createTRPCRouter({
 
       const enrichedComputedScores = {
         ...scoreResult.computedScores,
+        maxPossibleScore: scoreResult.maxPossibleScore,
         interpretation: interpretation
           ? {
+              label: interpretation.label,
               description: interpretation.description,
               recommendation: interpretation.recommendation,
               severity: interpretation.severity,
-              source: interpretation.source,
             }
           : null,
-        ...(Object.keys(dimensionInterpretations).length > 0
-          ? {
-              dimensionInterpretations,
-            }
-          : {}),
+        ...(Object.keys(dimensionInterpretations).length > 0 ? { dimensionInterpretations } : {}),
       };
 
-      // Atomic commit: update session logic state
-      await ctx.db
-        .update(testSessions)
-        .set({ status: "completed", completedAt: new Date() })
-        .where(eq(testSessions.id, sessionId));
+      // ── Atomic transaction: session update + result insert ─
+      const resultId = await ctx.db.transaction(async (tx) => {
+        await tx
+          .update(testSessions)
+          .set({ status: "completed", completedAt: new Date() })
+          .where(eq(testSessions.id, sessionId));
 
-      const [result] = await ctx.db
-        .insert(results)
-        .values({
-          sessionId,
-          testId: session.testId,
-          totalScore: scoreResult.totalScore.toString(),
-          dimensionScores: scoreResult.dimensionScores,
-          rawScores: scoreResult.rawScores,
-          computedScores: enrichedComputedScores,
-          resultLabel: interpretation?.label ?? null,
-          scoringVersion: 1,
-        })
-        .returning({ id: results.id });
+        const [inserted] = await tx
+          .insert(results)
+          .values({
+            sessionId,
+            testId: session.testId,
+            totalScore: scoreResult.totalScore.toString(),
+            dimensionScores: scoreResult.dimensionScores,
+            rawScores: scoreResult.rawScores,
+            computedScores: enrichedComputedScores,
+            resultLabel: interpretation?.label ?? null,
+            scoringVersion: 1,
+          })
+          .returning({ id: results.id });
 
-      return { sessionId, scoreId: result?.id ?? "" };
+        return inserted?.id ?? "";
+      });
+
+      return { sessionId, scoreId: resultId };
     }),
 
   // Phase 2B.1: claimSession — Atomic anonymous→authenticated handoff.
