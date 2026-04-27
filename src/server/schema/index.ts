@@ -12,6 +12,7 @@ export * from "./enums";
 export * from "./tests";
 export * from "./sessions";
 export * from "./consents";
+export * from "./report-requests";
 export * from "./admin";
 export * from "./users";
 export * from "./accounts";
