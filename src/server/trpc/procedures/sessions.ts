@@ -147,10 +147,9 @@ export const sessionsRouter = createTRPCRouter({
 
   // Phase 4F: saveProgress — Batch PostgreSQL UPSERT for storing intermediate answers
   //
-  // The Neon HTTP driver silently fails on multi-row INSERTs that exceed
-  // ~60 parameterized values (SRQ-29 = 29 × 3 = 87 params → always fails).
-  // Fix: chunk into batches of CHUNK_SIZE rows and use raw SQL with explicit
-  // jsonb casting to bypass both Drizzle ORM and driver serialization issues.
+  // drizzle-orm@1.0.0-beta.20 + neon-http driver produces "Failed query"
+  // errors on multi-row .insert().values([...]) — even with small batches.
+  // Workaround: individual parameterized INSERT statements via sql`` template.
   saveProgress: publicProcedure.input(saveProgressSchema).mutation(async ({ input, ctx }) => {
     const { sessionId, answers: answerMap } = input;
 
@@ -161,27 +160,14 @@ export const sessionsRouter = createTRPCRouter({
       return { success: true };
     }
 
-    // Chunk size of 10 rows = 30 params per batch — safely within Neon HTTP limits.
-    const CHUNK_SIZE = 10;
-
-    for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
-      const chunk = entries.slice(i, i + CHUNK_SIZE);
-      const answerEntries = chunk.map(([questionId, value]) => ({
-        sessionId,
-        questionId,
-        value,
-      }));
-
-      await ctx.db
-        .insert(answers)
-        .values(answerEntries)
-        .onConflictDoUpdate({
-          target: [answers.sessionId, answers.questionId],
-          set: {
-            value: sql`EXCLUDED.value`,
-            answeredAt: sql`CURRENT_TIMESTAMP`,
-          },
-        });
+    // Individual upserts — bypasses Drizzle's broken multi-row INSERT builder
+    for (const [questionId, value] of entries) {
+      await ctx.db.execute(sql`
+        INSERT INTO answers (session_id, question_id, value)
+        VALUES (${sessionId}, ${questionId}, ${JSON.stringify(value)}::jsonb)
+        ON CONFLICT (session_id, question_id)
+        DO UPDATE SET value = EXCLUDED.value, answered_at = CURRENT_TIMESTAMP
+      `);
     }
 
     return { success: true };
