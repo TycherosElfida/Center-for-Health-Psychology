@@ -134,52 +134,147 @@ export const QUESTIONS: Record<string, Question[]> = {
   srq29: [
     {
       id: "9c646827-055b-48e5-b2c6-2eb0de87f10c",
-      text: "Do you often have headaches?",
+      text: "Apakah kamu sering merasa sakit kepala?",
       options: yesNoOptions,
     },
     {
       id: "5597a915-169e-4437-9c3d-0b6b48e56a74",
-      text: "Is your appetite poor?",
+      text: "Apakah kamu kehilangan nafsu makan?",
       options: yesNoOptions,
     },
     {
       id: "aa7a1ec2-fae0-4871-8859-626c169e98db",
-      text: "Do you sleep badly?",
+      text: "Apakah tidur kamu tidak nyenyak?",
       options: yesNoOptions,
     },
     {
       id: "3ece958d-a163-4976-bf9a-dfe84a0aed0a",
-      text: "Are you easily frightened?",
+      text: "Apakah kamu mudah merasa takut?",
       options: yesNoOptions,
     },
     {
       id: "52afaf8b-ef12-482d-892d-9e4cc1d81134",
-      text: "Do your hands shake?",
+      text: "Apakah kamu merasa cemas, tegang, atau khawatir?",
       options: yesNoOptions,
     },
     {
       id: "b2177f92-f5c6-4226-8098-ef5796f6eae8",
-      text: "Do you feel nervous, tense, or worried?",
+      text: "Apakah tangan kamu gemetar?",
       options: yesNoOptions,
     },
     {
       id: "5d0f4528-e4ca-4657-b429-f6788c183459",
-      text: "Is your digestion poor?",
+      text: "Apakah kamu mengalami gangguan pencernaan?",
       options: yesNoOptions,
     },
     {
       id: "a51609b9-e1b0-45aa-ad70-88bf120c2bed",
-      text: "Do you have trouble thinking clearly?",
+      text: "Apakah kamu merasa sulit berpikir jernih?",
       options: yesNoOptions,
     },
     {
       id: "47f4969c-d4cb-4670-a641-eff1c1732053",
-      text: "Do you feel unhappy?",
+      text: "Apakah kamu merasa tidak bahagia?",
       options: yesNoOptions,
     },
     {
       id: "35bbd278-f9ee-40bf-84df-2a70844286f7",
-      text: "Do you cry more than usual?",
+      text: "Apakah kamu lebih sering menangis?",
+      options: yesNoOptions,
+    },
+    {
+      id: "3a0fe558-0785-40b7-a83f-3496bb3f82d9",
+      text: "Apakah kamu merasa sulit untuk menikmati aktivitas sehari-hari?",
+      options: yesNoOptions,
+    },
+    {
+      id: "539a31d0-7f42-4213-8d0a-f7aef5c1fb4c",
+      text: "Apakah kamu mengalami kesulitan untuk mengambil keputusan?",
+      options: yesNoOptions,
+    },
+    {
+      id: "15d88521-2a72-4fec-ab93-294ebf00b3d5",
+      text: "Apakah aktivitas/tugas sehari-hari kamu terbengkalai?",
+      options: yesNoOptions,
+    },
+    {
+      id: "7b5b0c2c-63e2-4563-9f16-09983fa9fa5a",
+      text: "Apakah kamu merasa tidak mampu berperan dalam kehidupan ini?",
+      options: yesNoOptions,
+    },
+    {
+      id: "9b609674-0951-4dd8-8b24-77baa31622b1",
+      text: "Apakah kamu kehilangan minat terhadap banyak hal?",
+      options: yesNoOptions,
+    },
+    {
+      id: "4735dfb6-4cd3-49b3-9bf6-f4c62282b1e8",
+      text: "Apakah kamu merasa tidak berharga?",
+      options: yesNoOptions,
+    },
+    {
+      id: "8a9a113e-9098-47a7-8de6-cbf5412dd7ca",
+      text: "Apakah kamu mempunyai pikiran untuk mengakhiri hidup kamu?",
+      options: yesNoOptions,
+    },
+    {
+      id: "71d975ae-a29e-418d-b402-bef87853cfb3",
+      text: "Apakah kamu merasa lelah sepanjang waktu?",
+      options: yesNoOptions,
+    },
+    {
+      id: "c4db99a0-b9e6-41d2-99bf-840c397ad2d9",
+      text: "Apakah kamu merasa tidak enak di perut?",
+      options: yesNoOptions,
+    },
+    {
+      id: "493c6b92-0016-4ea1-8ef2-72d35b594d81",
+      text: "Apakah kamu mudah lelah?",
+      options: yesNoOptions,
+    },
+    {
+      id: "320a4332-4d2c-442d-9985-c2ffba7766f8",
+      text: "Apakah kamu minum alkohol lebih banyak dari biasanya atau apakah kamu menggunakan narkoba?",
+      options: yesNoOptions,
+    },
+    {
+      id: "3760f0ad-65de-421b-a533-0e662207e44c",
+      text: "Apakah kamu yakin bahwa seseorang mencoba mencelakai kamu dengan cara tertentu?",
+      options: yesNoOptions,
+    },
+    {
+      id: "049b0458-b7d5-4803-bec5-f8f520e8f0b6",
+      text: "Apakah ada yang mengganggu atau hal yang tidak biasa dalam pikiran kamu?",
+      options: yesNoOptions,
+    },
+    {
+      id: "aa7ac5bd-dd56-4891-a86c-b898e198b016",
+      text: "Apakah kamu pernah mendengar suara tanpa tahu sumbernya atau yang orang lain tidak dapat mendengar?",
+      options: yesNoOptions,
+    },
+    {
+      id: "1773240c-1c00-4998-af48-6ec3945d1402",
+      text: "Apakah kamu mengalami mimpi yang mengganggu tentang suatu bencana/musibah atau adakah saat-saat kamu seolah mengalami kembali kejadian bencana itu?",
+      options: yesNoOptions,
+    },
+    {
+      id: "3078b8e7-4e17-4df6-a1f4-3d60cb207f10",
+      text: "Apakah kamu menghindari kegiatan, tempat, orang atau pikiran yang mengingatkan kamu akan bencana tersebut?",
+      options: yesNoOptions,
+    },
+    {
+      id: "429aa465-c6b9-4f4d-8dff-5e7a4ddeb68a",
+      text: "Apakah minat kamu terhadap teman dan kegiatan yang biasa kamu lakukan berkurang?",
+      options: yesNoOptions,
+    },
+    {
+      id: "c5a869bc-7939-4867-bc55-8e90c4768c99",
+      text: "Apakah kamu merasa sangat terganggu jika berada dalam situasi yang mengingatkan kamu akan bencana atau jika kamu berpikir tentang bencana itu?",
+      options: yesNoOptions,
+    },
+    {
+      id: "f898110d-6ee8-4eb4-a125-76a6ad00e710",
+      text: "Apakah kamu kesulitan memahami atau mengekspresikan perasaan kamu?",
       options: yesNoOptions,
     },
   ],

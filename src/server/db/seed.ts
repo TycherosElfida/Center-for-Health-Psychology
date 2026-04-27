@@ -1,10 +1,29 @@
 import { config } from "dotenv";
 config({ path: ".env.local" });
 import { db } from "./index";
-import { tests, questions, options } from "../schema/tests";
+import { tests, questions, options, resultInterpretations } from "../schema/tests";
 import { TESTS } from "@/lib/data/tests";
 import { QUESTIONS } from "@/lib/data/questions";
-import { eq } from "drizzle-orm";
+import { INTERPRETATIONS } from "@/lib/data/interpretations";
+import { eq, and, isNull } from "drizzle-orm";
+
+/** SRQ-29 dimension assignment by question index (0-based) */
+const SRQ29_DIMENSIONS: Record<number, string> = {
+  // Q1-Q20 (indices 0-19): Neurotic / Anxiety-Depression
+  ...Object.fromEntries(Array.from({ length: 20 }, (_, i) => [i, "neurotic"])),
+  // Q21 (index 20): Substance Use
+  20: "substance",
+  // Q22-Q24 (indices 21-23): Psychotic Symptoms
+  21: "psychotic",
+  22: "psychotic",
+  23: "psychotic",
+  // Q25-Q29 (indices 24-28): PTSD Symptoms
+  24: "ptsd",
+  25: "ptsd",
+  26: "ptsd",
+  27: "ptsd",
+  28: "ptsd",
+};
 
 async function main() {
   console.log("🌱 Starting Database Seed...");
@@ -68,13 +87,15 @@ async function main() {
           .limit(1);
 
         if (!existingQ) {
+          const dimension = testMeta.id === "srq29" ? (SRQ29_DIMENSIONS[i] ?? null) : null;
+
           await db.insert(questions).values({
             id: qData.id,
             testId: testId,
             order: i + 1,
             questionText: qData.text,
             type: qType,
-            dimension: null,
+            dimension: dimension,
             isReversed: qData.reversed ?? false,
             weight: "1.00",
             required: true,
@@ -95,7 +116,72 @@ async function main() {
       }
     }
 
-    console.log("✅ Database seeded successfully!");
+    // ── Seed result_interpretations ───────────────────────────
+    console.log("\n🧠 Seeding result_interpretations...");
+
+    // Build a slug → testId map from what we just seeded/found
+    const slugToId = new Map<string, string>();
+    for (const testMeta of TESTS) {
+      const [row] = await db
+        .select({ id: tests.id })
+        .from(tests)
+        .where(eq(tests.slug, testMeta.id))
+        .limit(1);
+      if (row) slugToId.set(testMeta.id, row.id);
+    }
+
+    let inserted = 0;
+    let skipped = 0;
+
+    for (const interp of INTERPRETATIONS) {
+      const testId = slugToId.get(interp.testSlug);
+      if (!testId) {
+        throw new Error(
+          `Cannot seed interpretation: test slug "${interp.testSlug}" not found in DB`
+        );
+      }
+
+      // Idempotency: composite uniqueness check (testId, dimension, minScore, maxScore)
+      const dimensionCheck =
+        interp.dimension === null
+          ? isNull(resultInterpretations.dimension)
+          : eq(resultInterpretations.dimension, interp.dimension);
+
+      const [existing] = await db
+        .select({ id: resultInterpretations.id })
+        .from(resultInterpretations)
+        .where(
+          and(
+            eq(resultInterpretations.testId, testId),
+            dimensionCheck,
+            eq(resultInterpretations.minScore, interp.minScore),
+            eq(resultInterpretations.maxScore, interp.maxScore)
+          )
+        )
+        .limit(1);
+
+      if (existing) {
+        skipped++;
+        continue;
+      }
+
+      await db.insert(resultInterpretations).values({
+        testId,
+        dimension: interp.dimension,
+        minScore: interp.minScore,
+        maxScore: interp.maxScore,
+        label: interp.label,
+        description: interp.description,
+        recommendation: interp.recommendation,
+        severity: interp.severity,
+        version: interp.version,
+      });
+      inserted++;
+    }
+
+    console.log(`  ✅ Interpretations: ${inserted} inserted, ${skipped} skipped (already exist)`);
+
+    console.log("\n✅ Database seeded successfully!");
     process.exit(0);
   } catch (err) {
     console.error("❌ Seed failed:", err);

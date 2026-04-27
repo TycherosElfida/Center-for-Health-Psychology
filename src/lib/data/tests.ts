@@ -8,13 +8,7 @@
  */
 
 import type { ElementType } from "react";
-import {
-  Brain,
-  ClipboardList,
-  BarChart2,
-  Monitor,
-  ShieldCheck,
-} from "lucide-react";
+import { Brain, ClipboardList, BarChart2, Monitor, ShieldCheck } from "lucide-react";
 
 /* ═══════════════════════════════════════════════════════
    Types
@@ -79,10 +73,7 @@ export const ICON_MAP: Record<string, ElementType> = {
    Status Styles
    ═══════════════════════════════════════════════════════ */
 
-export const STATUS_STYLES: Record<
-  TestStatus,
-  { bg: string; text: string; border: string }
-> = {
+export const STATUS_STYLES: Record<TestStatus, { bg: string; text: string; border: string }> = {
   Active: { bg: "#ECFDF5", text: "#065F46", border: "#A7F3D0" },
   Draft: { bg: "#FFF7ED", text: "#9A3412", border: "#FED7AA" },
   Beta: { bg: "#EFF6FF", text: "#1E40AF", border: "#BFDBFE" },
@@ -111,8 +102,7 @@ export const TESTS: TestMeta[] = [
     alpha: "0.82",
     author: "Myers & Briggs",
     year: 1962,
-    validationNote:
-      "Validated across 50+ countries with millions of respondents",
+    validationNote: "Validated across 50+ countries with millions of respondents",
     respondentCount: 1247,
     status: "Active",
   },
@@ -124,7 +114,7 @@ export const TESTS: TestMeta[] = [
       "Widely used in public health research, primary healthcare services, and mental health monitoring programs.",
     longDescription:
       "The Self-Reporting Questionnaire (SRQ-29) is a World Health Organization screening instrument used to identify common mental disorders. It covers somatic symptoms, anxiety, depressive symptoms, and more.",
-    itemCount: 10,
+    itemCount: 29,
     duration: "5–8 min",
     color: "#9B8EC4",
     iconName: "ClipboardList",
@@ -134,8 +124,7 @@ export const TESTS: TestMeta[] = [
     alpha: "0.85",
     author: "WHO",
     year: 1994,
-    validationNote:
-      "WHO-endorsed screening instrument for primary care settings",
+    validationNote: "WHO-endorsed screening instrument for primary care settings",
     respondentCount: 892,
     status: "Active",
   },
@@ -143,8 +132,7 @@ export const TESTS: TestMeta[] = [
     id: "pss10",
     name: "Perceived Stress Scale (PSS-10)",
     shortName: "PSS-10",
-    description:
-      "Commonly used in psychological research, health studies, and clinical settings.",
+    description: "Commonly used in psychological research, health studies, and clinical settings.",
     longDescription:
       "The Perceived Stress Scale (PSS-10) is the most widely used psychological instrument for measuring the perception of stress. It assesses the degree to which situations in one's life are appraised as stressful.",
     itemCount: 10,
@@ -157,8 +145,7 @@ export const TESTS: TestMeta[] = [
     alpha: "0.89",
     author: "Cohen et al.",
     year: 1983,
-    validationNote:
-      "Gold-standard stress measurement instrument with 40+ years of validation",
+    validationNote: "Gold-standard stress measurement instrument with 40+ years of validation",
     respondentCount: 1563,
     status: "Active",
   },
@@ -187,8 +174,7 @@ export const TESTS: TestMeta[] = [
     alpha: "0.91",
     author: "Caplan",
     year: 2010,
-    validationNote:
-      "Indonesian adaptation validated with 420+ university students",
+    validationNote: "Indonesian adaptation validated with 420+ university students",
     respondentCount: 734,
     status: "Active",
   },
@@ -211,8 +197,7 @@ export const TESTS: TestMeta[] = [
     alpha: "0.87",
     author: "Schwarzer et al.",
     year: 1999,
-    validationNote:
-      "Cross-culturally validated in 20+ countries for health research",
+    validationNote: "Cross-culturally validated in 20+ countries for health research",
     respondentCount: 621,
     status: "Active",
   },
@@ -255,7 +240,7 @@ export const SORT_OPTIONS: { value: SortBy; label: string }[] = [
 export function filterAndSortTests(
   searchQuery: string,
   activeCategory: string,
-  sortBy: SortBy,
+  sortBy: SortBy
 ): TestMeta[] {
   const q = searchQuery.toLowerCase();
 
@@ -266,8 +251,7 @@ export function filterAndSortTests(
       t.shortName.toLowerCase().includes(q) ||
       t.description.toLowerCase().includes(q) ||
       t.tags.some((tag) => tag.toLowerCase().includes(q));
-    const matchCategory =
-      activeCategory === "All" || t.primaryCategory === activeCategory;
+    const matchCategory = activeCategory === "All" || t.primaryCategory === activeCategory;
     return matchSearch && matchCategory;
   });
 
