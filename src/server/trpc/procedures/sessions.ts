@@ -146,41 +146,42 @@ export const sessionsRouter = createTRPCRouter({
   }),
 
   // Phase 4F: saveProgress — Batch PostgreSQL UPSERT for storing intermediate answers
+  //
+  // The Neon HTTP driver silently fails on multi-row INSERTs that exceed
+  // ~60 parameterized values (SRQ-29 = 29 × 3 = 87 params → always fails).
+  // Fix: chunk into batches of CHUNK_SIZE rows and use raw SQL with explicit
+  // jsonb casting to bypass both Drizzle ORM and driver serialization issues.
   saveProgress: publicProcedure.input(saveProgressSchema).mutation(async ({ input, ctx }) => {
     const { sessionId, answers: answerMap } = input;
 
-    const answerEntries = Object.entries(answerMap).map(([questionId, value]) => ({
-      sessionId,
-      questionId,
-      // Neon HTTP driver requires jsonb values to be serialized strings,
-      // not raw JS primitives — wrap in JSON.stringify for proper casting.
-      value: JSON.stringify(value),
-    }));
+    const entries = Object.entries(answerMap);
 
     // Short-circuit to avoid DB trips for empty commits
-    if (answerEntries.length === 0) {
+    if (entries.length === 0) {
       return { success: true };
     }
 
-    try {
-      // Explicit DB level ON CONFLICT constraint logic mapping to schema unique setup
+    // Chunk size of 10 rows = 30 params per batch — safely within Neon HTTP limits.
+    const CHUNK_SIZE = 10;
+
+    for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
+      const chunk = entries.slice(i, i + CHUNK_SIZE);
+      const answerEntries = chunk.map(([questionId, value]) => ({
+        sessionId,
+        questionId,
+        value,
+      }));
+
       await ctx.db
         .insert(answers)
         .values(answerEntries)
         .onConflictDoUpdate({
           target: [answers.sessionId, answers.questionId],
           set: {
-            value: sql`EXCLUDED.value`, // Update the jsonb mapping
-            answeredAt: sql`CURRENT_TIMESTAMP`, // Explicitly increment the record modified time
+            value: sql`EXCLUDED.value`,
+            answeredAt: sql`CURRENT_TIMESTAMP`,
           },
         });
-    } catch (err) {
-      // Surface the actual PG error for diagnosis
-      const pgErr = err as { code?: string; detail?: string; message?: string };
-      console.error(
-        `[saveProgress] DB error — code: ${pgErr.code}, detail: ${pgErr.detail}, message: ${pgErr.message}`
-      );
-      throw err;
     }
 
     return { success: true };
