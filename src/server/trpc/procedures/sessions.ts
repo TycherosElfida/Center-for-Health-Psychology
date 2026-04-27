@@ -1,4 +1,4 @@
-import { eq, and, sql, desc } from "drizzle-orm";
+import { eq, and, sql, desc, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import { TRPCError } from "@trpc/server";
@@ -211,7 +211,7 @@ export const sessionsRouter = createTRPCRouter({
           ? await ctx.db
               .select({ questionId: optionsTable.questionId, value: optionsTable.value })
               .from(optionsTable)
-              .where(sql`${optionsTable.questionId} = ANY(${questionIds})`)
+              .where(inArray(optionsTable.questionId, questionIds))
           : [];
 
       // Group options by questionId for O(1) lookup
@@ -295,29 +295,28 @@ export const sessionsRouter = createTRPCRouter({
         ...(Object.keys(dimensionInterpretations).length > 0 ? { dimensionInterpretations } : {}),
       };
 
-      // ── Atomic transaction: session update + result insert ─
-      const resultId = await ctx.db.transaction(async (tx) => {
-        await tx
-          .update(testSessions)
-          .set({ status: "completed", completedAt: new Date() })
-          .where(eq(testSessions.id, sessionId));
+      // ── Sequential writes (neon-http driver lacks transaction support) ──
+      // Safety: the idempotency guard above prevents duplicate results.
+      await ctx.db
+        .update(testSessions)
+        .set({ status: "completed", completedAt: new Date() })
+        .where(eq(testSessions.id, sessionId));
 
-        const [inserted] = await tx
-          .insert(results)
-          .values({
-            sessionId,
-            testId: session.testId,
-            totalScore: scoreResult.totalScore.toString(),
-            dimensionScores: scoreResult.dimensionScores,
-            rawScores: scoreResult.rawScores,
-            computedScores: enrichedComputedScores,
-            resultLabel: interpretation?.label ?? null,
-            scoringVersion: 1,
-          })
-          .returning({ id: results.id });
+      const [inserted] = await ctx.db
+        .insert(results)
+        .values({
+          sessionId,
+          testId: session.testId,
+          totalScore: scoreResult.totalScore.toString(),
+          dimensionScores: scoreResult.dimensionScores,
+          rawScores: scoreResult.rawScores,
+          computedScores: enrichedComputedScores,
+          resultLabel: interpretation?.label ?? null,
+          scoringVersion: 1,
+        })
+        .returning({ id: results.id });
 
-        return inserted?.id ?? "";
-      });
+      const resultId = inserted?.id ?? "";
 
       return { sessionId, scoreId: resultId };
     }),
