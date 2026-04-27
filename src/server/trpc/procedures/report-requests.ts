@@ -6,14 +6,14 @@
  *
  * All procedures use `adminProcedure` — requires authenticated admin role.
  */
-import { eq, and, sql, desc, inArray } from "drizzle-orm";
+import { eq, and, sql, desc } from "drizzle-orm";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
 import { createTRPCRouter, adminProcedure } from "../index";
 import { reportRequests } from "@/server/schema/report-requests";
 import { tests } from "@/server/schema/tests";
-import { results } from "@/server/schema/sessions";
+
 import { users } from "@/server/schema/users";
 import { db as dbInstance } from "@/server/db";
 import { assembleReportData } from "@/server/reports/assemble";

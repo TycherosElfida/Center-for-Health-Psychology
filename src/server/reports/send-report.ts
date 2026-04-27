@@ -32,9 +32,9 @@ export async function sendReportEmail(
   const resend = getResendClient();
 
   // Generate PDF buffer
-  const pdfBuffer = await renderToBuffer(
-    React.createElement(ClinicalReportPDF, { data: reportData })
-  );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- renderToBuffer expects ReactElement<DocumentProps>
+  const pdfElement = React.createElement(ClinicalReportPDF, { data: reportData }) as any;
+  const pdfBuffer = await renderToBuffer(pdfElement);
 
   const dateStr = new Date().toISOString().split("T")[0];
   const filename = `Laporan-${reportData.testSlug}-${dateStr}.pdf`;
