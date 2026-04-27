@@ -15,6 +15,8 @@ import { testSessions, answers, results } from "@/server/schema/sessions";
 import { computeScore } from "@/server/scoring/engine";
 import { lookupInterpretation } from "@/server/scoring/interpretation";
 import { validateAnswerValues, validateCompleteness } from "@/server/scoring/validation";
+import { reportRequests } from "@/server/schema/report-requests";
+import { resolveRequesterInfo } from "@/server/reports/resolve-requester";
 
 export const sessionsRouter = createTRPCRouter({
   // Phase 2A: getActiveSession — Looks up in-progress sessions for forced-resume
@@ -391,27 +393,64 @@ export const sessionsRouter = createTRPCRouter({
       return { success: true as const, alreadyOwned: false };
     }),
 
-  // Phase 5: requestEmailReport — Lead capture for emailed results
-  // Placeholder: validates input and returns success. Production will
-  // encrypt the email via AES-256-GCM and INSERT into guestLeads.
+  // Phase 1B: requestEmailReport — Admin-gated report request queue
+  // Inserts a pending request into report_requests. Guests provide email
+  // (encrypted), authenticated users resolve via userId.
   requestEmailReport: publicProcedure
     .input(
       z.object({
         scoreId: z.string().uuid(),
-        email: z.string().email(),
+        email: z.string().email().optional(),
       })
     )
-    .mutation(async ({ input }) => {
-      // In production:
-      // 1. Resolve scoreId → sessionId + testId
-      // 2. encrypt(input.email) → encryptedEmail
-      // 3. INSERT INTO guest_leads (sessionId, testId, encryptedEmail)
-      // 4. Enqueue async email delivery job
-      console.info("[requestEmailReport] Lead captured:", {
-        scoreId: input.scoreId,
-        email: input.email,
-      });
+    .mutation(async ({ input, ctx }) => {
+      const { scoreId, email } = input;
+      const userId = ctx.session?.userId ?? null;
 
-      return { success: true as const };
+      // 1. Resolve scoreId → result row
+      const result = await ctx.db
+        .select({ id: results.id, sessionId: results.sessionId, testId: results.testId })
+        .from(results)
+        .where(eq(results.id, scoreId))
+        .limit(1)
+        .then((r) => r[0]);
+
+      if (!result) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Result not found" });
+      }
+
+      // 2. Idempotency: check for existing non-rejected request
+      const existing = await ctx.db
+        .select({ id: reportRequests.id, status: reportRequests.status })
+        .from(reportRequests)
+        .where(
+          and(eq(reportRequests.resultId, scoreId), sql`${reportRequests.status} != 'rejected'`)
+        )
+        .limit(1)
+        .then((r) => r[0]);
+
+      if (existing) {
+        return { success: true as const, alreadyRequested: true, requestId: existing.id };
+      }
+
+      // 3. Resolve requester info (encrypt email for guests)
+      const requester = resolveRequesterInfo(userId, email);
+
+      // 4. Insert report request as pending
+      const [inserted] = await ctx.db
+        .insert(reportRequests)
+        .values({
+          sessionId: result.sessionId,
+          testId: result.testId,
+          resultId: result.id,
+          ...requester,
+        })
+        .returning({ id: reportRequests.id });
+
+      return {
+        success: true as const,
+        alreadyRequested: false,
+        requestId: inserted?.id ?? "",
+      };
     }),
 });
