@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { lookupInterpretation } from "@/server/scoring/interpretation";
 import { db } from "@/server/db";
 import * as Sentry from "@sentry/nextjs";
-import * as hardcodedFallback from "@/lib/scoring/interpretation";
 
 vi.mock("@/server/db", () => ({
   db: {
@@ -14,7 +13,7 @@ vi.mock("@/server/db", () => ({
 }));
 
 vi.mock("@sentry/nextjs", () => ({
-  addBreadcrumb: vi.fn(),
+  captureMessage: vi.fn(),
 }));
 
 describe("lookupInterpretation", () => {
@@ -24,7 +23,7 @@ describe("lookupInterpretation", () => {
     vi.clearAllMocks();
   });
 
-  it("Returns correct shape from DB when a matching row exists (source: 'database')", async () => {
+  it("Returns correct shape from DB when a matching row exists", async () => {
     vi.mocked(db.limit).mockResolvedValueOnce([
       {
         label: "Low Stress",
@@ -40,7 +39,6 @@ describe("lookupInterpretation", () => {
       description: "Your stress is low.",
       recommendation: "Keep it up.",
       severity: "low",
-      source: "database",
     });
   });
 
@@ -55,59 +53,25 @@ describe("lookupInterpretation", () => {
     ]);
 
     await lookupInterpretation(mockTestId, 10);
-    expect(Sentry.addBreadcrumb).not.toHaveBeenCalled();
+    expect(Sentry.captureMessage).not.toHaveBeenCalled();
   });
 
-  it("Fires Sentry breadcrumb with exact message format when DB returns undefined", async () => {
-    // DB returns empty array (no rows found)
+  it("Fires Sentry captureMessage when DB returns no rows", async () => {
     vi.mocked(db.limit).mockResolvedValueOnce([]);
-    // Mock for tests table lookup
-    vi.mocked(db.limit).mockResolvedValueOnce([{ slug: "pss10" }]);
 
     await lookupInterpretation(mockTestId, 10);
 
-    expect(Sentry.addBreadcrumb).toHaveBeenCalledWith({
-      category: "scoring",
-      message: `DB interpretation miss: testId=${mockTestId}, score=10. Using hardcoded fallback.`,
-      level: "warning",
-    });
+    expect(Sentry.captureMessage).toHaveBeenCalledWith(
+      `Interpretation miss: testId=${mockTestId}, score=10, dimension=total`,
+      { level: "warning" }
+    );
   });
 
-  it("Returns fallback data with source: 'hardcoded' on DB miss", async () => {
-    vi.mocked(db.limit).mockResolvedValueOnce([]); // No interpretation
-    vi.mocked(db.limit).mockResolvedValueOnce([{ slug: "pss10" }]); // returns test slug
-
-    const spy = vi.spyOn(hardcodedFallback, "getScoreInterpretation").mockReturnValue({
-      label: "Moderate",
-      description: "Moderate desc",
-      severity: "moderate",
-      color: "#000",
-    });
-
-    const result = await lookupInterpretation(mockTestId, 10);
-    expect(result).toEqual({
-      label: "Moderate",
-      description: "Moderate desc",
-      recommendation: null,
-      severity: "moderate",
-      source: "hardcoded",
-    });
-
-    spy.mockRestore();
-  });
-
-  it("Returns null when DB miss AND hardcoded fallback also returns null", async () => {
+  it("Returns null on DB miss (no hardcoded fallback)", async () => {
     vi.mocked(db.limit).mockResolvedValueOnce([]);
-    vi.mocked(db.limit).mockResolvedValueOnce([{ slug: "unknown" }]);
-
-    const spy = vi
-      .spyOn(hardcodedFallback, "getScoreInterpretation")
-      .mockReturnValue(null as unknown as hardcodedFallback.ScoreInterpretation);
 
     const result = await lookupInterpretation(mockTestId, 10);
     expect(result).toBeNull();
-
-    spy.mockRestore();
   });
 
   it("Handles numeric string comparison correctly", async () => {
@@ -154,7 +118,6 @@ describe("lookupInterpretation", () => {
       description: "Terdapat indikasi masalah psikologis...",
       recommendation: "Disarankan untuk berkonsultasi...",
       severity: "high",
-      source: "database",
     });
   });
 
@@ -174,7 +137,17 @@ describe("lookupInterpretation", () => {
       description: "Low stress",
       recommendation: null,
       severity: "low",
-      source: "database",
     });
+  });
+
+  it("Fires Sentry with dimension in message when dimension is provided", async () => {
+    vi.mocked(db.limit).mockResolvedValueOnce([]);
+
+    await lookupInterpretation(mockTestId, 10, "neurotic");
+
+    expect(Sentry.captureMessage).toHaveBeenCalledWith(
+      `Interpretation miss: testId=${mockTestId}, score=10, dimension=neurotic`,
+      { level: "warning" }
+    );
   });
 });
