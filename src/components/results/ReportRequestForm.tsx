@@ -3,8 +3,8 @@
 /**
  * ReportRequestForm — Email lead capture with react-hook-form + zod validation.
  *
- * Kaizen change: NO direct PDF downloads for anonymous users. Instead,
- * the user submits their email and gets the report delivered asynchronously.
+ * Phase 1B: Admin-gated report request queue. Supports both guest (email
+ * required) and authenticated (email resolved from user profile) flows.
  *
  * Form stack:
  *   - react-hook-form (controlled form state)
@@ -18,7 +18,7 @@ import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Mail, Send, CheckCircle2, X, Loader2 } from "lucide-react";
+import { Mail, Send, CheckCircle2, X, Loader2, Clock } from "lucide-react";
 import { trpc } from "@/lib/trpc/client";
 
 /* ═══════════════════════════════════════════════════════
@@ -26,7 +26,7 @@ import { trpc } from "@/lib/trpc/client";
    ═══════════════════════════════════════════════════════ */
 
 const reportRequestSchema = z.object({
-  email: z.string().min(1, "Masukkan alamat email Anda.").email("Format email tidak valid."),
+  email: z.string().email("Format email tidak valid.").optional().or(z.literal("")),
 });
 
 type ReportRequestValues = z.infer<typeof reportRequestSchema>;
@@ -42,16 +42,24 @@ interface ReportRequestFormProps {
   testShortName: string;
   /** Brand colour for styling. */
   accentColor: string;
+  /** Whether the current user is authenticated. */
+  isAuthenticated?: boolean;
 }
 
 /* ═══════════════════════════════════════════════════════
    Component
    ═══════════════════════════════════════════════════════ */
 
-export function ReportRequestForm({ scoreId, testShortName, accentColor }: ReportRequestFormProps) {
+export function ReportRequestForm({
+  scoreId,
+  testShortName,
+  accentColor,
+  isAuthenticated = false,
+}: ReportRequestFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSent, setIsSent] = useState(false);
   const [sentEmail, setSentEmail] = useState("");
+  const [alreadyRequested, setAlreadyRequested] = useState(false);
 
   const {
     register,
@@ -64,9 +72,13 @@ export function ReportRequestForm({ scoreId, testShortName, accentColor }: Repor
   });
 
   const requestMutation = trpc.sessions.requestEmailReport.useMutation({
-    onSuccess: (_data, variables) => {
-      setIsSent(true);
-      setSentEmail(variables.email);
+    onSuccess: (data, variables) => {
+      if (data.alreadyRequested) {
+        setAlreadyRequested(true);
+      } else {
+        setIsSent(true);
+        setSentEmail(variables.email ?? "");
+      }
     },
   });
 
@@ -75,13 +87,21 @@ export function ReportRequestForm({ scoreId, testShortName, accentColor }: Repor
     reset();
     setIsSent(false);
     setSentEmail("");
+    setAlreadyRequested(false);
   }, [reset]);
 
   const onSubmit = useCallback(
     (values: ReportRequestValues) => {
-      requestMutation.mutate({ scoreId, email: values.email });
+      if (isAuthenticated) {
+        // Authenticated: no email needed, resolve from user profile
+        requestMutation.mutate({ scoreId });
+      } else {
+        // Guest: email is required
+        if (!values.email) return;
+        requestMutation.mutate({ scoreId, email: values.email });
+      }
     },
-    [requestMutation, scoreId]
+    [requestMutation, scoreId, isAuthenticated]
   );
 
   return (
@@ -121,7 +141,31 @@ export function ReportRequestForm({ scoreId, testShortName, accentColor }: Repor
           />
 
           <div className="bg-card p-5 sm:p-6">
-            {!isSent ? (
+            {alreadyRequested ? (
+              /* ── Already requested state ── */
+              <div className="flex items-center gap-4 py-2">
+                <div
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+                  style={{
+                    background: "color-mix(in oklch, #f59e0b 12%, transparent)",
+                    border: "1.5px solid color-mix(in oklch, #f59e0b 40%, transparent)",
+                  }}
+                >
+                  <Clock size={20} style={{ color: "#f59e0b" }} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-heading text-[15px] font-bold text-foreground">
+                    Permintaan Sudah Diajukan
+                  </p>
+                  <p className="text-[13px] text-muted-foreground">
+                    Anda sudah mengajukan permintaan laporan ini. Tim kami sedang memprosesnya.
+                  </p>
+                </div>
+                <button type="button" onClick={toggle} className="ml-auto p-1">
+                  <X size={16} className="text-muted-foreground" />
+                </button>
+              </div>
+            ) : !isSent ? (
               <form onSubmit={handleSubmit(onSubmit)} noValidate>
                 {/* Header */}
                 <div className="mb-4 flex items-center justify-between">
@@ -140,32 +184,45 @@ export function ReportRequestForm({ scoreId, testShortName, accentColor }: Repor
                   </button>
                 </div>
 
-                <p className="mb-4 text-[13px] leading-relaxed text-muted-foreground">
-                  Masukkan alamat email Anda dan kami akan mengirimkan salinan laporan hasil{" "}
-                  {testShortName} Anda.
-                </p>
+                {isAuthenticated ? (
+                  /* Authenticated user: no email input needed */
+                  <p className="mb-4 text-[13px] leading-relaxed text-muted-foreground">
+                    Laporan akan dikirim ke email terdaftar Anda. Tim kami akan memproses permintaan
+                    ini sebelum mengirimkannya.
+                  </p>
+                ) : (
+                  /* Guest: show email input */
+                  <p className="mb-4 text-[13px] leading-relaxed text-muted-foreground">
+                    Masukkan alamat email Anda dan tim kami akan memproses serta mengirimkan laporan
+                    hasil {testShortName} Anda.
+                  </p>
+                )}
 
                 {/* Input row */}
                 <div className="flex gap-2">
-                  <div className="flex-1">
-                    <input
-                      type="email"
-                      autoComplete="email"
-                      placeholder="anda@email.com"
-                      {...register("email")}
-                      className="w-full rounded-xl border bg-background px-4 py-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/50"
-                      style={{
-                        borderColor: errors.email ? "var(--destructive, #e53e3e)" : "var(--border)",
-                      }}
-                    />
-                    {errors.email && (
-                      <p className="mt-1.5 text-xs text-destructive">{errors.email.message}</p>
-                    )}
-                  </div>
+                  {!isAuthenticated && (
+                    <div className="flex-1">
+                      <input
+                        type="email"
+                        autoComplete="email"
+                        placeholder="anda@email.com"
+                        {...register("email")}
+                        className="w-full rounded-xl border bg-background px-4 py-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/50"
+                        style={{
+                          borderColor: errors.email
+                            ? "var(--destructive, #e53e3e)"
+                            : "var(--border)",
+                        }}
+                      />
+                      {errors.email && (
+                        <p className="mt-1.5 text-xs text-destructive">{errors.email.message}</p>
+                      )}
+                    </div>
+                  )}
                   <button
                     type="submit"
                     disabled={requestMutation.isPending}
-                    className="flex shrink-0 items-center gap-2 self-start rounded-xl px-5 py-3 font-heading text-sm font-semibold text-white transition-all disabled:opacity-60"
+                    className={`flex shrink-0 items-center gap-2 self-start rounded-xl px-5 py-3 font-heading text-sm font-semibold text-white transition-all disabled:opacity-60 ${isAuthenticated ? "flex-1 justify-center" : ""}`}
                     style={{
                       background: `linear-gradient(135deg, ${accentColor}, color-mix(in oklch, ${accentColor} 80%, white))`,
                       boxShadow: `0 4px 16px color-mix(in oklch, ${accentColor} 30%, transparent)`,
@@ -176,7 +233,7 @@ export function ReportRequestForm({ scoreId, testShortName, accentColor }: Repor
                     ) : (
                       <Send size={14} />
                     )}
-                    Kirim
+                    {isAuthenticated ? "Ajukan Permintaan Laporan" : "Kirim"}
                   </button>
                 </div>
 
@@ -201,11 +258,17 @@ export function ReportRequestForm({ scoreId, testShortName, accentColor }: Repor
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-heading text-[15px] font-bold text-foreground">
-                    Hasil Terkirim!
+                    Permintaan Terkirim!
                   </p>
                   <p className="text-[13px] text-muted-foreground">
-                    Laporan {testShortName} Anda telah dikirim ke{" "}
-                    <strong style={{ color: accentColor }}>{sentEmail}</strong>.
+                    {isAuthenticated ? (
+                      <>Tim kami akan memproses dan mengirimkan laporan ke email terdaftar Anda.</>
+                    ) : (
+                      <>
+                        Tim kami akan memproses dan mengirimkan laporan {testShortName} ke{" "}
+                        <strong style={{ color: accentColor }}>{sentEmail}</strong>.
+                      </>
+                    )}
                   </p>
                 </div>
                 <button type="button" onClick={toggle} className="ml-auto p-1">
