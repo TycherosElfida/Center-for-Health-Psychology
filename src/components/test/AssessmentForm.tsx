@@ -323,7 +323,17 @@ export function AssessmentForm({
     try {
       await flushToServer();
     } catch {
-      console.warn("[AssessmentForm] Flush failed, attempting submit anyway");
+      // Retry once after a short delay — transient network/Neon errors
+      console.warn("[AssessmentForm] Flush failed, retrying in 500ms...");
+      try {
+        await new Promise((r) => setTimeout(r, 500));
+        await flushToServer();
+      } catch {
+        // Both attempts failed — do NOT proceed to submit.
+        // The DB has no answers, so submitAssessment will always fail.
+        console.error("[AssessmentForm] Flush retry failed, cannot submit.");
+        return;
+      }
     }
     submitMutation.mutate({ sessionId });
   }, [isComplete, submitMutation, sessionId, flushToServer]);

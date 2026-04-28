@@ -12,6 +12,8 @@ import {
 
 import { tests, questions, options as optionsTable } from "@/server/schema/tests";
 import { testSessions, answers, results } from "@/server/schema/sessions";
+import { consents } from "@/server/schema/consents";
+import { CONSENT_VERSION } from "@/lib/constants/consent";
 import { computeScore } from "@/server/scoring/engine";
 import { lookupInterpretation } from "@/server/scoring/interpretation";
 import { validateAnswerValues, validateCompleteness } from "@/server/scoring/validation";
@@ -123,6 +125,20 @@ export const sessionsRouter = createTRPCRouter({
       })
       .returning({ id: testSessions.id, claimToken: testSessions.claimToken });
 
+    // Step 5: Record explicit consent (1:1 with session)
+    // consentAccepted is validated as `true` by Zod schema — this INSERT
+    // only runs when consent was given. Atomic with session creation.
+    if (session?.id) {
+      await ctx.db.insert(consents).values({
+        sessionId: session.id,
+        tosAccepted: true,
+        researchOptIn: true,
+        marketingOptIn: false,
+        consentVersion: CONSENT_VERSION,
+        ipHash,
+      });
+    }
+
     return {
       sessionId: session?.id ?? "",
       claimToken: session?.claimToken ?? null,
@@ -144,15 +160,14 @@ export const sessionsRouter = createTRPCRouter({
       return { success: true };
     }
 
-    // Explicit DB level ON CONFLICT constraint logic mapping to schema unique setup
     await ctx.db
       .insert(answers)
       .values(answerEntries)
       .onConflictDoUpdate({
         target: [answers.sessionId, answers.questionId],
         set: {
-          value: sql`EXCLUDED.value`, // Update the jsonb mapping
-          answeredAt: sql`CURRENT_TIMESTAMP`, // Explicitly increment the record modified time
+          value: sql`EXCLUDED.value`,
+          answeredAt: sql`CURRENT_TIMESTAMP`,
         },
       });
 
@@ -261,8 +276,6 @@ export const sessionsRouter = createTRPCRouter({
       });
 
       // ── Interpretation lookup ──────────────────────────────
-      const interpretation = await lookupInterpretation(session.testId, scoreResult.totalScore);
-
       // Per-dimension interpretations (for instruments like SRQ-29)
       const dimensionInterpretations: Record<
         string,
@@ -274,7 +287,9 @@ export const sessionsRouter = createTRPCRouter({
         }
       > = {};
 
-      if (Object.keys(scoreResult.dimensionScores).length > 0) {
+      const hasDimensions = Object.keys(scoreResult.dimensionScores).length > 0;
+
+      if (hasDimensions) {
         for (const [dimension, dimScore] of Object.entries(scoreResult.dimensionScores)) {
           const dimInterp = await lookupInterpretation(session.testId, dimScore, dimension);
           if (dimInterp) {
@@ -282,6 +297,12 @@ export const sessionsRouter = createTRPCRouter({
           }
         }
       }
+
+      // Total-score interpretation — skip for dimension-only instruments
+      // (e.g. SRQ-29 has no total-score bands, only per-dimension bands)
+      const interpretation = hasDimensions
+        ? null
+        : await lookupInterpretation(session.testId, scoreResult.totalScore);
 
       const enrichedComputedScores = {
         ...scoreResult.computedScores,

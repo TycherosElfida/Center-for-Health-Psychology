@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { User, Calendar, Users, MapPin, ArrowRight, Shield } from "lucide-react";
@@ -29,7 +29,16 @@ interface PersonalInfoFormProps {
 
 export function PersonalInfoForm({ testSlug, testColor }: PersonalInfoFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const hasConsent = searchParams.get("consent") === "1";
   const provinces = getProvinces();
+
+  // Guard: redirect back to briefing if consent param is missing
+  useEffect(() => {
+    if (!hasConsent) {
+      router.replace(`/test/${testSlug}/briefing`);
+    }
+  }, [hasConsent, router, testSlug]);
 
   const {
     register,
@@ -87,7 +96,7 @@ export function PersonalInfoForm({ testSlug, testColor }: PersonalInfoFormProps)
 
   function onSubmit(data: PersonalInfoFormData) {
     localStorage.setItem(`chp_personal_${testSlug}`, JSON.stringify(data));
-    startSession.mutate({ testSlug });
+    startSession.mutate({ testSlug, consentAccepted: true });
   }
 
   /* ── Field state helpers ── */
