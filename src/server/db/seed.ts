@@ -1,11 +1,5 @@
 import { config } from "dotenv";
 config({ path: ".env.local" });
-import { db } from "./index";
-import { tests, questions, options, resultInterpretations } from "../schema/tests";
-import { TESTS } from "@/lib/data/tests";
-import { QUESTIONS } from "@/lib/data/questions";
-import { INTERPRETATIONS } from "@/lib/data/interpretations";
-import { eq, and, isNull } from "drizzle-orm";
 
 /** SRQ-29 dimension assignment by question index (0-based) */
 const SRQ29_DIMENSIONS: Record<number, string> = {
@@ -26,6 +20,13 @@ const SRQ29_DIMENSIONS: Record<number, string> = {
 };
 
 async function main() {
+  // Dynamic imports — must be after dotenv loads DATABASE_URL
+  const { db } = await import("./index");
+  const { tests, questions, options, resultInterpretations } = await import("../schema/tests");
+  const { TESTS } = await import("@/lib/data/tests");
+  const { QUESTIONS } = await import("@/lib/data/questions");
+  const { INTERPRETATIONS } = await import("@/lib/data/interpretations");
+  const { eq, and, isNull } = await import("drizzle-orm");
   console.log("🌱 Starting Database Seed...");
 
   try {

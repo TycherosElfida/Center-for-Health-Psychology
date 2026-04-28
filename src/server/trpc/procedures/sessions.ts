@@ -146,29 +146,30 @@ export const sessionsRouter = createTRPCRouter({
   }),
 
   // Phase 4F: saveProgress — Batch PostgreSQL UPSERT for storing intermediate answers
-  //
-  // drizzle-orm@1.0.0-beta.20 + neon-http driver produces "Failed query"
-  // errors on multi-row .insert().values([...]) — even with small batches.
-  // Workaround: individual parameterized INSERT statements via sql`` template.
   saveProgress: publicProcedure.input(saveProgressSchema).mutation(async ({ input, ctx }) => {
     const { sessionId, answers: answerMap } = input;
 
-    const entries = Object.entries(answerMap);
+    const answerEntries = Object.entries(answerMap).map(([questionId, value]) => ({
+      sessionId,
+      questionId,
+      value,
+    }));
 
     // Short-circuit to avoid DB trips for empty commits
-    if (entries.length === 0) {
+    if (answerEntries.length === 0) {
       return { success: true };
     }
 
-    // Individual upserts — bypasses Drizzle's broken multi-row INSERT builder
-    for (const [questionId, value] of entries) {
-      await ctx.db.execute(sql`
-        INSERT INTO answers (session_id, question_id, value)
-        VALUES (${sessionId}, ${questionId}, ${JSON.stringify(value)}::jsonb)
-        ON CONFLICT (session_id, question_id)
-        DO UPDATE SET value = EXCLUDED.value, answered_at = CURRENT_TIMESTAMP
-      `);
-    }
+    await ctx.db
+      .insert(answers)
+      .values(answerEntries)
+      .onConflictDoUpdate({
+        target: [answers.sessionId, answers.questionId],
+        set: {
+          value: sql`EXCLUDED.value`,
+          answeredAt: sql`CURRENT_TIMESTAMP`,
+        },
+      });
 
     return { success: true };
   }),
