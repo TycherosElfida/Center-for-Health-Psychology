@@ -18,6 +18,7 @@ const eslintConfig = defineConfig([
     "DesignReference/**",
     // Vitest coverage reports (generated JS instrumentation)
     "coverage/**",
+    ".worktrees/**",
   ]),
 ]);
 
