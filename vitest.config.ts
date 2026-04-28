@@ -9,10 +9,6 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
-    environmentMatchGlobs: [
-      // Server-side code runs in Node — no DOM needed
-      ["src/server/**", "node"],
-    ],
     exclude: [
       "**/node_modules/**",
       "**/dist/**",
