@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { httpBatchStreamLink } from "@trpc/client";
+import { httpBatchLink } from "@trpc/client";
 import superjson from "superjson";
 import { trpc } from "./client";
 
@@ -41,8 +41,12 @@ function getBaseUrl(): string {
 
 /**
  * TRPCProvider wraps the app tree with both the tRPC client and React Query
- * provider. It uses `httpBatchStreamLink` for optimal request batching and
- * response streaming. SuperJSON handles Date, Map, Set, and BigInt serialization.
+ * provider. It uses `httpBatchLink` for request batching.
+ * SuperJSON handles Date, Map, Set, and BigInt serialization.
+ *
+ * NOTE: `httpBatchStreamLink` cannot be used here because streaming sends
+ * HTTP headers before procedures finish, which prevents Set-Cookie from
+ * reaching the browser. `httpBatchLink` waits for all procedures to complete.
  *
  * Usage in `layout.tsx`:
  * ```tsx
@@ -56,7 +60,7 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
   const [trpcClient] = useState(() =>
     trpc.createClient({
       links: [
-        httpBatchStreamLink({
+        httpBatchLink({
           url: `${getBaseUrl()}/api/trpc`,
           transformer: superjson,
           headers() {

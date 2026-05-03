@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc/client";
 import { AdminSidebar } from "../_components/AdminSidebar";
 import { AdminHeader } from "../_components/AdminHeader";
 import "@/app/admin/admin.css";
 
 export default function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
   const meQuery = trpc.admin.me.useQuery(undefined, {
     retry: false,
     refetchOnWindowFocus: true,
@@ -16,15 +14,13 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
 
   useEffect(() => {
     if (meQuery.isError || (meQuery.isSuccess && !meQuery.data)) {
-      router.replace("/admin/login");
+      // Use window.location.href (not router.replace) to ensure cookie headers
+      // are properly read on the next request — same pattern as login page.
+      window.location.href = "/admin/login";
     }
-  }, [meQuery.isError, meQuery.isSuccess, meQuery.data, router]);
-
-  useEffect(() => {
-    if (meQuery.data?.mustChangePassword) {
-      router.replace("/admin/change-password");
-    }
-  }, [meQuery.data?.mustChangePassword, router]);
+    // mustChangePassword enforcement is intentionally not implemented here.
+    // Redirect to a change-password page is deferred to a later phase.
+  }, [meQuery.isError, meQuery.isSuccess, meQuery.data]);
 
   // Loading state
   if (meQuery.isLoading) {

@@ -25,7 +25,9 @@ const handler = async (req: Request) => {
         : undefined,
   });
 
-  // Merge any Set-Cookie headers from tRPC procedures into the response
+  // Merge any Set-Cookie headers from tRPC procedures into the response.
+  // IMPORTANT: This requires httpBatchLink (not httpBatchStreamLink) on the client.
+  // Streaming sends headers before procedures finish, so Set-Cookie would be lost.
   const setCookies = resHeaders.getSetCookie();
   if (setCookies.length > 0) {
     const newHeaders = new Headers(response.headers);
