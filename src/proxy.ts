@@ -31,6 +31,7 @@ export default auth((req) => {
   const isProtectedPath = protectedPaths.some((p) => nextUrl.pathname.startsWith(p));
   const isAdminPath = nextUrl.pathname.startsWith("/admin");
   const isAdminLoginPath = nextUrl.pathname === "/admin/login";
+
   const isAuthPath = authPaths.some((p) => nextUrl.pathname.startsWith(p));
 
   // ── Admin routes (decoupled from Auth.js) ────────────────────────

@@ -1,8 +1,8 @@
 "use client";
 
 import { trpc } from "@/lib/trpc/client";
-import { StatCard, StatCardSkeleton } from "../_components/StatCard";
-import { RecentResultsTable } from "../_components/RecentResultsTable";
+import { StatCard, StatCardSkeleton } from "../../_components/StatCard";
+import { RecentResultsTable } from "../../_components/RecentResultsTable";
 
 export default function AdminDashboardPage() {
   const statsQuery = trpc.adminDashboard.stats.useQuery(undefined, {

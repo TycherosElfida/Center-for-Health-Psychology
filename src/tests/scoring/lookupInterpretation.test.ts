@@ -24,7 +24,7 @@ describe("lookupInterpretation", () => {
   });
 
   it("Returns correct shape from DB when a matching row exists", async () => {
-    vi.mocked(db.limit).mockResolvedValueOnce([
+    vi.mocked((db as any).limit).mockResolvedValueOnce([
       {
         label: "Low Stress",
         description: "Your stress is low.",
@@ -43,7 +43,7 @@ describe("lookupInterpretation", () => {
   });
 
   it("Does NOT call Sentry when DB hit occurs", async () => {
-    vi.mocked(db.limit).mockResolvedValueOnce([
+    vi.mocked((db as any).limit).mockResolvedValueOnce([
       {
         label: "Low Stress",
         description: "Your stress is low.",
@@ -57,7 +57,7 @@ describe("lookupInterpretation", () => {
   });
 
   it("Fires Sentry captureMessage when DB returns no rows", async () => {
-    vi.mocked(db.limit).mockResolvedValueOnce([]);
+    vi.mocked((db as any).limit).mockResolvedValueOnce([]);
 
     await lookupInterpretation(mockTestId, 10);
 
@@ -68,14 +68,14 @@ describe("lookupInterpretation", () => {
   });
 
   it("Returns null on DB miss (no hardcoded fallback)", async () => {
-    vi.mocked(db.limit).mockResolvedValueOnce([]);
+    vi.mocked((db as any).limit).mockResolvedValueOnce([]);
 
     const result = await lookupInterpretation(mockTestId, 10);
     expect(result).toBeNull();
   });
 
   it("Handles numeric string comparison correctly", async () => {
-    vi.mocked(db.limit).mockResolvedValueOnce([
+    vi.mocked((db as any).limit).mockResolvedValueOnce([
       {
         label: "Test Label",
         description: "Test Desc",
@@ -85,11 +85,11 @@ describe("lookupInterpretation", () => {
     ]);
 
     await lookupInterpretation(mockTestId, 14);
-    expect(db.where).toHaveBeenCalled();
+    expect((db as any).where).toHaveBeenCalled();
   });
 
   it("Query uses (dimension IS NULL OR dimension = 'total') — not dimension = 'total' alone", async () => {
-    vi.mocked(db.limit).mockResolvedValueOnce([
+    vi.mocked((db as any).limit).mockResolvedValueOnce([
       {
         label: "Test Label",
         description: "Test Desc",
@@ -99,11 +99,11 @@ describe("lookupInterpretation", () => {
     ]);
 
     await lookupInterpretation(mockTestId, 14);
-    expect(db.where).toHaveBeenCalled();
+    expect((db as any).where).toHaveBeenCalled();
   });
 
   it("Queries with specific dimension when dimension param is provided", async () => {
-    vi.mocked(db.limit).mockResolvedValueOnce([
+    vi.mocked((db as any).limit).mockResolvedValueOnce([
       {
         label: "Cemas / Depresi",
         description: "Terdapat indikasi masalah psikologis...",
@@ -122,7 +122,7 @@ describe("lookupInterpretation", () => {
   });
 
   it("Falls back to total-score lookup when dimension is omitted", async () => {
-    vi.mocked(db.limit).mockResolvedValueOnce([
+    vi.mocked((db as any).limit).mockResolvedValueOnce([
       {
         label: "Stres Rendah",
         description: "Low stress",
@@ -141,7 +141,7 @@ describe("lookupInterpretation", () => {
   });
 
   it("Fires Sentry with dimension in message when dimension is provided", async () => {
-    vi.mocked(db.limit).mockResolvedValueOnce([]);
+    vi.mocked((db as any).limit).mockResolvedValueOnce([]);
 
     await lookupInterpretation(mockTestId, 10, "neurotic");
 
