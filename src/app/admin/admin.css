@@ -152,3 +152,100 @@
 .admin-fade-in {
   animation: adminFadeIn 0.3s ease-out both;
 }
+
+/* ── Status Badges ───────────────────────────────────────────── */
+.admin-status-pending {
+  background: #FFF8E1;
+  color: #F57F17;
+}
+.admin-status-reviewed {
+  background: #E3F2FD;
+  color: #1565C0;
+}
+.admin-status-sent {
+  background: #E8F5E9;
+  color: #2E7D32;
+}
+.admin-status-rejected {
+  background: #FFEBEE;
+  color: #C62828;
+}
+
+/* ── Admin Data Table ────────────────────────────────────────── */
+.admin-table-header {
+  background: #F5F3FA;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.admin-table-row-alt {
+  background: #FBFAFD;
+}
+
+.admin-table-row-selected {
+  background: rgba(155, 142, 196, 0.06);
+}
+
+/* ── Reject / Confirm Modal ──────────────────────────────────── */
+.admin-modal-dialog {
+  border: none;
+  border-radius: 1rem;
+  max-width: 480px;
+  width: 90%;
+  padding: 0;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  animation: adminFadeIn 0.2s ease-out both;
+}
+
+.admin-modal-dialog::backdrop {
+  background: rgba(30, 24, 48, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+/* ── Spin Animation ──────────────────────────────────────────── */
+@keyframes adminSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.admin-spin {
+  animation: adminSpin 1s linear infinite;
+}
+
+/* ── Action Button Styles ────────────────────────────────────── */
+.admin-btn-approve {
+  background: linear-gradient(135deg, #9B8EC4, #6B5CA0);
+  color: #ffffff;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.admin-btn-approve:hover {
+  opacity: 0.85;
+}
+
+.admin-btn-approve:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.admin-btn-reject {
+  background: transparent;
+  color: #C62828;
+  border: 1px solid #FFCDD2;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.admin-btn-reject:hover {
+  background: #FFEBEE;
+}
+
+.admin-btn-reject:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
