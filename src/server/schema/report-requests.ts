@@ -26,6 +26,7 @@ import { pgTable, uuid, text, timestamp, index } from "drizzle-orm/pg-core";
 import { testSessions, results } from "./sessions";
 import { tests } from "./tests";
 import { users } from "./users";
+import { adminUsers } from "./admin";
 
 export const reportRequests = pgTable(
   "report_requests",
@@ -45,9 +46,9 @@ export const reportRequests = pgTable(
     userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
     status: text("status").notNull().default("pending"), // pending | reviewed | sent | rejected
     rejectionReason: text("rejection_reason"),
-    reviewedBy: uuid("reviewed_by").references(() => users.id, { onDelete: "set null" }),
+    reviewedBy: uuid("reviewed_by").references(() => adminUsers.id, { onDelete: "set null" }),
     reviewedAt: timestamp("reviewed_at", { withTimezone: true, mode: "date" }),
-    processedBy: uuid("processed_by").references(() => users.id, { onDelete: "set null" }),
+    processedBy: uuid("processed_by").references(() => adminUsers.id, { onDelete: "set null" }),
     processedAt: timestamp("processed_at", { withTimezone: true, mode: "date" }),
     requestedAt: timestamp("requested_at", { withTimezone: true, mode: "date" })
       .defaultNow()

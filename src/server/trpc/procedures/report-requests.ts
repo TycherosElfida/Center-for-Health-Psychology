@@ -242,7 +242,7 @@ export const reportRequestsRouter = createTRPCRouter({
         .update(reportRequests)
         .set({
           status: "reviewed",
-          reviewedBy: ctx.admin.id,
+          reviewedBy: ctx.adminSession.id,
           reviewedAt: new Date(),
         })
         .where(eq(reportRequests.id, input.requestId));
@@ -292,7 +292,7 @@ export const reportRequestsRouter = createTRPCRouter({
         .update(reportRequests)
         .set({
           status: "sent",
-          processedBy: ctx.admin.id,
+          processedBy: ctx.adminSession.id,
           processedAt: new Date(),
         })
         .where(eq(reportRequests.id, input.requestId));
@@ -334,7 +334,7 @@ export const reportRequestsRouter = createTRPCRouter({
         .set({
           status: "rejected",
           rejectionReason: input.reason ?? null,
-          processedBy: ctx.admin.id,
+          processedBy: ctx.adminSession.id,
           processedAt: new Date(),
         })
         .where(eq(reportRequests.id, input.requestId));
@@ -392,7 +392,7 @@ export const reportRequestsRouter = createTRPCRouter({
             .update(reportRequests)
             .set({
               status: "sent",
-              processedBy: ctx.admin.id,
+              processedBy: ctx.adminSession.id,
               processedAt: new Date(),
             })
             .where(eq(reportRequests.id, requestId));

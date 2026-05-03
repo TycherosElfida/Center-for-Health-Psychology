@@ -9,7 +9,7 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
-    // @ts-ignore - Some versions of vitest types don't include environmentMatchGlobs
+    // @ts-expect-error - Some versions of vitest types don't include environmentMatchGlobs
     environmentMatchGlobs: [
       // Server-side code runs in Node — no DOM needed
       ["src/server/**", "node"],
