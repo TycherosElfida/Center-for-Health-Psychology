@@ -26,12 +26,25 @@ export default auth((req) => {
 
   // Protected route patterns — require authentication
   const protectedPaths = ["/dashboard", "/profile", "/history"];
-  const adminPaths = ["/admin"];
   const authPaths = ["/login", "/signup"];
 
   const isProtectedPath = protectedPaths.some((p) => nextUrl.pathname.startsWith(p));
-  const isAdminPath = adminPaths.some((p) => nextUrl.pathname.startsWith(p));
+  const isAdminPath = nextUrl.pathname.startsWith("/admin");
+  const isAdminLoginPath = nextUrl.pathname === "/admin/login";
+
   const isAuthPath = authPaths.some((p) => nextUrl.pathname.startsWith(p));
+
+  // ── Admin routes (decoupled from Auth.js) ────────────────────────
+  // /admin/login is always accessible (it's the admin login page)
+  // /admin/* requires admin-token cookie (optimistic check only;
+  // full JWT validation happens server-side in adminProcedure)
+  if (isAdminPath && !isAdminLoginPath) {
+    const adminToken = req.cookies.get("admin-token")?.value;
+    if (!adminToken) {
+      return NextResponse.redirect(new URL("/admin/login", nextUrl));
+    }
+    return NextResponse.next();
+  }
 
   // Redirect unauthenticated users away from protected routes
   if (isProtectedPath && !isAuthenticated) {
@@ -43,11 +56,6 @@ export default auth((req) => {
   // Redirect authenticated users away from login/signup
   if (isAuthPath && isAuthenticated) {
     return NextResponse.redirect(new URL("/dashboard", nextUrl));
-  }
-
-  // Admin routes: require auth (full admin isolation in Phase 2C)
-  if (isAdminPath && !isAuthenticated) {
-    return NextResponse.redirect(new URL("/login", nextUrl));
   }
 
   return NextResponse.next();

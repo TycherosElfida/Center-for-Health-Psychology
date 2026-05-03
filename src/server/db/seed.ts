@@ -27,7 +27,39 @@ async function main() {
   const { QUESTIONS } = await import("@/lib/data/questions");
   const { INTERPRETATIONS } = await import("@/lib/data/interpretations");
   const { eq, and, isNull } = await import("drizzle-orm");
+  const { adminUsers } = await import("../schema/admin");
+  const bcrypt = await import("bcryptjs");
   console.log("🌱 Starting Database Seed...");
+
+  // ── Bootstrap super_admin ─────────────────────────────────────────
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if (adminEmail && adminPassword) {
+    console.log("\n🔐 Bootstrapping super_admin account...");
+    const [existing] = await db
+      .select({ id: adminUsers.id })
+      .from(adminUsers)
+      .where(eq(adminUsers.email, adminEmail))
+      .limit(1);
+
+    if (existing) {
+      console.log(`  ✅ super_admin already exists (${adminEmail})`);
+    } else {
+      const hash = await bcrypt.hash(adminPassword, 12);
+      await db.insert(adminUsers).values({
+        email: adminEmail,
+        name: "Super Admin",
+        passwordHash: hash,
+        role: "super_admin",
+        isActive: true,
+        mustChangePassword: true,
+      });
+      console.log(`  ✅ super_admin created: ${adminEmail} (must change password on first login)`);
+    }
+  } else {
+    console.log("\n⚠️  ADMIN_EMAIL/ADMIN_PASSWORD not set — skipping admin bootstrap.");
+  }
 
   try {
     for (const testMeta of TESTS) {
