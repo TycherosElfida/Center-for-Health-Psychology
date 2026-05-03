@@ -2,18 +2,18 @@
  * CHP Platform — Admin Report Request Procedures
  *
  * Backend-only tRPC procedures for managing the report request queue.
- * Admin UI (EmailRequestsPage) is deferred to Phase 1D.
+ * Admin UI (EmailRequestsPage) renders at /admin/reports (Phase 1D.3).
  *
  * All procedures use `adminProcedure` — requires authenticated admin role.
  */
-import { eq, and, sql, desc } from "drizzle-orm";
+import { eq, and, sql, desc, gte, lte } from "drizzle-orm";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
 import { createTRPCRouter, adminProcedure } from "../index";
 import { reportRequests } from "@/server/schema/report-requests";
 import { tests } from "@/server/schema/tests";
-
+import { results } from "@/server/schema/sessions";
 import { users } from "@/server/schema/users";
 import { db as dbInstance } from "@/server/db";
 import { assembleReportData } from "@/server/reports/assemble";
@@ -76,12 +76,18 @@ async function resolveRecipientEmail(
 export const reportRequestsRouter = createTRPCRouter({
   /**
    * List report requests with optional filters and pagination.
+   *
+   * Enriched with JOINs to tests, results, and users (Phase 1D.3).
+   * PII is resolved server-side into `requesterDisplay` — raw encrypted
+   * email and userId are never returned to the client.
    */
   list: adminProcedure
     .input(
       z.object({
         status: z.enum(VALID_STATUSES).optional(),
         testId: z.string().uuid().optional(),
+        dateFrom: z.date().optional(),
+        dateTo: z.date().optional(),
         limit: z.number().int().min(1).max(100).default(20),
         offset: z.number().int().min(0).default(0),
       })
@@ -94,36 +100,86 @@ export const reportRequestsRouter = createTRPCRouter({
       if (input.testId) {
         conditions.push(eq(reportRequests.testId, input.testId));
       }
+      if (input.dateFrom) {
+        conditions.push(gte(reportRequests.requestedAt, input.dateFrom));
+      }
+      if (input.dateTo) {
+        // Include the full end-of-day
+        const endOfDay = new Date(input.dateTo);
+        endOfDay.setHours(23, 59, 59, 999);
+        conditions.push(lte(reportRequests.requestedAt, endOfDay));
+      }
 
       const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
       const rows = await ctx.db
         .select({
           id: reportRequests.id,
-          sessionId: reportRequests.sessionId,
-          testId: reportRequests.testId,
-          resultId: reportRequests.resultId,
           requesterType: reportRequests.requesterType,
+          encryptedEmail: reportRequests.encryptedEmail,
+          userId: reportRequests.userId,
           status: reportRequests.status,
           rejectionReason: reportRequests.rejectionReason,
           requestedAt: reportRequests.requestedAt,
           reviewedAt: reportRequests.reviewedAt,
           processedAt: reportRequests.processedAt,
+          // Joined fields
+          testName: tests.title,
+          testSlug: tests.slug,
+          totalScore: results.totalScore,
+          resultLabel: results.resultLabel,
+          // User email for authenticated requests
+          userEmail: users.email,
         })
         .from(reportRequests)
+        .leftJoin(tests, eq(reportRequests.testId, tests.id))
+        .leftJoin(results, eq(reportRequests.resultId, results.id))
+        .leftJoin(users, eq(reportRequests.userId, users.id))
         .where(whereClause)
         .orderBy(desc(reportRequests.requestedAt))
         .limit(input.limit)
         .offset(input.offset);
 
-      // Get total count for pagination
+      // Get total count for pagination (same WHERE, no JOINs needed)
       const countResult = await ctx.db
         .select({ count: sql<number>`count(*)::int` })
         .from(reportRequests)
         .where(whereClause)
         .then((r) => r[0]);
 
-      return { items: rows, total: countResult?.count ?? 0 };
+      // Post-processing: resolve requesterDisplay, strip PII columns
+      const items = rows.map((row) => {
+        let requesterDisplay: string;
+        if (row.requesterType === "authenticated" && row.userEmail) {
+          requesterDisplay = row.userEmail;
+        } else if (row.requesterType === "guest" && row.encryptedEmail) {
+          try {
+            requesterDisplay = decrypt(row.encryptedEmail);
+          } catch {
+            // Malformed ciphertext — graceful fallback (design spec §2)
+            requesterDisplay = `Guest (${row.id.slice(0, 8)})`;
+          }
+        } else {
+          requesterDisplay = `Guest (${row.id.slice(0, 8)})`;
+        }
+
+        return {
+          id: row.id,
+          requesterType: row.requesterType as "guest" | "authenticated",
+          requesterDisplay,
+          testName: row.testName ?? "Unknown",
+          testSlug: row.testSlug ?? "unknown",
+          totalScore: row.totalScore ? Number(row.totalScore) : null,
+          resultLabel: row.resultLabel ?? null,
+          status: row.status as "pending" | "reviewed" | "sent" | "rejected",
+          rejectionReason: row.rejectionReason,
+          requestedAt: row.requestedAt,
+          reviewedAt: row.reviewedAt,
+          processedAt: row.processedAt,
+        };
+      });
+
+      return { items, total: countResult?.count ?? 0 };
     }),
 
   /**
@@ -293,7 +349,7 @@ export const reportRequestsRouter = createTRPCRouter({
   batchApprove: adminProcedure
     .input(z.object({ requestIds: z.array(z.string().uuid()).min(1).max(50) }))
     .mutation(async ({ input, ctx }) => {
-      const results: Array<{
+      const batchResults: Array<{
         requestId: string;
         success: boolean;
         error?: string;
@@ -310,17 +366,21 @@ export const reportRequestsRouter = createTRPCRouter({
             .then((r) => r[0]);
 
           if (!request) {
-            results.push({ requestId, success: false, error: "Not found" });
+            batchResults.push({ requestId, success: false, error: "Not found" });
             continue;
           }
 
           if (request.status === "sent") {
-            results.push({ requestId, success: true, error: "Already sent" });
+            batchResults.push({ requestId, success: true, error: "Already sent" });
             continue;
           }
 
           if (request.status === "rejected") {
-            results.push({ requestId, success: false, error: "Cannot approve rejected request" });
+            batchResults.push({
+              requestId,
+              success: false,
+              error: "Cannot approve rejected request",
+            });
             continue;
           }
 
@@ -337,9 +397,9 @@ export const reportRequestsRouter = createTRPCRouter({
             })
             .where(eq(reportRequests.id, requestId));
 
-          results.push({ requestId, success: true, emailId });
+          batchResults.push({ requestId, success: true, emailId });
         } catch (err) {
-          results.push({
+          batchResults.push({
             requestId,
             success: false,
             error: err instanceof Error ? err.message : "Unknown error",
@@ -349,9 +409,9 @@ export const reportRequestsRouter = createTRPCRouter({
 
       return {
         total: input.requestIds.length,
-        succeeded: results.filter((r) => r.success).length,
-        failed: results.filter((r) => !r.success).length,
-        results,
+        succeeded: batchResults.filter((r) => r.success).length,
+        failed: batchResults.filter((r) => !r.success).length,
+        results: batchResults,
       };
     }),
 
