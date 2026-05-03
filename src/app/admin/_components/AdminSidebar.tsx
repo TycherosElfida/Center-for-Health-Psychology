@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { ChpLogo } from "@/components/ui/ChpLogo";
 import { trpc } from "@/lib/trpc/client";
 
@@ -26,11 +26,11 @@ const NAV_ITEMS = [
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const router = useRouter();
 
   const logoutMutation = trpc.admin.logout.useMutation({
     onSuccess() {
-      router.push("/admin/login");
+      // Full reload ensures the cleared cookie is respected (ADR-7)
+      window.location.href = "/admin/login";
     },
   });
 
