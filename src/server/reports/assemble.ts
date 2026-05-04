@@ -9,6 +9,9 @@ import { eq, asc } from "drizzle-orm";
 import { db } from "@/server/db";
 import { tests, questions, resultInterpretations } from "@/server/schema/tests";
 import { testSessions, answers, results } from "@/server/schema/sessions";
+import { guestLeads } from "@/server/schema/consents";
+import { sessionDemographics } from "@/server/schema/session-demographics";
+import { decrypt } from "@/server/utils/encryption";
 
 /* ═══════════════════════════════════════════════════════
    Types
@@ -38,6 +41,19 @@ export interface ReportInterpretation {
   severity: string;
 }
 
+export interface ReportProfile {
+  id: string;
+  name: string;
+  email: string;
+  age: number | null;
+  sex: string;
+  province: string;
+  regency: string;
+  jobTitle: string;
+  education: string;
+  testDate: string;
+}
+
 export interface ReportData {
   /** Test instrument metadata */
   testName: string;
@@ -47,6 +63,9 @@ export interface ReportData {
   /** Session metadata */
   dateTaken: Date;
   dateCompleted: Date | null;
+
+  /** User profile metadata */
+  profile: ReportProfile;
 
   /** Scores */
   totalScore: number;
@@ -126,6 +145,47 @@ export async function assembleReportData(resultId: string): Promise<ReportData> 
   if (!session) {
     throw new Error(`Session not found: ${result.sessionId}`);
   }
+
+  // 2a. Fetch Demographics and Guest Lead
+  const demo = await db
+    .select()
+    .from(sessionDemographics)
+    .where(eq(sessionDemographics.sessionId, result.sessionId))
+    .limit(1)
+    .then((r) => r[0]);
+
+  const lead = await db
+    .select()
+    .from(guestLeads)
+    .where(eq(guestLeads.sessionId, result.sessionId))
+    .limit(1)
+    .then((r) => r[0]);
+
+  let email = "Anonymous";
+  if (lead?.encryptedEmail) {
+    try {
+      email = decrypt(lead.encryptedEmail);
+    } catch (err) {
+      console.warn("Failed to decrypt email for session:", result.sessionId);
+    }
+  }
+
+  const profile: ReportProfile = {
+    id: lead?.id ?? "Anonymous",
+    name: demo?.name ?? "Anonymous User",
+    email,
+    age: demo?.age ?? null,
+    sex: demo?.sex ?? "Not specified",
+    province: demo?.province ?? "Not specified",
+    regency: demo?.city ?? "Not specified",
+    jobTitle: "-", // Not collected in current schema
+    education: "-", // Not collected in current schema
+    testDate: new Intl.DateTimeFormat("id-ID", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }).format(session.startedAt),
+  };
 
   // 3. Fetch test instrument
   const test = await db
@@ -217,6 +277,7 @@ export async function assembleReportData(resultId: string): Promise<ReportData> 
     testCategory: test.category,
     dateTaken: session.startedAt,
     dateCompleted: session.completedAt,
+    profile,
     totalScore,
     maxPossibleScore,
     resultLabel: result.resultLabel,

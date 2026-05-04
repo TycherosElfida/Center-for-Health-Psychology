@@ -2,9 +2,10 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
-import { createTRPCRouter, publicProcedure } from "../index";
+import { createTRPCRouter, publicProcedure, adminProcedure } from "../index";
 import { results } from "@/server/schema/sessions";
 import { tests } from "@/server/schema/tests";
+import { assembleReportData } from "@/server/reports/assemble";
 
 export const resultsRouter = createTRPCRouter({
   /**
@@ -55,5 +56,28 @@ export const resultsRouter = createTRPCRouter({
         testTitle: row.testTitle,
         testCategory: row.testCategory,
       };
+    }),
+
+  /**
+   * getDetailedReport — Fetch full clinical report data for an assessment result.
+   * Requires admin privileges.
+   */
+  getDetailedReport: adminProcedure
+    .input(z.object({ scoreId: z.string().uuid() }))
+    .query(async ({ input }) => {
+      try {
+        const reportData = await assembleReportData(input.scoreId);
+        return reportData;
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : "Unknown error";
+        if (msg.includes("not found")) {
+          throw new TRPCError({ code: "NOT_FOUND", message: msg });
+        }
+        console.error("Failed to assemble detailed report:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to assemble detailed report",
+        });
+      }
     }),
 });

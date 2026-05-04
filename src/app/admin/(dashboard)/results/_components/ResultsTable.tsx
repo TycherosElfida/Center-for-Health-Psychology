@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Search, RotateCcw, Eye, ChevronUp, ChevronDown } from "lucide-react";
 import {
   DT,
@@ -56,6 +57,7 @@ export function ResultsTable({
   onClearFilters,
   testConfig,
 }: ResultsTableProps) {
+  const router = useRouter();
   const { color, slug, maxScore, shortName } = testConfig;
   const catColors = CATEGORY_COLORS[slug] ?? {};
   const totalPages = Math.ceil(total / pageSize);
@@ -528,6 +530,7 @@ export function ResultsTable({
                       }}
                     >
                       <button
+                        onClick={() => router.push(`/admin/results/${row.id}`)}
                         style={{
                           display: "inline-flex",
                           alignItems: "center",
