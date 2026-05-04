@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChpLogo } from "@/components/ui/ChpLogo";
 import { trpc } from "@/lib/trpc/client";
+import { useState, useRef, useEffect } from "react";
+import { User, Moon, LogOut, Link as LinkIcon, MoreHorizontal } from "lucide-react";
 
 const NAV_ITEMS = [
   {
@@ -24,8 +26,9 @@ const NAV_ITEMS = [
   },
 ];
 
-export function AdminSidebar() {
-  const pathname = usePathname();
+function UserProfileDropdown({ adminName }: { adminName: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const logoutMutation = trpc.admin.logout.useMutation({
     onSuccess() {
@@ -33,6 +36,84 @@ export function AdminSidebar() {
       window.location.href = "/admin/login";
     },
   });
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      {isOpen && (
+        <div className="absolute bottom-full left-0 mb-2 w-full bg-[#18181b] border border-[#27272a] rounded-xl shadow-xl overflow-hidden z-50 text-sm">
+          <div className="px-3 py-2.5 text-white font-medium border-b border-[#27272a] flex items-center gap-2">
+            <span className="text-[#a1a1aa]">
+              <User size={14} />
+            </span>{" "}
+            My profile
+          </div>
+          <div className="py-1 border-b border-[#27272a]">
+            <button
+              onClick={() => {
+                setIsOpen(false);
+              }}
+              className="w-full flex items-center justify-between px-3 py-2 text-[#a1a1aa] hover:text-white hover:bg-[#27272a] transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <Moon size={14} /> Toggle theme
+              </div>
+              <kbd className="bg-[#27272a] text-[#71717a] text-[10px] px-1.5 py-0.5 rounded border border-[#3f3f46]">
+                M
+              </kbd>
+            </button>
+          </div>
+          <div className="py-1 border-b border-[#27272a]">
+            <Link
+              href="/home"
+              onClick={() => setIsOpen(false)}
+              className="w-full flex items-center gap-2 px-3 py-2 text-[#a1a1aa] hover:text-white hover:bg-[#27272a] transition-colors"
+            >
+              <LinkIcon size={14} /> Homepage
+            </Link>
+          </div>
+          <div className="py-1">
+            <button
+              onClick={() => logoutMutation.mutate()}
+              disabled={logoutMutation.isPending}
+              className="w-full flex items-center gap-2 px-3 py-2 text-[#E57373] hover:bg-[#27272a] transition-colors"
+            >
+              <LogOut size={14} /> {logoutMutation.isPending ? "Logging out..." : "Log out"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-[#27272a]/50 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-[#27272a] text-[#a1a1aa] flex items-center justify-center font-medium text-xs">
+            {adminName.charAt(0).toUpperCase()}
+          </div>
+          <div className="text-sm text-[#d4d4d8] truncate max-w-[120px] font-medium text-left">
+            {adminName}
+          </div>
+        </div>
+        <MoreHorizontal size={16} className="text-[#71717a]" />
+      </button>
+    </div>
+  );
+}
+
+export function AdminSidebar({ adminName = "Admin" }: { adminName?: string }) {
+  const pathname = usePathname();
 
   return (
     <aside className="admin-sidebar">
@@ -69,17 +150,9 @@ export function AdminSidebar() {
         ))}
       </nav>
 
-      {/* Logout */}
+      {/* User Profile / Menu */}
       <div className="px-3 pb-5 mt-auto">
-        <button
-          onClick={() => logoutMutation.mutate()}
-          disabled={logoutMutation.isPending}
-          className="admin-sidebar-item w-full text-left"
-          style={{ color: "#E57373" }}
-        >
-          <span className="sidebar-icon">🚪</span>
-          {logoutMutation.isPending ? "Logging out\u2026" : "Logout"}
-        </button>
+        <UserProfileDropdown adminName={adminName} />
       </div>
     </aside>
   );

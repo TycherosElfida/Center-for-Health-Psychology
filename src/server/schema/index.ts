@@ -18,4 +18,5 @@ export * from "./users";
 export * from "./accounts";
 export * from "./authSessions";
 export * from "./verificationTokens";
+export * from "./session-demographics";
 export * from "./relations";

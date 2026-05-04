@@ -45,7 +45,7 @@ export function PersonalInfoForm({ testSlug, testColor }: PersonalInfoFormProps)
     handleSubmit,
     control,
     resetField,
-    formState: { errors, isValid, touchedFields },
+    formState: { errors, isValid, touchedFields, isSubmitting },
   } = useForm<PersonalInfoInput, unknown, PersonalInfoFormData>({
     resolver: zodResolver(personalInfoSchema),
     mode: "onTouched",
@@ -69,34 +69,83 @@ export function PersonalInfoForm({ testSlug, testColor }: PersonalInfoFormProps)
   }, [selectedProvince, resetField]);
 
   /* ── Submit handler ── */
-  const startSession = trpc.sessions.startSession.useMutation({
-    onSuccess: (data) => {
+
+  const startSession = trpc.sessions.startSession.useMutation();
+  const saveDemographics = trpc.sessions.saveDemographics.useMutation();
+
+  async function onSubmit(data: PersonalInfoFormData) {
+    // 1. Cache locally just in case
+    localStorage.setItem(`chp_personal_${testSlug}`, JSON.stringify(data));
+
+    try {
+      // 2. Start session (awaits response before continuing)
+      const sessionData = await startSession.mutateAsync({ testSlug, consentAccepted: true });
+
       // Support anonymous forced resume
       try {
-        localStorage.setItem(`chp_active_session_${testSlug}`, data.sessionId);
+        localStorage.setItem(`chp_active_session_${testSlug}`, sessionData.sessionId);
       } catch {}
 
       // Phase 2B.1: Persist claim token for later anonymous→authenticated handoff
-      if (data.claimToken) {
+      if (sessionData.claimToken) {
         try {
           localStorage.setItem(
-            `chp_claim_${data.sessionId}`,
-            JSON.stringify({ sessionId: data.sessionId, claimToken: data.claimToken })
+            `chp_claim_${sessionData.sessionId}`,
+            JSON.stringify({ sessionId: sessionData.sessionId, claimToken: sessionData.claimToken })
           );
         } catch {
-          // localStorage full / blocked — non-critical for assessment flow
+          // non-critical
         }
       }
-      router.push(`/test/${testSlug}?sessionId=${data.sessionId}`);
-    },
-    onError: (err) => {
-      console.error("[PersonalInfoForm] Failed to start session:", err.message);
-    },
-  });
 
-  function onSubmit(data: PersonalInfoFormData) {
-    localStorage.setItem(`chp_personal_${testSlug}`, JSON.stringify(data));
-    startSession.mutate({ testSlug, consentAccepted: true });
+      // 3. Save demographics directly via TRPC mutateAsync
+      try {
+        // Handle potential type mismatch where react-hook-form passes string instead of transformed number
+        const rawAge = data.age as unknown;
+        const parsedAge =
+          typeof rawAge === "string" && rawAge.trim() !== ""
+            ? parseInt(rawAge, 10)
+            : typeof rawAge === "number"
+              ? rawAge
+              : undefined;
+
+        // Map codes back to human-readable names for database storage
+        const allProvinces = getProvinces();
+        const provinceName =
+          allProvinces.find((p) => p.code === data.province)?.name || data.province;
+
+        const allCities = data.province ? getCitiesByProvince(data.province) : [];
+        const cityName = allCities.find((c) => c.code === data.city)?.name || data.city;
+
+        await saveDemographics.mutateAsync({
+          sessionId: sessionData.sessionId,
+          name: data.name,
+          sex: data.sex as "Male" | "Female",
+          age: parsedAge,
+          province: provinceName,
+          city: cityName,
+        });
+      } catch (err) {
+        console.error("[PersonalInfoForm] Failed to save demographics:", err);
+        if (err && typeof err === "object" && "data" in err) {
+          const errorData = (err as { data?: { zodError?: unknown } }).data;
+          if (errorData?.zodError) {
+            console.error("Zod Validation Error:", errorData.zodError);
+          }
+        }
+      }
+
+      // 4. Safely navigate away AFTER mutations have hit the network
+      router.push(`/test/${testSlug}?sessionId=${sessionData.sessionId}`);
+    } catch (err) {
+      console.error("[PersonalInfoForm] Failed to start session:", err);
+      if (err && typeof err === "object" && "data" in err) {
+        const errorData = (err as { data?: { zodError?: unknown } }).data;
+        if (errorData?.zodError) {
+          console.error("Zod Validation Error:", errorData.zodError);
+        }
+      }
+    }
   }
 
   /* ── Field state helpers ── */
@@ -287,7 +336,8 @@ export function PersonalInfoForm({ testSlug, testColor }: PersonalInfoFormProps)
           {/* ── Submit ── */}
           <button
             type="submit"
-            className="mt-3 flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-2xl border-none py-4 text-base font-bold transition-all"
+            disabled={!isValid || isSubmitting}
+            className="mt-3 flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-2xl border-none py-4 text-base font-bold transition-all disabled:cursor-not-allowed disabled:opacity-50"
             style={{
               background: isValid
                 ? `linear-gradient(135deg, ${testColor}, ${testColor}CC)`
@@ -296,8 +346,8 @@ export function PersonalInfoForm({ testSlug, testColor }: PersonalInfoFormProps)
               boxShadow: isValid ? `0 8px 28px ${testColor}35` : "none",
             }}
           >
-            Continue to Assessment
-            <ArrowRight size={18} />
+            {isSubmitting ? "Starting Assessment..." : "Continue to Assessment"}
+            {!isSubmitting && <ArrowRight size={18} />}
           </button>
 
           <p className="mt-1 text-center text-xs text-muted-foreground">

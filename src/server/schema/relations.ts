@@ -20,6 +20,7 @@ import { users } from "./users";
 import { accounts } from "./accounts";
 import { authSessions } from "./authSessions";
 import { verificationTokens } from "./verificationTokens";
+import { sessionDemographics } from "./session-demographics";
 
 export const relations = defineRelations(
   {
@@ -39,6 +40,7 @@ export const relations = defineRelations(
     accounts,
     authSessions,
     verificationTokens,
+    sessionDemographics,
   },
   (r) => ({
     // ── Test Domain ────────────────────────────────────────────────
@@ -98,6 +100,10 @@ export const relations = defineRelations(
         from: r.testSessions.id,
         to: r.consents.sessionId,
       }),
+      demographics: r.one.sessionDemographics({
+        from: r.testSessions.id,
+        to: r.sessionDemographics.sessionId,
+      }),
       guestLeads: r.many.guestLeads(),
       // Phase 2: link sessions to authenticated users
       user: r.one.users({
@@ -125,6 +131,13 @@ export const relations = defineRelations(
       test: r.one.tests({
         from: r.results.testId,
         to: r.tests.id,
+      }),
+    },
+
+    sessionDemographics: {
+      session: r.one.testSessions({
+        from: r.sessionDemographics.sessionId,
+        to: r.testSessions.id,
       }),
     },
 

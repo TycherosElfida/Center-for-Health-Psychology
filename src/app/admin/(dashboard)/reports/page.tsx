@@ -102,8 +102,9 @@ export default function ReportsPage() {
   });
 
   // ── Derived Data ───────────────────────────────────────────────
-  const rawItems: EnrichedReportRequest[] = (listQuery.data?.items ??
-    []) as EnrichedReportRequest[];
+  const rawItems: EnrichedReportRequest[] = useMemo(() => {
+    return (listQuery.data?.items ?? []) as EnrichedReportRequest[];
+  }, [listQuery.data?.items]);
 
   // Client-side search filter (page-scoped, design spec §2 ADR-7)
   const searchFiltered = useMemo(() => {

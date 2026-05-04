@@ -12,6 +12,7 @@ import {
 
 import { tests, questions, options as optionsTable } from "@/server/schema/tests";
 import { testSessions, answers, results } from "@/server/schema/sessions";
+import { sessionDemographics } from "@/server/schema/session-demographics";
 import { consents } from "@/server/schema/consents";
 import { CONSENT_VERSION } from "@/lib/constants/consent";
 import { computeScore } from "@/server/scoring/engine";
@@ -145,7 +146,46 @@ export const sessionsRouter = createTRPCRouter({
     };
   }),
 
-  // Phase 4F: saveProgress — Batch PostgreSQL UPSERT for storing intermediate answers
+  // Phase 5: saveDemographics — Persist demographic data alongside a session.
+  // Called fire-and-forget by PersonalInfoForm after startSession succeeds.
+  // Idempotent: ON CONFLICT (session_id) DO UPDATE handles double-submit.
+  // No auth required — sessionId acts as the authorization token.
+  saveDemographics: publicProcedure
+    .input(
+      z.object({
+        sessionId: z.string().uuid(),
+        name: z.string().min(1).max(100),
+        sex: z.enum(["Male", "Female"]),
+        age: z.number().int().min(5).max(120).optional(),
+        province: z.string().min(1),
+        city: z.string().min(1),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      await ctx.db
+        .insert(sessionDemographics)
+        .values({
+          sessionId: input.sessionId,
+          name: input.name,
+          sex: input.sex,
+          age: input.age ?? null,
+          province: input.province,
+          city: input.city,
+        })
+        .onConflictDoUpdate({
+          target: sessionDemographics.sessionId,
+          set: {
+            name: sql`EXCLUDED.name`,
+            sex: sql`EXCLUDED.sex`,
+            age: sql`EXCLUDED.age`,
+            province: sql`EXCLUDED.province`,
+            city: sql`EXCLUDED.city`,
+          },
+        });
+
+      return { success: true as const };
+    }),
+
   saveProgress: publicProcedure.input(saveProgressSchema).mutation(async ({ input, ctx }) => {
     const { sessionId, answers: answerMap } = input;
 
