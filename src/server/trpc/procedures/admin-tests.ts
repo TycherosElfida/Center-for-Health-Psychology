@@ -435,6 +435,14 @@ export const adminTestsRouter = createTRPCRouter({
         });
       }
 
+      const sessionCount = await getSessionCount(ctx.db, input.id);
+      if (sessionCount > 0) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: `Cannot revert to draft: test has ${sessionCount} recorded session(s).`,
+        });
+      }
+
       await ctx.db
         .update(tests)
         .set({
