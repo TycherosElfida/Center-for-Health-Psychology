@@ -73,6 +73,15 @@ async function main() {
         .where(eq(tests.slug, testMeta.id))
         .limit(1);
 
+      // Map static scoring method by slug (known at seed time)
+      const scoringMethodMap: Record<string, "summative" | "dimensional" | "binary_cluster"> = {
+        pss10: "summative",
+        srs: "summative",
+        gpius2: "dimensional",
+        srq29: "binary_cluster",
+        mbti: "dimensional",
+      };
+
       if (existingTest) {
         testId = existingTest.id;
         console.log(`  Test already exists with ID: ${testId}`);
@@ -85,7 +94,9 @@ async function main() {
             description: testMeta.description,
             category: testMeta.primaryCategory,
             estimatedMinutes: parseInt(testMeta.duration.split("–")[0] || "5", 10),
-            isPublished: testMeta.status === "Active",
+            // 1D.7 lifecycle columns
+            status: testMeta.status === "Active" ? "published" : "draft",
+            scoringMethod: scoringMethodMap[testMeta.id] ?? "summative",
             version: 1,
           })
           .returning({ id: tests.id });

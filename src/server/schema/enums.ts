@@ -9,6 +9,14 @@ import { pgEnum } from "drizzle-orm/pg-core";
 
 // ── Test Domain ──────────────────────────────────────────────────────
 
+export const testStatusEnum = pgEnum("test_status", ["draft", "published", "archived"]);
+
+export const scoringMethodEnum = pgEnum("scoring_method", [
+  "summative",
+  "dimensional",
+  "binary_cluster",
+]);
+
 export const questionTypeEnum = pgEnum("question_type", [
   "likert_5",
   "likert_7",

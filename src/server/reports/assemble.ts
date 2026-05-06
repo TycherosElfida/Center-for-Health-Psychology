@@ -165,7 +165,7 @@ export async function assembleReportData(resultId: string): Promise<ReportData> 
   if (lead?.encryptedEmail) {
     try {
       email = decrypt(lead.encryptedEmail);
-    } catch (err) {
+    } catch {
       console.warn("Failed to decrypt email for session:", result.sessionId);
     }
   }

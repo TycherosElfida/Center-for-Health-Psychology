@@ -18,7 +18,13 @@ import {
   jsonb,
   index,
 } from "drizzle-orm/pg-core";
-import { questionTypeEnum, algorithmEnum, severityEnum } from "./enums";
+import {
+  questionTypeEnum,
+  algorithmEnum,
+  severityEnum,
+  testStatusEnum,
+  scoringMethodEnum,
+} from "./enums";
 
 // ── tests ────────────────────────────────────────────────────────────
 // A validated psychological assessment instrument (e.g., PHQ-9, GAD-7)
@@ -32,14 +38,19 @@ export const tests = pgTable(
     description: text("description"),
     category: text("category").notNull(),
     estimatedMinutes: integer("estimated_minutes").notNull(),
-    isPublished: boolean("is_published").default(false).notNull(),
+    status: testStatusEnum("status").default("draft").notNull(),
+    scoringMethod: scoringMethodEnum("scoring_method"),
+    instructions: text("instructions"),
+    thumbnailUrl: text("thumbnail_url"),
+    isActive: boolean("is_active").default(true).notNull(),
     version: integer("version").notNull().default(1),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
   },
   (t) => [
     index("idx_tests_category").on(t.category),
-    index("idx_tests_is_published").on(t.isPublished),
+    index("idx_tests_status").on(t.status),
+    index("idx_tests_is_active").on(t.isActive),
   ]
 );
 
