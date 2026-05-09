@@ -22,18 +22,25 @@ import {
 } from "@/components/ui/sheet";
 import { AlertCircle, Loader2, CheckCircle } from "lucide-react";
 
-/* ── Design Tokens ───────────────────────────────────────────── */
-const DT = {
-  DARK_TEXT: "#1E1830",
-  MID_TEXT: "#6B5CA0",
-  LIGHT_TEXT: "#8B7CB8",
-  BORDER: "#E2DCF0",
-  WHITE: "#FFFFFF",
-  BG: "#F5F3FA",
-  BRAND: "#9B8EC4",
-  BRAND_DEEP: "#6B5CA0",
-  ERROR: "#E53935",
-} as const;
+import {
+  DARK_TEXT,
+  MID_TEXT,
+  LIGHT_TEXT,
+  BORDER,
+  WHITE,
+  BRAND,
+  BRAND_DEEP,
+  RED,
+  GREEN,
+  GREEN_LIGHT,
+  GREEN_BORDER,
+  RED_LIGHT,
+  RED_BORDER,
+  inputStyle as sharedInputStyle,
+  labelStyle as sharedLabelStyle,
+  onInputFocus,
+  onInputBlur,
+} from "../../_components/DesignTokens";
 
 /* ── Slug generator ──────────────────────────────────────────── */
 function toSlug(text: string): string {
@@ -122,33 +129,20 @@ export function CreateTestSheet({ open, onOpenChange, onCreated }: CreateTestShe
     });
   }
 
-  /* ── Inline style helpers ──────────────────────────────────── */
-  const labelStyle: React.CSSProperties = {
+  /* ── Derived styles ── */
+  const lblStyle: React.CSSProperties = {
+    ...sharedLabelStyle,
     display: "block",
+    textTransform: "none",
     fontSize: 12,
-    fontWeight: 600,
-    color: DT.DARK_TEXT,
-    marginBottom: 6,
-  };
-
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "10px 12px",
-    borderRadius: 8,
-    border: `1.5px solid ${DT.BORDER}`,
-    background: DT.WHITE,
-    fontSize: 13,
-    color: DT.DARK_TEXT,
-    outline: "none",
-    transition: "border-color 0.15s ease",
-    fontFamily: "'Inter', sans-serif",
+    letterSpacing: "normal",
   };
 
   const selectStyle: React.CSSProperties = {
-    ...inputStyle,
+    ...sharedInputStyle,
     cursor: "pointer",
     appearance: "none" as const,
-    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238B7CB8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
     backgroundRepeat: "no-repeat",
     backgroundPosition: "right 12px center",
     paddingRight: 32,
@@ -171,20 +165,21 @@ export function CreateTestSheet({ open, onOpenChange, onCreated }: CreateTestShe
         <SheetHeader
           style={{
             padding: "24px 28px 16px",
-            borderBottom: `1px solid ${DT.BORDER}`,
+            borderBottom: `1px solid ${BORDER}`,
           }}
         >
           <SheetTitle
             style={{
               fontSize: 18,
               fontWeight: 700,
-              color: DT.DARK_TEXT,
+              color: DARK_TEXT,
               letterSpacing: "-0.01em",
+              fontFamily: "'DM Sans', 'Inter', sans-serif",
             }}
           >
             New Assessment
           </SheetTitle>
-          <SheetDescription style={{ fontSize: 13, color: DT.LIGHT_TEXT }}>
+          <SheetDescription style={{ fontSize: 13, color: LIGHT_TEXT }}>
             Create a new assessment instrument. It will start as a Draft.
           </SheetDescription>
         </SheetHeader>
@@ -203,8 +198,8 @@ export function CreateTestSheet({ open, onOpenChange, onCreated }: CreateTestShe
         >
           {/* Title */}
           <div>
-            <label style={labelStyle}>
-              Title <span style={{ color: DT.ERROR }}>*</span>
+            <label style={lblStyle}>
+              Title <span style={{ color: RED }}>*</span>
             </label>
             <input
               type="text"
@@ -213,25 +208,21 @@ export function CreateTestSheet({ open, onOpenChange, onCreated }: CreateTestShe
               value={form.title}
               onChange={(e) => handleTitleChange(e.target.value)}
               placeholder="e.g. Perceived Stress Scale"
-              style={inputStyle}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = DT.BRAND;
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = DT.BORDER;
-              }}
+              style={sharedInputStyle}
+              onFocus={onInputFocus}
+              onBlur={onInputBlur}
             />
           </div>
 
           {/* Slug */}
           <div>
-            <label style={labelStyle}>
-              Slug <span style={{ color: DT.ERROR }}>*</span>
+            <label style={lblStyle}>
+              Slug <span style={{ color: RED }}>*</span>
               <span
                 style={{
                   fontSize: 10,
                   fontWeight: 400,
-                  color: DT.LIGHT_TEXT,
+                  color: LIGHT_TEXT,
                   marginLeft: 8,
                 }}
               >
@@ -249,24 +240,20 @@ export function CreateTestSheet({ open, onOpenChange, onCreated }: CreateTestShe
               }}
               placeholder="e.g. pss-10"
               style={{
-                ...inputStyle,
+                ...sharedInputStyle,
                 fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
                 fontSize: 12,
               }}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = DT.BRAND;
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = DT.BORDER;
-              }}
+              onFocus={onInputFocus}
+              onBlur={onInputBlur}
             />
           </div>
 
           {/* Category + Estimated Minutes (side-by-side) */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 120px", gap: 12 }}>
             <div>
-              <label style={labelStyle}>
-                Category <span style={{ color: DT.ERROR }}>*</span>
+              <label style={lblStyle}>
+                Category <span style={{ color: RED }}>*</span>
               </label>
               <input
                 type="text"
@@ -275,18 +262,14 @@ export function CreateTestSheet({ open, onOpenChange, onCreated }: CreateTestShe
                 value={form.category}
                 onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
                 placeholder="e.g. Stress"
-                style={inputStyle}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = DT.BRAND;
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = DT.BORDER;
-                }}
+                style={sharedInputStyle}
+                onFocus={onInputFocus}
+                onBlur={onInputBlur}
               />
             </div>
             <div>
-              <label style={labelStyle}>
-                Minutes <span style={{ color: DT.ERROR }}>*</span>
+              <label style={lblStyle}>
+                Minutes <span style={{ color: RED }}>*</span>
               </label>
               <input
                 type="number"
@@ -296,21 +279,17 @@ export function CreateTestSheet({ open, onOpenChange, onCreated }: CreateTestShe
                 value={form.estimatedMinutes}
                 onChange={(e) => setForm((f) => ({ ...f, estimatedMinutes: e.target.value }))}
                 placeholder="10"
-                style={inputStyle}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = DT.BRAND;
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = DT.BORDER;
-                }}
+                style={sharedInputStyle}
+                onFocus={onInputFocus}
+                onBlur={onInputBlur}
               />
             </div>
           </div>
 
           {/* Scoring Method */}
           <div>
-            <label style={labelStyle}>
-              Scoring Method <span style={{ color: DT.ERROR }}>*</span>
+            <label style={lblStyle}>
+              Scoring Method <span style={{ color: RED }}>*</span>
             </label>
             <select
               required
@@ -331,7 +310,7 @@ export function CreateTestSheet({ open, onOpenChange, onCreated }: CreateTestShe
 
           {/* Description */}
           <div>
-            <label style={labelStyle}>Description</label>
+            <label style={lblStyle}>Description</label>
             <textarea
               maxLength={1000}
               value={form.description}
@@ -339,22 +318,18 @@ export function CreateTestSheet({ open, onOpenChange, onCreated }: CreateTestShe
               placeholder="Brief description of the assessment..."
               rows={3}
               style={{
-                ...inputStyle,
+                ...sharedInputStyle,
                 resize: "vertical",
                 minHeight: 72,
               }}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = DT.BRAND;
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = DT.BORDER;
-              }}
+              onFocus={onInputFocus}
+              onBlur={onInputBlur}
             />
           </div>
 
           {/* Instructions */}
           <div>
-            <label style={labelStyle}>Instructions</label>
+            <label style={lblStyle}>Instructions</label>
             <textarea
               maxLength={5000}
               value={form.instructions}
@@ -362,35 +337,27 @@ export function CreateTestSheet({ open, onOpenChange, onCreated }: CreateTestShe
               placeholder="Instructions shown to participants before starting..."
               rows={3}
               style={{
-                ...inputStyle,
+                ...sharedInputStyle,
                 resize: "vertical",
                 minHeight: 72,
               }}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = DT.BRAND;
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = DT.BORDER;
-              }}
+              onFocus={onInputFocus}
+              onBlur={onInputBlur}
             />
           </div>
 
           {/* Thumbnail URL */}
           <div>
-            <label style={labelStyle}>Thumbnail URL</label>
+            <label style={lblStyle}>Thumbnail URL</label>
             <input
               type="text"
               maxLength={500}
               value={form.thumbnailUrl}
               onChange={(e) => setForm((f) => ({ ...f, thumbnailUrl: e.target.value }))}
               placeholder="https://..."
-              style={inputStyle}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = DT.BRAND;
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = DT.BORDER;
-              }}
+              style={sharedInputStyle}
+              onFocus={onInputFocus}
+              onBlur={onInputBlur}
             />
           </div>
 
@@ -406,7 +373,7 @@ export function CreateTestSheet({ open, onOpenChange, onCreated }: CreateTestShe
                 background: "#FFF5F5",
                 border: "1px solid #FFCDD2",
                 fontSize: 12,
-                color: DT.ERROR,
+                color: RED,
               }}
             >
               <AlertCircle size={14} style={{ marginTop: 1, flexShrink: 0 }} />
@@ -423,10 +390,10 @@ export function CreateTestSheet({ open, onOpenChange, onCreated }: CreateTestShe
                 gap: 8,
                 padding: "10px 14px",
                 borderRadius: 8,
-                background: "#E8F5E9",
-                border: "1px solid #A5D6A7",
+                background: GREEN_LIGHT,
+                border: `1px solid ${GREEN_BORDER}`,
                 fontSize: 12,
-                color: "#2E7D32",
+                color: GREEN,
               }}
             >
               <CheckCircle size={14} />
@@ -441,7 +408,7 @@ export function CreateTestSheet({ open, onOpenChange, onCreated }: CreateTestShe
           <div
             style={{
               padding: "16px 0 4px",
-              borderTop: `1px solid ${DT.BORDER}`,
+              borderTop: `1px solid ${BORDER}`,
               display: "flex",
               gap: 10,
             }}
@@ -449,40 +416,19 @@ export function CreateTestSheet({ open, onOpenChange, onCreated }: CreateTestShe
             <button
               type="button"
               onClick={() => onOpenChange(false)}
-              style={{
-                flex: 1,
-                padding: "10px 16px",
-                borderRadius: 8,
-                border: `1.5px solid ${DT.BORDER}`,
-                background: DT.WHITE,
-                color: DT.MID_TEXT,
-                fontSize: 13,
-                fontWeight: 500,
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-              }}
+              className="admin-btn-secondary"
+              style={{ flex: 1, justifyContent: "center", fontSize: 13 }}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={createMutation.isPending}
+              className="admin-btn-primary"
               style={{
                 flex: 1,
-                display: "flex",
-                alignItems: "center",
                 justifyContent: "center",
-                gap: 8,
-                padding: "10px 16px",
-                borderRadius: 8,
-                border: "none",
-                background: `linear-gradient(135deg, ${DT.BRAND}, ${DT.BRAND_DEEP})`,
-                color: DT.WHITE,
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: createMutation.isPending ? "not-allowed" : "pointer",
                 opacity: createMutation.isPending ? 0.6 : 1,
-                transition: "opacity 0.15s ease",
               }}
             >
               {createMutation.isPending ? (
