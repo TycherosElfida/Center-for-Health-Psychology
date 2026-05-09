@@ -3,6 +3,8 @@
  *
  * Server-rendered shell for the assessment management view.
  * Delegates interactive functionality to _components/AssessmentsClient.
+ *
+ * UI Remake: restyled to match DesignReference/AssessmentManagementPage.tsx
  */
 "use client";
 
@@ -11,32 +13,31 @@ import { trpc } from "@/lib/trpc/client";
 import { Search, Plus, FileText, BarChart3, GitBranch, Users, AlertTriangle } from "lucide-react";
 import { CreateTestSheet } from "./_components/CreateTestSheet";
 import { StatusActions } from "./_components/StatusActions";
+import {
+  BRAND,
+  BRAND_DEEP,
+  BRAND_LIGHT,
+  BRAND_BG,
+  WHITE,
+  DARK_TEXT,
+  MID_TEXT,
+  LIGHT_TEXT,
+  BORDER,
+  RED,
+  WARNING,
+  STATUS_CONFIG,
+  SCORING_LABELS,
+  inputStyle,
+  onInputFocus,
+  onInputBlur,
+} from "../_components/DesignTokens";
 
-/* ── Design Tokens (consistent with admin.css) ───────────────── */
-const DT = {
-  DARK_TEXT: "#1E1830",
-  MID_TEXT: "#6B5CA0",
-  LIGHT_TEXT: "#8B7CB8",
-  BORDER: "#E2DCF0",
-  WHITE: "#FFFFFF",
-  BG: "#F5F3FA",
-  BRAND: "#9B8EC4",
-  BRAND_DEEP: "#6B5CA0",
-} as const;
-
-/* ── Status badge config ─────────────────────────────────────── */
-const STATUS_CONFIG = {
-  draft: { label: "Draft", bg: "#F0EDF5", color: "#6B5CA0", border: "#D6CEE8" },
-  published: { label: "Published", bg: "#E8F5E9", color: "#2E7D32", border: "#A5D6A7" },
-  archived: { label: "Archived", bg: "#F5F5F5", color: "#757575", border: "#E0E0E0" },
-} as const;
-
-/* ── Scoring method badge config ─────────────────────────────── */
-const SCORING_CONFIG = {
-  summative: { label: "Summative", icon: BarChart3 },
-  dimensional: { label: "Dimensional", icon: GitBranch },
-  binary_cluster: { label: "Binary Cluster", icon: FileText },
-} as const;
+/* ── Scoring method icon mapping ─────────────────────────────── */
+const SCORING_ICON_MAP: Record<string, typeof FileText> = {
+  summative: BarChart3,
+  dimensional: GitBranch,
+  binary_cluster: FileText,
+};
 
 type StatusFilter = "all" | "draft" | "published" | "archived";
 
@@ -96,52 +97,37 @@ export default function AssessmentsPage() {
         <div>
           <h1
             style={{
-              fontSize: "1.5rem",
+              fontSize: 20,
               fontWeight: 700,
-              color: DT.DARK_TEXT,
+              color: DARK_TEXT,
               margin: 0,
               letterSpacing: "-0.015em",
+              fontFamily: "'DM Sans', 'Inter', sans-serif",
             }}
           >
             Assessment Instruments
           </h1>
-          <p style={{ fontSize: 13, color: DT.LIGHT_TEXT, margin: "4px 0 0" }}>
+          <p style={{ fontSize: 13, color: LIGHT_TEXT, margin: "4px 0 0" }}>
             Create, edit, and manage assessment lifecycle
           </p>
         </div>
-        <button
-          onClick={() => setIsCreateOpen(true)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "10px 20px",
-            borderRadius: 10,
-            border: "none",
-            background: `linear-gradient(135deg, ${DT.BRAND}, ${DT.BRAND_DEEP})`,
-            color: DT.WHITE,
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: "pointer",
-            transition: "opacity 0.15s ease, transform 0.15s ease",
-            boxShadow: `0 2px 12px ${DT.BRAND}40`,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.opacity = "0.9";
-            e.currentTarget.style.transform = "translateY(-1px)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.opacity = "1";
-            e.currentTarget.style.transform = "translateY(0)";
-          }}
-        >
+        <button className="admin-btn-primary" onClick={() => setIsCreateOpen(true)}>
           <Plus size={16} />
           New Assessment
         </button>
       </div>
 
-      {/* ── Status Filter Tabs ── */}
-      <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+      {/* ── Status Filter Tabs (DesignReference pill-tab pattern) ── */}
+      <div
+        style={{
+          display: "flex",
+          gap: 4,
+          marginBottom: 16,
+          background: "#F0EDF6",
+          borderRadius: 12,
+          padding: 4,
+        }}
+      >
         {(["all", "draft", "published", "archived"] as const).map((tab) => {
           const isActive = statusFilter === tab;
           const count = statusCounts[tab];
@@ -149,30 +135,31 @@ export default function AssessmentsPage() {
             <button
               key={tab}
               onClick={() => setStatusFilter(tab)}
+              className={`admin-tab ${isActive ? "admin-tab--active" : ""}`}
               style={{
+                flex: 1,
                 display: "flex",
                 alignItems: "center",
+                justifyContent: "center",
                 gap: 6,
                 padding: "8px 16px",
-                borderRadius: 8,
-                border: `1.5px solid ${isActive ? DT.BRAND : DT.BORDER}`,
-                background: isActive ? `${DT.BRAND}10` : DT.WHITE,
-                color: isActive ? DT.BRAND_DEEP : DT.MID_TEXT,
-                fontSize: 12,
-                fontWeight: isActive ? 600 : 500,
+                borderRadius: 10,
+                border: "none",
                 cursor: "pointer",
-                transition: "all 0.15s ease",
+                fontSize: 12,
+                fontWeight: isActive ? 700 : 500,
+                color: isActive ? BRAND_DEEP : LIGHT_TEXT,
                 textTransform: "capitalize",
               }}
             >
               {tab}
               <span
                 style={{
-                  background: isActive ? `${DT.BRAND}20` : "#F0EDF5",
-                  color: isActive ? DT.BRAND_DEEP : DT.LIGHT_TEXT,
+                  background: isActive ? BRAND_LIGHT : "#E8E4F0",
+                  color: isActive ? BRAND_DEEP : LIGHT_TEXT,
                   padding: "1px 7px",
                   borderRadius: 10,
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: 600,
                 }}
               >
@@ -192,7 +179,7 @@ export default function AssessmentsPage() {
             left: 14,
             top: "50%",
             transform: "translateY(-50%)",
-            color: DT.LIGHT_TEXT,
+            color: LIGHT_TEXT,
           }}
         />
         <input
@@ -201,224 +188,238 @@ export default function AssessmentsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{
-            width: "100%",
-            padding: "10px 14px 10px 40px",
-            borderRadius: 10,
-            border: `1.5px solid ${DT.BORDER}`,
-            background: DT.WHITE,
-            fontSize: 13,
-            color: DT.DARK_TEXT,
-            outline: "none",
-            transition: "border-color 0.15s ease",
+            ...inputStyle,
+            paddingLeft: 40,
           }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = DT.BRAND;
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = DT.BORDER;
-          }}
+          onFocus={onInputFocus}
+          onBlur={onInputBlur}
         />
       </div>
 
       {/* ── Data Table ── */}
       <div
         style={{
-          background: DT.WHITE,
+          background: WHITE,
           borderRadius: 14,
-          border: `1px solid ${DT.BORDER}`,
+          border: `1px solid ${BORDER}`,
+          overflow: "hidden",
         }}
       >
-        {/* Table Header */}
-        <div
+        {/* Table */}
+        <table
           style={{
-            display: "grid",
-            gridTemplateColumns: "2fr 1.2fr 1fr 1fr 80px 80px 120px",
-            gap: 0,
-            padding: "12px 20px",
-            background: "#FBFAFD",
-            borderBottom: `1px solid ${DT.BORDER}`,
-            fontSize: 11,
-            fontWeight: 600,
-            color: DT.LIGHT_TEXT,
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
+            width: "100%",
+            borderCollapse: "collapse",
+            tableLayout: "fixed",
           }}
         >
-          <div>Title</div>
-          <div>Slug</div>
-          <div>Scoring</div>
-          <div>Status</div>
-          <div style={{ textAlign: "center" }}>Sessions</div>
-          <div style={{ textAlign: "center" }}>Questions</div>
-          <div style={{ textAlign: "right" }}>Actions</div>
-        </div>
-
-        {/* Loading State */}
-        {testsQuery.isLoading && (
-          <div style={{ padding: "40px 20px", textAlign: "center" }}>
-            {[...Array(3)].map((_, i) => (
-              <div
-                key={i}
-                className="admin-skeleton"
-                style={{ height: 48, marginBottom: 8, borderRadius: 8 }}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Empty State */}
-        {testsQuery.isSuccess && rows.length === 0 && (
-          <div
-            style={{
-              padding: "60px 20px",
-              textAlign: "center",
-              color: DT.LIGHT_TEXT,
-            }}
-          >
-            <FileText size={40} style={{ margin: "0 auto 12px", opacity: 0.4 }} />
-            <p style={{ fontSize: 14, fontWeight: 500, margin: "0 0 4px" }}>
-              {search || statusFilter !== "all" ? "No matching assessments" : "No assessments yet"}
-            </p>
-            <p style={{ fontSize: 12, margin: 0 }}>
-              {search || statusFilter !== "all"
-                ? "Try adjusting your filters"
-                : "Create your first assessment to get started"}
-            </p>
-          </div>
-        )}
-
-        {/* Table Rows */}
-        {rows.map((test, i) => {
-          const statusStyle = STATUS_CONFIG[test.status as keyof typeof STATUS_CONFIG];
-          const scoringInfo = test.scoringMethod
-            ? SCORING_CONFIG[test.scoringMethod as keyof typeof SCORING_CONFIG]
-            : null;
-          const ScoringIcon = scoringInfo?.icon ?? FileText;
-
-          return (
-            <div
-              key={test.id}
+          <colgroup>
+            <col style={{ width: "26%" }} />
+            <col style={{ width: "14%" }} />
+            <col style={{ width: "14%" }} />
+            <col style={{ width: "12%" }} />
+            <col style={{ width: "9%" }} />
+            <col style={{ width: "9%" }} />
+            <col style={{ width: "16%" }} />
+          </colgroup>
+          <thead>
+            <tr
               style={{
-                display: "grid",
-                gridTemplateColumns: "2fr 1.2fr 1fr 1fr 80px 80px 120px",
-                gap: 0,
-                padding: "14px 20px",
-                borderBottom: i < rows.length - 1 ? `1px solid ${DT.BORDER}` : "none",
-                background: i % 2 === 1 ? "#FBFAFD" : DT.WHITE,
-                alignItems: "center",
-                transition: "background 0.1s ease",
-                cursor: "pointer",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = `${DT.BRAND}06`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = i % 2 === 1 ? "#FBFAFD" : DT.WHITE;
-              }}
-              onClick={() => {
-                window.location.href = `/admin/assessments/${test.id}`;
+                background: "#F9F7FD",
+                borderBottom: `1px solid ${BORDER}`,
               }}
             >
-              {/* Title */}
-              <div>
-                <div
+              {["Title", "Slug", "Scoring", "Status", "Sessions", "Items", "Actions"].map(
+                (label, idx) => (
+                  <th
+                    key={label}
+                    style={{
+                      padding: "12px 16px",
+                      fontSize: 10,
+                      fontWeight: 700,
+                      color: LIGHT_TEXT,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                      textAlign: idx >= 4 ? "center" : "left",
+                      ...(idx === 6 ? { textAlign: "right", paddingRight: 20 } : {}),
+                    }}
+                  >
+                    {label}
+                  </th>
+                )
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {/* Loading State */}
+            {testsQuery.isLoading && (
+              <tr>
+                <td colSpan={7} style={{ padding: "40px 20px", textAlign: "center" }}>
+                  {[...Array(3)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="admin-skeleton"
+                      style={{ height: 48, marginBottom: 8, borderRadius: 8 }}
+                    />
+                  ))}
+                </td>
+              </tr>
+            )}
+
+            {/* Empty State */}
+            {testsQuery.isSuccess && rows.length === 0 && (
+              <tr>
+                <td
+                  colSpan={7}
                   style={{
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: DT.DARK_TEXT,
-                    marginBottom: 2,
+                    padding: "60px 20px",
+                    textAlign: "center",
+                    color: LIGHT_TEXT,
                   }}
                 >
-                  {test.title}
-                </div>
-                <div style={{ fontSize: 11, color: DT.LIGHT_TEXT }}>{test.category}</div>
-              </div>
+                  <FileText
+                    size={40}
+                    style={{ margin: "0 auto 12px", opacity: 0.4, display: "block" }}
+                  />
+                  <p style={{ fontSize: 14, fontWeight: 500, margin: "0 0 4px" }}>
+                    {search || statusFilter !== "all"
+                      ? "No matching assessments"
+                      : "No assessments yet"}
+                  </p>
+                  <p style={{ fontSize: 12, margin: 0 }}>
+                    {search || statusFilter !== "all"
+                      ? "Try adjusting your filters"
+                      : "Create your first assessment to get started"}
+                  </p>
+                </td>
+              </tr>
+            )}
 
-              {/* Slug */}
-              <div
-                style={{
-                  fontSize: 12,
-                  fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-                  color: DT.MID_TEXT,
-                  background: "#F0EDF5",
-                  padding: "3px 8px",
-                  borderRadius: 6,
-                  display: "inline-block",
-                  maxWidth: "fit-content",
-                }}
-              >
-                {test.slug}
-              </div>
+            {/* Table Rows */}
+            {rows.map((test, i) => {
+              const statusStyle = STATUS_CONFIG[test.status as keyof typeof STATUS_CONFIG];
+              const ScoringIcon = test.scoringMethod
+                ? (SCORING_ICON_MAP[test.scoringMethod] ?? FileText)
+                : FileText;
+              const scoringLabel = test.scoringMethod
+                ? (SCORING_LABELS[test.scoringMethod] ?? "—")
+                : "—";
 
-              {/* Scoring Method */}
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <ScoringIcon size={14} style={{ color: DT.MID_TEXT, opacity: 0.7 }} />
-                <span style={{ fontSize: 12, color: DT.MID_TEXT }}>
-                  {scoringInfo?.label ?? "—"}
-                </span>
-              </div>
-
-              {/* Status Badge */}
-              <div>
-                <span
+              return (
+                <tr
+                  key={test.id}
+                  className="admin-row-hover"
                   style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    padding: "3px 10px",
-                    borderRadius: 20,
-                    fontSize: 11,
-                    fontWeight: 600,
-                    background: statusStyle?.bg,
-                    color: statusStyle?.color,
-                    border: `1px solid ${statusStyle?.border}`,
+                    borderBottom: i < rows.length - 1 ? `1px solid ${BORDER}` : "none",
+                    background: i % 2 === 1 ? "#FBFAFD" : WHITE,
+                    cursor: "pointer",
+                  }}
+                  onClick={() => {
+                    window.location.href = `/admin/assessments/${test.id}`;
                   }}
                 >
-                  {statusStyle?.label}
-                </span>
-              </div>
+                  {/* Title + Category */}
+                  <td style={{ padding: "14px 16px" }}>
+                    <div
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: DARK_TEXT,
+                        marginBottom: 2,
+                      }}
+                    >
+                      {test.title}
+                    </div>
+                    <div style={{ fontSize: 11, color: LIGHT_TEXT }}>{test.category}</div>
+                  </td>
 
-              {/* Session Count */}
-              <div style={{ textAlign: "center" }}>
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 4,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: test.sessionCount > 0 ? "#E65100" : DT.LIGHT_TEXT,
-                  }}
-                >
-                  {test.sessionCount > 0 && <Users size={12} style={{ color: "#E65100" }} />}
-                  {test.sessionCount}
-                </span>
-              </div>
+                  {/* Slug */}
+                  <td style={{ padding: "14px 16px" }}>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                        color: MID_TEXT,
+                        background: "#F0EDF5",
+                        padding: "3px 8px",
+                        borderRadius: 6,
+                        display: "inline-block",
+                      }}
+                    >
+                      {test.slug}
+                    </span>
+                  </td>
 
-              {/* Question Count */}
-              <div
-                style={{
-                  textAlign: "center",
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: test.questionCount === 0 ? "#E53935" : DT.DARK_TEXT,
-                }}
-              >
-                {test.questionCount === 0 ? (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                    <AlertTriangle size={12} />0
-                  </span>
-                ) : (
-                  test.questionCount
-                )}
-              </div>
+                  {/* Scoring Method */}
+                  <td style={{ padding: "14px 16px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <ScoringIcon size={13} style={{ color: MID_TEXT, opacity: 0.7 }} />
+                      <span style={{ fontSize: 12, color: MID_TEXT }}>{scoringLabel}</span>
+                    </div>
+                  </td>
 
-              {/* Actions */}
-              <div style={{ textAlign: "right" }} onClick={(e) => e.stopPropagation()}>
-                <StatusActions test={test} onRefresh={() => testsQuery.refetch()} />
-              </div>
-            </div>
-          );
-        })}
+                  {/* Status Badge */}
+                  <td style={{ padding: "14px 16px" }}>
+                    <span
+                      className="admin-pill"
+                      style={{
+                        background: statusStyle?.bg,
+                        color: statusStyle?.color,
+                        border: `1px solid ${statusStyle?.border}`,
+                      }}
+                    >
+                      {statusStyle?.label}
+                    </span>
+                  </td>
+
+                  {/* Session Count */}
+                  <td style={{ padding: "14px 16px", textAlign: "center" }}>
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 4,
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: test.sessionCount > 0 ? WARNING : LIGHT_TEXT,
+                      }}
+                    >
+                      {test.sessionCount > 0 && <Users size={12} style={{ color: WARNING }} />}
+                      {test.sessionCount}
+                    </span>
+                  </td>
+
+                  {/* Question Count */}
+                  <td
+                    style={{
+                      padding: "14px 16px",
+                      textAlign: "center",
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: test.questionCount === 0 ? RED : DARK_TEXT,
+                    }}
+                  >
+                    {test.questionCount === 0 ? (
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                        <AlertTriangle size={12} />0
+                      </span>
+                    ) : (
+                      test.questionCount
+                    )}
+                  </td>
+
+                  {/* Actions */}
+                  <td
+                    style={{ padding: "14px 16px", textAlign: "right" }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <StatusActions test={test} onRefresh={() => testsQuery.refetch()} />
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
 
       {/* ── Create Sheet ── */}
