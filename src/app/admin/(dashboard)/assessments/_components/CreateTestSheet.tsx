@@ -40,7 +40,7 @@ import {
   labelStyle as sharedLabelStyle,
   onInputFocus,
   onInputBlur,
-} from "../../_components/DesignTokens";
+} from "../../../_components/DesignTokens";
 
 /* ── Slug generator ──────────────────────────────────────────── */
 function toSlug(text: string): string {

@@ -30,7 +30,7 @@ import {
   RED_BORDER,
   WARNING_BG,
   WARNING_BORDER,
-} from "../../_components/DesignTokens";
+} from "../../../_components/DesignTokens";
 
 /* ── Types ───────────────────────────────────────────────────── */
 interface TestRow {

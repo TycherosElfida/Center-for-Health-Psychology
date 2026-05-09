@@ -59,7 +59,7 @@ import {
   labelStyle as sharedLabelStyle,
   onInputFocus,
   onInputBlur,
-} from "../../_components/DesignTokens";
+} from "../../../_components/DesignTokens";
 
 type ScoringMethodType = "summative" | "dimensional" | "binary_cluster";
 type EditorTab = "identity" | "questions";

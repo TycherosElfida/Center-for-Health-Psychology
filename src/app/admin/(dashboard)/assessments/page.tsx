@@ -30,7 +30,7 @@ import {
   inputStyle,
   onInputFocus,
   onInputBlur,
-} from "../_components/DesignTokens";
+} from "../../_components/DesignTokens";
 
 /* ── Scoring method icon mapping ─────────────────────────────── */
 const SCORING_ICON_MAP: Record<string, typeof FileText> = {
