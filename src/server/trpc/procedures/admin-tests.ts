@@ -17,6 +17,7 @@ import { createTRPCRouter, adminProcedure, adminMutationProcedure } from "../ind
 import { tests, questions } from "../../schema/tests";
 import { testSessions } from "../../schema/sessions";
 import { auditLogs } from "../../schema/admin";
+import { getSessionCount } from "./_shared";
 
 // ── Input Schemas ────────────────────────────────────────────────────
 
@@ -51,24 +52,6 @@ const updateTestSchema = z.object({
   instructions: z.string().max(5000).optional(),
   thumbnailUrl: z.string().url().max(500).or(z.literal("")).optional(),
 });
-
-// ── Helpers ──────────────────────────────────────────────────────────
-
-/**
- * Fetch session count for a given test. Extracted to avoid repetition
- * across publish, delete, and update guards.
- *
- * Accepts ctx.db or a transaction handle (tx) — both share the same
- * Drizzle select/from/where API surface.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getSessionCount(db: any, testId: string): Promise<number> {
-  const [row] = await db
-    .select({ count: countDistinct(testSessions.id) })
-    .from(testSessions)
-    .where(eq(testSessions.testId, testId));
-  return Number(row?.count ?? 0);
-}
 
 // ── Router ───────────────────────────────────────────────────────────
 
