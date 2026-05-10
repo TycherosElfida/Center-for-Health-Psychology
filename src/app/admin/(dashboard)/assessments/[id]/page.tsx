@@ -5,15 +5,19 @@
  * Navigation: entered via window.location.href (admin cookie rule).
  *
  * Features:
+ * - Tab system: Identity (form) | Questions (placeholder)
  * - Structural lock indicators (slug/scoringMethod when sessions > 0)
  * - Status lifecycle actions (same as list view)
  * - Field-level editing with save
  * - Session count warning badge
  *
+ * UI Remake: restyled to match DesignReference/AssessmentManagementPage.tsx
+ *
  * Reviewed fixes applied:
  * - createdAt serialized at server→client boundary (ISO strings from tRPC)
  * - Empty string coercion on submit
  * - Uses window.location.href for back navigation, not router.push
+ * - Tab state managed via useState (no useSearchParams / Suspense needed)
  */
 "use client";
 
@@ -30,31 +34,32 @@ import {
   Users,
   FileText,
   AlertTriangle,
+  ClipboardList,
+  ExternalLink,
 } from "lucide-react";
 import { StatusActions } from "../_components/StatusActions";
-
-/* ── Design Tokens ───────────────────────────────────────────── */
-const DT = {
-  DARK_TEXT: "#1E1830",
-  MID_TEXT: "#6B5CA0",
-  LIGHT_TEXT: "#8B7CB8",
-  BORDER: "#E2DCF0",
-  WHITE: "#FFFFFF",
-  BG: "#F5F3FA",
-  BRAND: "#9B8EC4",
-  BRAND_DEEP: "#6B5CA0",
-  ERROR: "#E53935",
-  SUCCESS: "#2E7D32",
-  WARNING: "#E65100",
-} as const;
-
-const STATUS_CONFIG = {
-  draft: { label: "Draft", bg: "#F0EDF5", color: "#6B5CA0", border: "#D6CEE8" },
-  published: { label: "Published", bg: "#E8F5E9", color: "#2E7D32", border: "#A5D6A7" },
-  archived: { label: "Archived", bg: "#F5F5F5", color: "#757575", border: "#E0E0E0" },
-} as const;
+import {
+  BRAND_DEEP,
+  BRAND_LIGHT,
+  WHITE,
+  DARK_TEXT,
+  LIGHT_TEXT,
+  BORDER,
+  RED,
+  GREEN,
+  GREEN_LIGHT,
+  GREEN_BORDER,
+  WARNING,
+  RED_LIGHT,
+  RED_BORDER,
+  STATUS_CONFIG,
+  inputStyle as sharedInputStyle,
+  onInputFocus,
+  onInputBlur,
+} from "../../../_components/DesignTokens";
 
 type ScoringMethodType = "summative" | "dimensional" | "binary_cluster";
+type EditorTab = "identity" | "questions";
 
 function buildFormFromData(d: {
   title: string;
@@ -89,9 +94,39 @@ const EMPTY_FORM = {
   thumbnailUrl: "",
 };
 
+/* ── Derived style helpers ─────────────────────────────────────── */
+const lblStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 6,
+  fontSize: 12,
+  fontWeight: 600,
+  color: DARK_TEXT,
+  marginBottom: 6,
+};
+
+const lockedInputStyle: React.CSSProperties = {
+  ...sharedInputStyle,
+  background: "#F5F3FA",
+  color: LIGHT_TEXT,
+  cursor: "not-allowed",
+};
+
+const selectStyle: React.CSSProperties = {
+  ...sharedInputStyle,
+  cursor: "pointer",
+  appearance: "none" as const,
+  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+  backgroundRepeat: "no-repeat",
+  backgroundPosition: "right 12px center",
+  paddingRight: 32,
+};
+
 export default function AssessmentEditPage() {
   const params = useParams<{ id: string }>();
   const testId = params.id;
+
+  const [activeTab, setActiveTab] = useState<EditorTab>("identity");
 
   const testQuery = trpc.adminTests.getTestById.useQuery(
     { id: testId },
@@ -130,22 +165,14 @@ export default function AssessmentEditPage() {
   if (testQuery.error || !testQuery.data) {
     return (
       <div className="admin-fade-in" style={{ padding: "60px 0", textAlign: "center" }}>
-        <AlertCircle size={40} style={{ color: DT.ERROR, margin: "0 auto 12px" }} />
-        <p style={{ fontSize: 14, color: DT.DARK_TEXT, fontWeight: 600 }}>Assessment not found</p>
+        <AlertCircle size={40} style={{ color: RED, margin: "0 auto 12px" }} />
+        <p style={{ fontSize: 14, color: DARK_TEXT, fontWeight: 600 }}>Assessment not found</p>
         <button
+          className="admin-btn-secondary"
           onClick={() => {
             window.location.href = "/admin/assessments";
           }}
-          style={{
-            marginTop: 12,
-            padding: "8px 16px",
-            borderRadius: 8,
-            border: `1px solid ${DT.BORDER}`,
-            background: DT.WHITE,
-            color: DT.MID_TEXT,
-            fontSize: 13,
-            cursor: "pointer",
-          }}
+          style={{ marginTop: 12 }}
         >
           Back to Assessments
         </button>
@@ -175,37 +202,6 @@ export default function AssessmentEditPage() {
     });
   }
 
-  /* ── Shared styles ── */
-  const labelStyle: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: 6,
-    fontSize: 12,
-    fontWeight: 600,
-    color: DT.DARK_TEXT,
-    marginBottom: 6,
-  };
-
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "10px 12px",
-    borderRadius: 8,
-    border: `1.5px solid ${DT.BORDER}`,
-    background: DT.WHITE,
-    fontSize: 13,
-    color: DT.DARK_TEXT,
-    outline: "none",
-    transition: "border-color 0.15s ease",
-    fontFamily: "'Inter', sans-serif",
-  };
-
-  const lockedInputStyle: React.CSSProperties = {
-    ...inputStyle,
-    background: "#F5F3FA",
-    color: DT.LIGHT_TEXT,
-    cursor: "not-allowed",
-  };
-
   return (
     <div className="admin-fade-in" style={{ fontFamily: "'Inter', sans-serif" }}>
       {/* ── Top Bar ── */}
@@ -214,27 +210,14 @@ export default function AssessmentEditPage() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          marginBottom: 28,
+          marginBottom: 20,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <button
+            className="admin-btn-ghost"
             onClick={() => {
               window.location.href = "/admin/assessments";
-            }}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "8px 14px",
-              borderRadius: 8,
-              border: `1px solid ${DT.BORDER}`,
-              background: DT.WHITE,
-              color: DT.MID_TEXT,
-              fontSize: 12,
-              fontWeight: 500,
-              cursor: "pointer",
-              transition: "all 0.15s ease",
             }}
           >
             <ArrowLeft size={14} />
@@ -243,27 +226,25 @@ export default function AssessmentEditPage() {
           <div>
             <h1
               style={{
-                fontSize: "1.25rem",
+                fontSize: 18,
                 fontWeight: 700,
-                color: DT.DARK_TEXT,
+                color: DARK_TEXT,
                 margin: 0,
                 letterSpacing: "-0.01em",
+                fontFamily: "'DM Sans', 'Inter', sans-serif",
               }}
             >
               {test.title}
             </h1>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
               <span
+                className="admin-pill"
                 style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  padding: "2px 8px",
-                  borderRadius: 20,
-                  fontSize: 10,
-                  fontWeight: 600,
                   background: statusStyle?.bg,
                   color: statusStyle?.color,
                   border: `1px solid ${statusStyle?.border}`,
+                  fontSize: 10,
+                  padding: "2px 8px",
                 }}
               >
                 {statusStyle?.label}
@@ -272,7 +253,7 @@ export default function AssessmentEditPage() {
                 style={{
                   fontSize: 11,
                   fontFamily: "'JetBrains Mono', monospace",
-                  color: DT.LIGHT_TEXT,
+                  color: LIGHT_TEXT,
                 }}
               >
                 {test.slug}
@@ -284,45 +265,83 @@ export default function AssessmentEditPage() {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           {/* Session/Question count badges */}
           <div
+            className="admin-pill"
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
               padding: "6px 12px",
               borderRadius: 8,
               background: test.sessionCount > 0 ? "#FFF3E0" : "#F5F3FA",
-              border: `1px solid ${test.sessionCount > 0 ? "#FFE0B2" : DT.BORDER}`,
+              border: `1px solid ${test.sessionCount > 0 ? "#FFE0B2" : BORDER}`,
               fontSize: 11,
-              fontWeight: 600,
-              color: test.sessionCount > 0 ? DT.WARNING : DT.LIGHT_TEXT,
+              color: test.sessionCount > 0 ? WARNING : LIGHT_TEXT,
             }}
           >
-            <Users size={12} />
+            <Users size={12} style={{ marginRight: 4 }} />
             {test.sessionCount} sessions
           </div>
           <div
+            className="admin-pill"
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
               padding: "6px 12px",
               borderRadius: 8,
-              background: test.questionCount === 0 ? "#FFF5F5" : "#F5F3FA",
-              border: `1px solid ${test.questionCount === 0 ? "#FFCDD2" : DT.BORDER}`,
+              background: test.questionCount === 0 ? RED_LIGHT : "#F5F3FA",
+              border: `1px solid ${test.questionCount === 0 ? RED_BORDER : BORDER}`,
               fontSize: 11,
-              fontWeight: 600,
-              color: test.questionCount === 0 ? DT.ERROR : DT.LIGHT_TEXT,
+              color: test.questionCount === 0 ? RED : LIGHT_TEXT,
             }}
           >
-            <FileText size={12} />
+            <FileText size={12} style={{ marginRight: 4 }} />
             {test.questionCount} questions
           </div>
           <StatusActions test={test} onRefresh={() => testQuery.refetch()} />
         </div>
       </div>
 
+      {/* ── Tab Navigation (DesignReference pill-tab pattern) ── */}
+      <div
+        style={{
+          display: "flex",
+          gap: 4,
+          marginBottom: 20,
+          background: "#F0EDF6",
+          borderRadius: 12,
+          padding: 4,
+          maxWidth: 320,
+        }}
+      >
+        {[
+          { key: "identity" as const, label: "Identity", icon: ClipboardList },
+          { key: "questions" as const, label: "Questions", icon: FileText },
+        ].map(({ key, label, icon: Icon }) => {
+          const isActive = activeTab === key;
+          return (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className={`admin-tab ${isActive ? "admin-tab--active" : ""}`}
+              style={{
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                padding: "8px 16px",
+                borderRadius: 10,
+                border: "none",
+                cursor: "pointer",
+                fontSize: 12,
+                fontWeight: isActive ? 700 : 500,
+                color: isActive ? BRAND_DEEP : LIGHT_TEXT,
+              }}
+            >
+              <Icon size={14} />
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* ── Structural Lock Warning ── */}
-      {isStructurallyLocked && (
+      {isStructurallyLocked && activeTab === "identity" && (
         <div
           style={{
             display: "flex",
@@ -332,12 +351,12 @@ export default function AssessmentEditPage() {
             borderRadius: 10,
             background: "#FFF8E1",
             border: "1px solid #FFE082",
-            marginBottom: 24,
+            marginBottom: 20,
             fontSize: 12,
             color: "#5D4037",
           }}
         >
-          <AlertTriangle size={16} style={{ color: DT.WARNING, flexShrink: 0 }} />
+          <AlertTriangle size={16} style={{ color: WARNING, flexShrink: 0 }} />
           <div>
             <strong>Structural lock active.</strong> Slug and scoring method cannot be changed
             because {test.sessionCount} session(s) have been recorded against this assessment.
@@ -345,285 +364,287 @@ export default function AssessmentEditPage() {
         </div>
       )}
 
-      {/* ── Edit Form ── */}
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          background: DT.WHITE,
-          borderRadius: 14,
-          border: `1px solid ${DT.BORDER}`,
-          padding: 28,
-        }}
-      >
-        <div
+      {/* ── Identity Tab Content ── */}
+      {activeTab === "identity" && (
+        <form
+          onSubmit={handleSubmit}
           style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 20,
-            marginBottom: 20,
+            background: WHITE,
+            borderRadius: 14,
+            border: `1px solid ${BORDER}`,
+            padding: 28,
           }}
         >
-          {/* Title */}
-          <div>
-            <label style={labelStyle}>Title</label>
-            <input
-              type="text"
-              required
-              maxLength={200}
-              value={form.title}
-              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-              style={inputStyle}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = DT.BRAND;
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = DT.BORDER;
-              }}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 20,
+              marginBottom: 20,
+            }}
+          >
+            {/* Title */}
+            <div>
+              <label style={lblStyle}>Title</label>
+              <input
+                type="text"
+                required
+                maxLength={200}
+                value={form.title}
+                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                style={sharedInputStyle}
+                onFocus={onInputFocus}
+                onBlur={onInputBlur}
+              />
+            </div>
+
+            {/* Slug — locked when structural lock active */}
+            <div>
+              <label style={lblStyle}>
+                Slug
+                {isStructurallyLocked && <Lock size={11} style={{ color: WARNING }} />}
+              </label>
+              <input
+                type="text"
+                required
+                maxLength={100}
+                value={form.slug}
+                onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
+                disabled={isStructurallyLocked}
+                style={{
+                  ...(isStructurallyLocked ? lockedInputStyle : sharedInputStyle),
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: 12,
+                }}
+                onFocus={(e) => {
+                  if (!isStructurallyLocked) onInputFocus(e);
+                }}
+                onBlur={onInputBlur}
+              />
+            </div>
+
+            {/* Category */}
+            <div>
+              <label style={lblStyle}>Category</label>
+              <input
+                type="text"
+                required
+                maxLength={100}
+                value={form.category}
+                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                style={sharedInputStyle}
+                onFocus={onInputFocus}
+                onBlur={onInputBlur}
+              />
+            </div>
+
+            {/* Estimated Minutes */}
+            <div>
+              <label style={lblStyle}>Estimated Minutes</label>
+              <input
+                type="number"
+                required
+                min={1}
+                max={120}
+                value={form.estimatedMinutes}
+                onChange={(e) => setForm((f) => ({ ...f, estimatedMinutes: e.target.value }))}
+                style={sharedInputStyle}
+                onFocus={onInputFocus}
+                onBlur={onInputBlur}
+              />
+            </div>
+
+            {/* Scoring Method — locked when structural lock active */}
+            <div>
+              <label style={lblStyle}>
+                Scoring Method
+                {isStructurallyLocked && <Lock size={11} style={{ color: WARNING }} />}
+              </label>
+              <select
+                required
+                value={form.scoringMethod}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    scoringMethod: e.target.value as typeof form.scoringMethod,
+                  }))
+                }
+                disabled={isStructurallyLocked}
+                style={{
+                  ...(isStructurallyLocked ? lockedInputStyle : selectStyle),
+                  cursor: isStructurallyLocked ? "not-allowed" : "pointer",
+                }}
+              >
+                <option value="summative">Summative</option>
+                <option value="dimensional">Dimensional</option>
+                <option value="binary_cluster">Binary Cluster</option>
+              </select>
+            </div>
+
+            {/* Thumbnail URL */}
+            <div>
+              <label style={lblStyle}>Thumbnail URL</label>
+              <input
+                type="text"
+                maxLength={500}
+                value={form.thumbnailUrl}
+                onChange={(e) => setForm((f) => ({ ...f, thumbnailUrl: e.target.value }))}
+                placeholder="https://..."
+                style={sharedInputStyle}
+                onFocus={onInputFocus}
+                onBlur={onInputBlur}
+              />
+            </div>
+          </div>
+
+          {/* Description — full width */}
+          <div style={{ marginBottom: 20 }}>
+            <label style={lblStyle}>Description</label>
+            <textarea
+              maxLength={1000}
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              placeholder="Brief description of the assessment..."
+              rows={3}
+              style={{ ...sharedInputStyle, resize: "vertical", minHeight: 72 }}
+              onFocus={onInputFocus}
+              onBlur={onInputBlur}
             />
           </div>
 
-          {/* Slug — locked when structural lock active */}
-          <div>
-            <label style={labelStyle}>
-              Slug
-              {isStructurallyLocked && <Lock size={11} style={{ color: DT.WARNING }} />}
-            </label>
-            <input
-              type="text"
-              required
-              maxLength={100}
-              value={form.slug}
-              onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
-              disabled={isStructurallyLocked}
+          {/* Instructions — full width */}
+          <div style={{ marginBottom: 24 }}>
+            <label style={lblStyle}>Instructions</label>
+            <textarea
+              maxLength={5000}
+              value={form.instructions}
+              onChange={(e) => setForm((f) => ({ ...f, instructions: e.target.value }))}
+              placeholder="Instructions shown to participants before starting..."
+              rows={4}
+              style={{ ...sharedInputStyle, resize: "vertical", minHeight: 80 }}
+              onFocus={onInputFocus}
+              onBlur={onInputBlur}
+            />
+          </div>
+
+          {/* Error */}
+          {updateMutation.error && (
+            <div
               style={{
-                ...(isStructurallyLocked ? lockedInputStyle : inputStyle),
-                fontFamily: "'JetBrains Mono', monospace",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 8,
+                padding: "10px 14px",
+                borderRadius: 8,
+                background: RED_LIGHT,
+                border: `1px solid ${RED_BORDER}`,
                 fontSize: 12,
-              }}
-              onFocus={(e) => {
-                if (!isStructurallyLocked) e.currentTarget.style.borderColor = DT.BRAND;
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = DT.BORDER;
-              }}
-            />
-          </div>
-
-          {/* Category */}
-          <div>
-            <label style={labelStyle}>Category</label>
-            <input
-              type="text"
-              required
-              maxLength={100}
-              value={form.category}
-              onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-              style={inputStyle}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = DT.BRAND;
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = DT.BORDER;
-              }}
-            />
-          </div>
-
-          {/* Estimated Minutes */}
-          <div>
-            <label style={labelStyle}>Estimated Minutes</label>
-            <input
-              type="number"
-              required
-              min={1}
-              max={120}
-              value={form.estimatedMinutes}
-              onChange={(e) => setForm((f) => ({ ...f, estimatedMinutes: e.target.value }))}
-              style={inputStyle}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = DT.BRAND;
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = DT.BORDER;
-              }}
-            />
-          </div>
-
-          {/* Scoring Method — locked when structural lock active */}
-          <div>
-            <label style={labelStyle}>
-              Scoring Method
-              {isStructurallyLocked && <Lock size={11} style={{ color: DT.WARNING }} />}
-            </label>
-            <select
-              required
-              value={form.scoringMethod}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  scoringMethod: e.target.value as typeof form.scoringMethod,
-                }))
-              }
-              disabled={isStructurallyLocked}
-              style={{
-                ...(isStructurallyLocked ? lockedInputStyle : inputStyle),
-                cursor: isStructurallyLocked ? "not-allowed" : "pointer",
-                appearance: "none" as const,
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238B7CB8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
-                backgroundRepeat: "no-repeat",
-                backgroundPosition: "right 12px center",
-                paddingRight: 32,
+                color: RED,
+                marginBottom: 16,
               }}
             >
-              <option value="summative">Summative</option>
-              <option value="dimensional">Dimensional</option>
-              <option value="binary_cluster">Binary Cluster</option>
-            </select>
-          </div>
+              <AlertCircle size={14} style={{ marginTop: 1, flexShrink: 0 }} />
+              {updateMutation.error.message}
+            </div>
+          )}
 
-          {/* Thumbnail URL */}
-          <div>
-            <label style={labelStyle}>Thumbnail URL</label>
-            <input
-              type="text"
-              maxLength={500}
-              value={form.thumbnailUrl}
-              onChange={(e) => setForm((f) => ({ ...f, thumbnailUrl: e.target.value }))}
-              placeholder="https://..."
-              style={inputStyle}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = DT.BRAND;
+          {/* Success */}
+          {saveSuccess && (
+            <div
+              className="admin-success-flash"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "10px 14px",
+                borderRadius: 8,
+                background: GREEN_LIGHT,
+                border: `1px solid ${GREEN_BORDER}`,
+                fontSize: 12,
+                color: GREEN,
+                marginBottom: 16,
               }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = DT.BORDER;
+            >
+              <CheckCircle size={14} />
+              Changes saved.
+            </div>
+          )}
+
+          {/* Submit */}
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <button
+              type="submit"
+              disabled={updateMutation.isPending}
+              className="admin-btn-primary"
+              style={{
+                opacity: updateMutation.isPending ? 0.6 : 1,
               }}
-            />
+            >
+              {updateMutation.isPending ? (
+                <>
+                  <Loader2 size={14} className="admin-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save size={14} />
+                  Save Changes
+                </>
+              )}
+            </button>
           </div>
-        </div>
+        </form>
+      )}
 
-        {/* Description — full width */}
-        <div style={{ marginBottom: 20 }}>
-          <label style={labelStyle}>Description</label>
-          <textarea
-            maxLength={1000}
-            value={form.description}
-            onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-            placeholder="Brief description of the assessment..."
-            rows={3}
-            style={{ ...inputStyle, resize: "vertical", minHeight: 72 }}
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = DT.BRAND;
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = DT.BORDER;
-            }}
+      {/* ── Questions Tab Content (Placeholder) ── */}
+      {activeTab === "questions" && (
+        <div
+          style={{
+            background: WHITE,
+            borderRadius: 14,
+            border: `1px solid ${BORDER}`,
+            padding: "60px 28px",
+            textAlign: "center",
+          }}
+        >
+          <FileText
+            size={48}
+            style={{ color: BRAND_LIGHT, margin: "0 auto 16px", display: "block" }}
           />
-        </div>
-
-        {/* Instructions — full width */}
-        <div style={{ marginBottom: 24 }}>
-          <label style={labelStyle}>Instructions</label>
-          <textarea
-            maxLength={5000}
-            value={form.instructions}
-            onChange={(e) => setForm((f) => ({ ...f, instructions: e.target.value }))}
-            placeholder="Instructions shown to participants before starting..."
-            rows={4}
-            style={{ ...inputStyle, resize: "vertical", minHeight: 80 }}
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = DT.BRAND;
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = DT.BORDER;
-            }}
-          />
-        </div>
-
-        {/* Error */}
-        {updateMutation.error && (
-          <div
+          <h3
             style={{
-              display: "flex",
-              alignItems: "flex-start",
-              gap: 8,
-              padding: "10px 14px",
-              borderRadius: 8,
-              background: "#FFF5F5",
-              border: "1px solid #FFCDD2",
-              fontSize: 12,
-              color: DT.ERROR,
-              marginBottom: 16,
+              fontSize: 16,
+              fontWeight: 700,
+              color: DARK_TEXT,
+              margin: "0 0 8px",
+              fontFamily: "'DM Sans', 'Inter', sans-serif",
             }}
           >
-            <AlertCircle size={14} style={{ marginTop: 1, flexShrink: 0 }} />
-            {updateMutation.error.message}
-          </div>
-        )}
-
-        {/* Success */}
-        {saveSuccess && (
-          <div
+            Question Management
+          </h3>
+          <p
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "10px 14px",
-              borderRadius: 8,
-              background: "#E8F5E9",
-              border: "1px solid #A5D6A7",
-              fontSize: 12,
-              color: DT.SUCCESS,
-              marginBottom: 16,
-            }}
-          >
-            <CheckCircle size={14} />
-            Changes saved.
-          </div>
-        )}
-
-        {/* Submit */}
-        <div style={{ display: "flex", justifyContent: "flex-end" }}>
-          <button
-            type="submit"
-            disabled={updateMutation.isPending}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "10px 24px",
-              borderRadius: 8,
-              border: "none",
-              background: `linear-gradient(135deg, ${DT.BRAND}, ${DT.BRAND_DEEP})`,
-              color: DT.WHITE,
               fontSize: 13,
-              fontWeight: 600,
-              cursor: updateMutation.isPending ? "not-allowed" : "pointer",
-              opacity: updateMutation.isPending ? 0.6 : 1,
-              transition: "opacity 0.15s ease, transform 0.15s ease",
-              boxShadow: `0 2px 12px ${DT.BRAND}40`,
-            }}
-            onMouseEnter={(e) => {
-              if (!updateMutation.isPending) {
-                e.currentTarget.style.transform = "translateY(-1px)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
+              color: LIGHT_TEXT,
+              margin: "0 0 20px",
+              maxWidth: 400,
+              marginLeft: "auto",
+              marginRight: "auto",
             }}
           >
-            {updateMutation.isPending ? (
-              <>
-                <Loader2 size={14} className="admin-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save size={14} />
-                Save Changes
-              </>
-            )}
+            Manage questions, options, scoring dimensions, and display order for this assessment.
+          </p>
+          <button
+            className="admin-btn-secondary"
+            onClick={() => {
+              window.location.href = `/admin/assessments/${testId}/questions`;
+            }}
+          >
+            <ExternalLink size={14} />
+            Open Question Editor
           </button>
         </div>
-      </form>
+      )}
 
       {/* ── Metadata Footer ── */}
       <div
@@ -632,7 +653,7 @@ export default function AssessmentEditPage() {
           justifyContent: "space-between",
           padding: "16px 4px",
           fontSize: 11,
-          color: DT.LIGHT_TEXT,
+          color: LIGHT_TEXT,
         }}
       >
         <span>Created: {new Date(test.createdAt).toLocaleDateString("id-ID")}</span>

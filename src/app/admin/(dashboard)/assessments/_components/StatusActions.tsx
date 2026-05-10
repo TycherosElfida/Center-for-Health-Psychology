@@ -15,19 +15,18 @@ import { useState, useRef, useEffect } from "react";
 import { trpc } from "@/lib/trpc/client";
 import { MoreHorizontal, Send, Archive, RotateCcw, Trash2, Loader2 } from "lucide-react";
 
-/* ── Design Tokens ───────────────────────────────────────────── */
-const DT = {
-  DARK_TEXT: "#1E1830",
-  MID_TEXT: "#6B5CA0",
-  LIGHT_TEXT: "#8B7CB8",
-  BORDER: "#E2DCF0",
-  WHITE: "#FFFFFF",
-  BRAND: "#9B8EC4",
-  BRAND_DEEP: "#6B5CA0",
-  ERROR: "#E53935",
-  SUCCESS: "#2E7D32",
-  WARNING: "#E65100",
-} as const;
+import {
+  DARK_TEXT,
+  MID_TEXT,
+  LIGHT_TEXT,
+  BORDER,
+  WHITE,
+  BRAND,
+  RED,
+  GREEN,
+  WARNING,
+  RED_LIGHT,
+} from "../../../_components/DesignTokens";
 
 /* ── Types ───────────────────────────────────────────────────── */
 interface TestRow {
@@ -135,7 +134,7 @@ export function StatusActions({ test, onRefresh }: StatusActionsProps) {
   }
 
   /* ── Menu item style builder ── */
-  const menuItemStyle = (color: string = DT.MID_TEXT): React.CSSProperties => ({
+  const menuItemStyle = (color: string = MID_TEXT): React.CSSProperties => ({
     display: "flex",
     alignItems: "center",
     gap: 8,
@@ -173,9 +172,9 @@ export function StatusActions({ test, onRefresh }: StatusActionsProps) {
           width: 32,
           height: 32,
           borderRadius: 8,
-          border: `1px solid ${DT.BORDER}`,
-          background: DT.WHITE,
-          color: DT.LIGHT_TEXT,
+          border: `1px solid ${BORDER}`,
+          background: WHITE,
+          color: LIGHT_TEXT,
           cursor: isAnyPending ? "not-allowed" : "pointer",
           transition: "all 0.15s ease",
           marginLeft: "auto",
@@ -192,8 +191,8 @@ export function StatusActions({ test, onRefresh }: StatusActionsProps) {
             right: 0,
             ...(dropUp ? { bottom: "100%", marginBottom: 4 } : { top: "100%", marginTop: 4 }),
             width: 200,
-            background: DT.WHITE,
-            border: `1px solid ${DT.BORDER}`,
+            background: WHITE,
+            border: `1px solid ${BORDER}`,
             borderRadius: 10,
             boxShadow: dropUp
               ? "0 -8px 24px rgba(30, 24, 48, 0.12)"
@@ -208,7 +207,7 @@ export function StatusActions({ test, onRefresh }: StatusActionsProps) {
             <>
               <button
                 onClick={handlePublish}
-                style={menuItemStyle(DT.SUCCESS)}
+                style={menuItemStyle(GREEN)}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = "#E8F5E9";
                 }}
@@ -222,7 +221,7 @@ export function StatusActions({ test, onRefresh }: StatusActionsProps) {
                   <span
                     style={{
                       fontSize: 9,
-                      color: DT.WARNING,
+                      color: WARNING,
                       marginLeft: "auto",
                       fontWeight: 600,
                     }}
@@ -236,7 +235,7 @@ export function StatusActions({ test, onRefresh }: StatusActionsProps) {
               {test.sessionCount > 0 && (
                 <button
                   onClick={handleArchive}
-                  style={menuItemStyle(DT.WARNING)}
+                  style={menuItemStyle(WARNING)}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = "#FFF3E0";
                   }}
@@ -252,12 +251,12 @@ export function StatusActions({ test, onRefresh }: StatusActionsProps) {
               {/* Delete — only when no sessions exist */}
               {test.sessionCount === 0 && (
                 <>
-                  <div style={{ height: 1, background: DT.BORDER, margin: "2px 0" }} />
+                  <div style={{ height: 1, background: BORDER, margin: "2px 0" }} />
                   <button
                     onClick={handleDelete}
-                    style={menuItemStyle(DT.ERROR)}
+                    style={menuItemStyle(RED)}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "#FFF5F5";
+                      e.currentTarget.style.background = RED_LIGHT;
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.background = "none";
@@ -274,7 +273,7 @@ export function StatusActions({ test, onRefresh }: StatusActionsProps) {
           {test.status === "published" && (
             <button
               onClick={handleArchive}
-              style={menuItemStyle(DT.WARNING)}
+              style={menuItemStyle(WARNING)}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = "#FFF3E0";
               }}
@@ -290,9 +289,9 @@ export function StatusActions({ test, onRefresh }: StatusActionsProps) {
           {test.status === "archived" && (
             <button
               onClick={handleRevert}
-              style={menuItemStyle(DT.MID_TEXT)}
+              style={menuItemStyle(MID_TEXT)}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = `${DT.BRAND}08`;
+                e.currentTarget.style.background = `${BRAND}08`;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = "none";
@@ -304,15 +303,15 @@ export function StatusActions({ test, onRefresh }: StatusActionsProps) {
           )}
 
           {/* Edit link — always available */}
-          <div style={{ height: 1, background: DT.BORDER, margin: "2px 0" }} />
+          <div style={{ height: 1, background: BORDER, margin: "2px 0" }} />
           <button
             onClick={() => {
               setMenuOpen(false);
               window.location.href = `/admin/assessments/${test.id}`;
             }}
-            style={menuItemStyle(DT.DARK_TEXT)}
+            style={menuItemStyle(DARK_TEXT)}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = `${DT.BRAND}08`;
+              e.currentTarget.style.background = `${BRAND}08`;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = "none";
@@ -336,7 +335,7 @@ export function StatusActions({ test, onRefresh }: StatusActionsProps) {
             background: "#FFF5F5",
             border: "1px solid #FFCDD2",
             fontSize: 11,
-            color: DT.ERROR,
+            color: RED,
             whiteSpace: "nowrap",
             zIndex: 51,
             boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
