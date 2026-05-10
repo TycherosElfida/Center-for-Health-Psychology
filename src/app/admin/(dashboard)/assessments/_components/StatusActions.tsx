@@ -22,14 +22,10 @@ import {
   BORDER,
   WHITE,
   BRAND,
-  BRAND_DEEP,
   RED,
   GREEN,
   WARNING,
   RED_LIGHT,
-  RED_BORDER,
-  WARNING_BG,
-  WARNING_BORDER,
 } from "../../../_components/DesignTokens";
 
 /* ── Types ───────────────────────────────────────────────────── */

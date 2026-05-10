@@ -39,12 +39,10 @@ import {
 } from "lucide-react";
 import { StatusActions } from "../_components/StatusActions";
 import {
-  BRAND,
   BRAND_DEEP,
   BRAND_LIGHT,
   WHITE,
   DARK_TEXT,
-  MID_TEXT,
   LIGHT_TEXT,
   BORDER,
   RED,
@@ -56,7 +54,6 @@ import {
   RED_BORDER,
   STATUS_CONFIG,
   inputStyle as sharedInputStyle,
-  labelStyle as sharedLabelStyle,
   onInputFocus,
   onInputBlur,
 } from "../../../_components/DesignTokens";

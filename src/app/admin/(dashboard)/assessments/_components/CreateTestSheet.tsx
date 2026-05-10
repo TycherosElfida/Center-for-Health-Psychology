@@ -24,18 +24,12 @@ import { AlertCircle, Loader2, CheckCircle } from "lucide-react";
 
 import {
   DARK_TEXT,
-  MID_TEXT,
   LIGHT_TEXT,
   BORDER,
-  WHITE,
-  BRAND,
-  BRAND_DEEP,
   RED,
   GREEN,
   GREEN_LIGHT,
   GREEN_BORDER,
-  RED_LIGHT,
-  RED_BORDER,
   inputStyle as sharedInputStyle,
   labelStyle as sharedLabelStyle,
   onInputFocus,

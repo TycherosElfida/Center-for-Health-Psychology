@@ -14,10 +14,8 @@ import { Search, Plus, FileText, BarChart3, GitBranch, Users, AlertTriangle } fr
 import { CreateTestSheet } from "./_components/CreateTestSheet";
 import { StatusActions } from "./_components/StatusActions";
 import {
-  BRAND,
   BRAND_DEEP,
   BRAND_LIGHT,
-  BRAND_BG,
   WHITE,
   DARK_TEXT,
   MID_TEXT,
