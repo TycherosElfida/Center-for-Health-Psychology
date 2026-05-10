@@ -422,3 +422,38 @@
 .admin-success-flash {
   animation: adminSuccessFlash 2.5s ease both;
 }
+
+/* ── Shimmer Skeleton ──────────────────────────────────────── */
+@keyframes adminShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.admin-shimmer {
+  background: linear-gradient(90deg, #F0EDF5 25%, #E2DCF0 50%, #F0EDF5 75%);
+  background-size: 200% 100%;
+  animation: adminShimmer 1.5s ease infinite;
+  border-radius: 8px;
+}
+
+/* ── Fade In ───────────────────────────────────────────────── */
+@keyframes adminFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.admin-fade-in,
+[style*="admin-fade-in"] {
+  animation: adminFadeIn 0.2s ease both;
+}
+
+/* ── Spin (loading indicator) ──────────────────────────────── */
+@keyframes adminSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.admin-spin {
+  animation: adminSpin 0.8s linear infinite;
+}
+
