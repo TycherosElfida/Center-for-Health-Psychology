@@ -21,7 +21,7 @@ import { getSessionCount } from "./_shared";
 
 // ── Input Schemas ────────────────────────────────────────────────────
 
-const createTestSchema = z.object({
+export const createTestSchema = z.object({
   title: z.string().min(1).max(200),
   slug: z
     .string()
@@ -30,13 +30,16 @@ const createTestSchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be lowercase alphanumeric with hyphens"),
   description: z.string().max(1000).optional().default(""),
   category: z.string().min(1).max(100),
+  abbreviation: z.string().min(2).max(20),
+  releaseYear: z.number().int().max(new Date().getFullYear()).nullable().optional(),
+  author: z.string().min(1).max(200).nullable().optional(),
   estimatedMinutes: z.number().int().min(1).max(120),
   scoringMethod: z.enum(["summative", "dimensional", "binary_cluster"]),
   instructions: z.string().max(5000).optional().default(""),
   thumbnailUrl: z.string().url().max(500).or(z.literal("")).optional().default(""),
 });
 
-const updateTestSchema = z.object({
+export const updateTestSchema = z.object({
   id: z.string().uuid(),
   title: z.string().min(1).max(200).optional(),
   slug: z
@@ -47,11 +50,16 @@ const updateTestSchema = z.object({
     .optional(),
   description: z.string().max(1000).optional(),
   category: z.string().min(1).max(100).optional(),
+  abbreviation: z.string().min(2).max(20).optional(),
+  releaseYear: z.number().int().max(new Date().getFullYear()).nullable().optional(),
+  author: z.string().min(1).max(200).nullable().optional(),
   estimatedMinutes: z.number().int().min(1).max(120).optional(),
   scoringMethod: z.enum(["summative", "dimensional", "binary_cluster"]).optional(),
   instructions: z.string().max(5000).optional(),
   thumbnailUrl: z.string().url().max(500).or(z.literal("")).optional(),
 });
+
+export const getCategoriesSchema = z.object({});
 
 // ── Router ───────────────────────────────────────────────────────────
 
@@ -68,6 +76,9 @@ export const adminTestsRouter = createTRPCRouter({
         title: tests.title,
         description: tests.description,
         category: tests.category,
+        abbreviation: tests.abbreviation,
+        releaseYear: tests.releaseYear,
+        author: tests.author,
         estimatedMinutes: tests.estimatedMinutes,
         status: tests.status,
         scoringMethod: tests.scoringMethod,
@@ -109,6 +120,9 @@ export const adminTestsRouter = createTRPCRouter({
           title: tests.title,
           description: tests.description,
           category: tests.category,
+          abbreviation: tests.abbreviation,
+          releaseYear: tests.releaseYear,
+          author: tests.author,
           estimatedMinutes: tests.estimatedMinutes,
           status: tests.status,
           scoringMethod: tests.scoringMethod,
@@ -141,6 +155,20 @@ export const adminTestsRouter = createTRPCRouter({
     }),
 
   /**
+   * getCategories — Returns distinct categories used across all tests.
+   */
+  getCategories: adminProcedure
+    .input(getCategoriesSchema)
+    .query(async ({ ctx }) => {
+      const rows = await ctx.db
+        .selectDistinct({ category: tests.category })
+        .from(tests)
+        .where(sql`${tests.category} != ''`);
+
+      return rows.map((r) => r.category);
+    }),
+
+  /**
    * createTest — Create a new draft assessment.
    * Validates slug uniqueness before insert.
    */
@@ -166,6 +194,9 @@ export const adminTestsRouter = createTRPCRouter({
         slug: input.slug,
         description: input.description || null,
         category: input.category,
+        abbreviation: input.abbreviation,
+        releaseYear: input.releaseYear || null,
+        author: input.author || null,
         estimatedMinutes: input.estimatedMinutes,
         scoringMethod: input.scoringMethod,
         instructions: input.instructions || null,
@@ -252,6 +283,9 @@ export const adminTestsRouter = createTRPCRouter({
     if (input.slug !== undefined) updatePayload.slug = input.slug;
     if (input.description !== undefined) updatePayload.description = input.description || null;
     if (input.category !== undefined) updatePayload.category = input.category;
+    if (input.abbreviation !== undefined) updatePayload.abbreviation = input.abbreviation;
+    if (input.releaseYear !== undefined) updatePayload.releaseYear = input.releaseYear;
+    if (input.author !== undefined) updatePayload.author = input.author;
     if (input.estimatedMinutes !== undefined)
       updatePayload.estimatedMinutes = input.estimatedMinutes;
     if (input.scoringMethod !== undefined) updatePayload.scoringMethod = input.scoringMethod;

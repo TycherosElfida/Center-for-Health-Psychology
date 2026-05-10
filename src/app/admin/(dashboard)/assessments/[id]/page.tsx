@@ -38,6 +38,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { StatusActions } from "../_components/StatusActions";
+import { CreatableSelect } from "../../../_components/CreatableSelect";
 import {
   BRAND_DEEP,
   BRAND_LIGHT,
@@ -70,6 +71,9 @@ function buildFormFromData(d: {
   scoringMethod: string | null;
   instructions: string | null;
   thumbnailUrl: string | null;
+  abbreviation: string | null;
+  releaseYear: number | null;
+  author: string | null;
 }) {
   return {
     title: d.title,
@@ -80,6 +84,9 @@ function buildFormFromData(d: {
     scoringMethod: (d.scoringMethod ?? "summative") as ScoringMethodType,
     instructions: d.instructions ?? "",
     thumbnailUrl: d.thumbnailUrl ?? "",
+    abbreviation: d.abbreviation ?? "",
+    releaseYear: d.releaseYear !== null ? String(d.releaseYear) : "",
+    author: d.author ?? "",
   };
 }
 
@@ -92,6 +99,9 @@ const EMPTY_FORM = {
   scoringMethod: "summative" as ScoringMethodType,
   instructions: "",
   thumbnailUrl: "",
+  abbreviation: "",
+  releaseYear: "",
+  author: "",
 };
 
 /* ── Derived style helpers ─────────────────────────────────────── */
@@ -132,6 +142,9 @@ export default function AssessmentEditPage() {
     { id: testId },
     { enabled: !!testId, refetchOnWindowFocus: false }
   );
+
+  const categoriesQuery = trpc.adminTests.getCategories.useQuery({});
+  const categories = categoriesQuery.data ?? [];
 
   const updateMutation = trpc.adminTests.updateTest.useMutation({
     onSuccess: () => {
@@ -199,6 +212,9 @@ export default function AssessmentEditPage() {
       scoringMethod: form.scoringMethod,
       instructions: form.instructions || "",
       thumbnailUrl: form.thumbnailUrl || "",
+      abbreviation: form.abbreviation,
+      releaseYear: form.releaseYear ? parseInt(form.releaseYear, 10) : null,
+      author: form.author || null,
     });
   }
 
@@ -423,18 +439,60 @@ export default function AssessmentEditPage() {
               />
             </div>
 
-            {/* Category */}
+            {/* Abbreviation */}
             <div>
-              <label style={lblStyle}>Category</label>
+              <label style={lblStyle}>Abbreviation</label>
               <input
                 type="text"
                 required
-                maxLength={100}
-                value={form.category}
-                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                maxLength={50}
+                value={form.abbreviation}
+                onChange={(e) => setForm((f) => ({ ...f, abbreviation: e.target.value }))}
                 style={sharedInputStyle}
                 onFocus={onInputFocus}
                 onBlur={onInputBlur}
+              />
+            </div>
+
+            {/* Author */}
+            <div>
+              <label style={lblStyle}>Author</label>
+              <input
+                type="text"
+                maxLength={200}
+                value={form.author}
+                onChange={(e) => setForm((f) => ({ ...f, author: e.target.value }))}
+                style={sharedInputStyle}
+                onFocus={onInputFocus}
+                onBlur={onInputBlur}
+              />
+            </div>
+
+            {/* Release Year */}
+            <div>
+              <label style={lblStyle}>Release Year</label>
+              <input
+                type="number"
+                min={1900}
+                max={new Date().getFullYear()}
+                placeholder={String(new Date().getFullYear())}
+                value={form.releaseYear}
+                onChange={(e) => setForm((f) => ({ ...f, releaseYear: e.target.value }))}
+                style={sharedInputStyle}
+                onFocus={onInputFocus}
+                onBlur={onInputBlur}
+              />
+            </div>
+
+            {/* Category */}
+            <div>
+              <label style={lblStyle}>Category</label>
+              <CreatableSelect
+                value={form.category}
+                onChange={(val: string) => setForm((f) => ({ ...f, category: val }))}
+                options={categories}
+                disabled={false}
+                placeholder="Select or type to create a new category..."
               />
             </div>
 

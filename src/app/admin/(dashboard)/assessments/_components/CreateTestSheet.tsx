@@ -21,6 +21,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { AlertCircle, Loader2, CheckCircle } from "lucide-react";
+import { CreatableSelect } from "../../../_components/CreatableSelect";
 
 import {
   DARK_TEXT,
@@ -55,6 +56,7 @@ interface CreateTestSheetProps {
 
 interface FormState {
   title: string;
+  abbreviation: string;
   slug: string;
   description: string;
   category: string;
@@ -66,6 +68,7 @@ interface FormState {
 
 const INITIAL_FORM: FormState = {
   title: "",
+  abbreviation: "",
   slug: "",
   description: "",
   category: "",
@@ -79,6 +82,9 @@ export function CreateTestSheet({ open, onOpenChange, onCreated }: CreateTestShe
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [slugManual, setSlugManual] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const categoriesQuery = trpc.adminTests.getCategories.useQuery({});
+  const categories = categoriesQuery.data ?? [];
 
   const createMutation = trpc.adminTests.createTest.useMutation({
     onSuccess: () => {
@@ -112,6 +118,7 @@ export function CreateTestSheet({ open, onOpenChange, onCreated }: CreateTestShe
 
     createMutation.mutate({
       title: form.title,
+      abbreviation: form.abbreviation,
       slug: form.slug,
       description: form.description || "",
       category: form.category,
@@ -208,6 +215,24 @@ export function CreateTestSheet({ open, onOpenChange, onCreated }: CreateTestShe
             />
           </div>
 
+          {/* Abbreviation */}
+          <div>
+            <label style={lblStyle}>
+              Abbreviation <span style={{ color: RED }}>*</span>
+            </label>
+            <input
+              type="text"
+              required
+              maxLength={20}
+              value={form.abbreviation}
+              onChange={(e) => setForm((f) => ({ ...f, abbreviation: e.target.value }))}
+              placeholder="e.g. PSS-10"
+              style={sharedInputStyle}
+              onFocus={onInputFocus}
+              onBlur={onInputBlur}
+            />
+          </div>
+
           {/* Slug */}
           <div>
             <label style={lblStyle}>
@@ -249,16 +274,11 @@ export function CreateTestSheet({ open, onOpenChange, onCreated }: CreateTestShe
               <label style={lblStyle}>
                 Category <span style={{ color: RED }}>*</span>
               </label>
-              <input
-                type="text"
-                required
-                maxLength={100}
+              <CreatableSelect
                 value={form.category}
-                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                placeholder="e.g. Stress"
-                style={sharedInputStyle}
-                onFocus={onInputFocus}
-                onBlur={onInputBlur}
+                onChange={(val) => setForm((f) => ({ ...f, category: val }))}
+                options={categories}
+                placeholder="Select or type to create a new category..."
               />
             </div>
             <div>
