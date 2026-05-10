@@ -35,10 +35,11 @@ import {
   FileText,
   AlertTriangle,
   ClipboardList,
-  ExternalLink,
+  BarChart2,
 } from "lucide-react";
 import { StatusActions } from "../_components/StatusActions";
 import { CreatableSelect } from "../../../_components/CreatableSelect";
+import { QuestionManager } from "./_components/QuestionManager";
 import {
   BRAND_DEEP,
   BRAND_LIGHT,
@@ -60,7 +61,7 @@ import {
 } from "../../../_components/DesignTokens";
 
 type ScoringMethodType = "summative" | "dimensional" | "binary_cluster";
-type EditorTab = "identity" | "questions";
+type EditorTab = "identity" | "questions" | "scales";
 
 function buildFormFromData(d: {
   title: string;
@@ -327,6 +328,7 @@ export default function AssessmentEditPage() {
         {[
           { key: "identity" as const, label: "Identity", icon: ClipboardList },
           { key: "questions" as const, label: "Questions", icon: FileText },
+          { key: "scales" as const, label: "Scales", icon: BarChart2 },
         ].map(({ key, label, icon: Icon }) => {
           const isActive = activeTab === key;
           return (
@@ -654,8 +656,13 @@ export default function AssessmentEditPage() {
         </form>
       )}
 
-      {/* ── Questions Tab Content (Placeholder) ── */}
+      {/* ── Questions Tab Content ── */}
       {activeTab === "questions" && (
+        <QuestionManager testId={testId} sessionCount={test.sessionCount} />
+      )}
+
+      {/* ── Scales Tab Content (Placeholder) ── */}
+      {activeTab === "scales" && (
         <div
           style={{
             background: WHITE,
@@ -665,7 +672,7 @@ export default function AssessmentEditPage() {
             textAlign: "center",
           }}
         >
-          <FileText
+          <BarChart2
             size={48}
             style={{ color: BRAND_LIGHT, margin: "0 auto 16px", display: "block" }}
           />
@@ -678,7 +685,7 @@ export default function AssessmentEditPage() {
               fontFamily: "'DM Sans', 'Inter', sans-serif",
             }}
           >
-            Question Management
+            Scale Configuration
           </h3>
           <p
             style={{
@@ -690,17 +697,8 @@ export default function AssessmentEditPage() {
               marginRight: "auto",
             }}
           >
-            Manage questions, options, scoring dimensions, and display order for this assessment.
+            Configure dimensional scales and interpretation bands for this assessment.
           </p>
-          <button
-            className="admin-btn-secondary"
-            onClick={() => {
-              window.location.href = `/admin/assessments/${testId}/questions`;
-            }}
-          >
-            <ExternalLink size={14} />
-            Open Question Editor
-          </button>
         </div>
       )}
 
