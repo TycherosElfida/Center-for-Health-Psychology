@@ -61,12 +61,16 @@ function UserProfileDropdown({ adminName }: { adminName: string }) {
     <div className="relative" ref={dropdownRef}>
       {isOpen && (
         <div className="absolute bottom-full left-0 mb-2 w-full bg-[#18181b] border border-[#27272a] rounded-xl shadow-xl overflow-hidden z-50 text-sm">
-          <div className="px-3 py-2.5 text-white font-medium border-b border-[#27272a] flex items-center gap-2">
+          <Link
+            href="/admin/profile"
+            onClick={() => setIsOpen(false)}
+            className="px-3 py-2.5 text-white font-medium border-b border-[#27272a] flex items-center gap-2 hover:bg-[#27272a]/50 transition-colors"
+          >
             <span className="text-[#a1a1aa]">
               <User size={14} />
             </span>{" "}
             My profile
-          </div>
+          </Link>
           <div className="py-1 border-b border-[#27272a]">
             <button
               onClick={() => {

@@ -46,7 +46,7 @@ export const adminAuthRouter = createTRPCRouter({
       z.object({
         email: z.string().email(),
         password: z.string().min(1),
-      }),
+      })
     )
     .mutation(async ({ ctx, input }) => {
       // Extract IP from standard headers (X-Forwarded-For > X-Real-Ip > "unknown")
@@ -154,6 +154,8 @@ export const adminAuthRouter = createTRPCRouter({
     const [admin] = await ctx.db
       .select({
         mustChangePassword: adminUsers.mustChangePassword,
+        createdAt: adminUsers.createdAt,
+        lastLoginAt: adminUsers.lastLoginAt,
       })
       .from(adminUsers)
       .where(eq(adminUsers.id, ctx.adminSession.id))
@@ -165,6 +167,8 @@ export const adminAuthRouter = createTRPCRouter({
       name: ctx.adminSession.name,
       role: ctx.adminSession.role,
       mustChangePassword: admin?.mustChangePassword ?? false,
+      createdAt: admin?.createdAt ?? null,
+      lastLoginAt: admin?.lastLoginAt ?? null,
     };
   }),
 });
