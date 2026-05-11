@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { ChpLogo } from "@/components/ui/ChpLogo";
 import { trpc } from "@/lib/trpc/client";
 import { useState, useRef, useEffect } from "react";
-import { User, Moon, LogOut, Link as LinkIcon, MoreHorizontal, ScrollText } from "lucide-react";
+import { User, LogOut, Link as LinkIcon, MoreHorizontal, ScrollText } from "lucide-react";
 
 function getNavItems(adminRole?: string) {
   const managementItems = [
@@ -71,21 +71,7 @@ function UserProfileDropdown({ adminName }: { adminName: string }) {
             </span>{" "}
             My profile
           </Link>
-          <div className="py-1 border-b border-[#27272a]">
-            <button
-              onClick={() => {
-                setIsOpen(false);
-              }}
-              className="w-full flex items-center justify-between px-3 py-2 text-[#a1a1aa] hover:text-white hover:bg-[#27272a] transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <Moon size={14} /> Toggle theme
-              </div>
-              <kbd className="bg-[#27272a] text-[#71717a] text-[10px] px-1.5 py-0.5 rounded border border-[#3f3f46]">
-                M
-              </kbd>
-            </button>
-          </div>
+
           <div className="py-1 border-b border-[#27272a]">
             <Link
               href="/home"
