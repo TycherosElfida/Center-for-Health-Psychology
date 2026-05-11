@@ -76,7 +76,7 @@ export const adminUserAccountsRouter = createTRPCRouter({
 
       await ctx.db.insert(auditLogs).values({
         adminUserId: ctx.adminSession.id,
-        action: input.active ? "ACTIVATE_USER" : "DEACTIVATE_USER",
+        action: input.active ? "account.user_activated" : "account.user_deactivated",
         entityType: "user",
         entityId: input.userId,
         newValue: { active: input.active },

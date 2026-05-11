@@ -201,7 +201,7 @@ export const adminAccountsRouter = createTRPCRouter({
     await writeAuditLog(
       ctx.db,
       ctx.adminSession.id,
-      "CREATE_ADMIN",
+      "account.admin_created",
       "admin_user",
       createdId,
       null,
@@ -265,7 +265,7 @@ export const adminAccountsRouter = createTRPCRouter({
     await writeAuditLog(
       ctx.db,
       ctx.adminSession.id,
-      "UPDATE_ADMIN",
+      "account.admin_updated",
       "admin_user",
       adminId,
       oldAdmin,
@@ -313,7 +313,7 @@ export const adminAccountsRouter = createTRPCRouter({
       await writeAuditLog(
         ctx.db,
         ctx.adminSession.id,
-        input.active ? "ACTIVATE_ADMIN" : "DEACTIVATE_ADMIN",
+        input.active ? "account.admin_activated" : "account.admin_deactivated",
         "admin_user",
         input.adminId,
         null,
@@ -339,7 +339,7 @@ export const adminAccountsRouter = createTRPCRouter({
     await writeAuditLog(
       ctx.db,
       ctx.adminSession.id,
-      "UNLOCK_ADMIN",
+      "account.admin_unlocked",
       "admin_user",
       input.adminId,
       null,
@@ -360,7 +360,7 @@ export const adminAccountsRouter = createTRPCRouter({
       await writeAuditLog(
         ctx.db,
         ctx.adminSession.id,
-        "FORCE_PASSWORD_RESET",
+        "account.password_reset_forced",
         "admin_user",
         input.adminId
       );
@@ -387,7 +387,7 @@ export const adminAccountsRouter = createTRPCRouter({
       await writeAuditLog(
         ctx.db,
         ctx.adminSession.id,
-        "INVALIDATE_SESSION",
+        "account.session_invalidated",
         "admin_user",
         input.adminId
       );
