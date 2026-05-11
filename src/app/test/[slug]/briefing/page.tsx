@@ -1,14 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import {
-  Shield,
-  CheckCircle2,
-  Eye,
-  AlertTriangle,
-  Heart,
-  Hand,
-  Info,
-} from "lucide-react";
+import { Shield, CheckCircle2, Eye, AlertTriangle, Heart, Hand, Info } from "lucide-react";
 import type { ElementType, ReactNode } from "react";
 import { getTestMeta, ICON_MAP } from "@/lib/data/tests";
 import { BriefingActions } from "@/components/test/BriefingActions";
@@ -43,45 +35,35 @@ interface Bullet {
 const TIMEFRAME_OVERRIDES: Record<string, ReactNode> = {
   pss10: (
     <>
-      Answer honestly based on how you&apos;ve been feeling over the{" "}
-      <strong>past month</strong>.
+      Answer honestly based on how you&apos;ve been feeling over the <strong>past month</strong>.
     </>
   ),
   srq29: (
     <>
-      Answer honestly based on how you&apos;ve been feeling{" "}
-      <strong>recently</strong>.
+      Answer honestly based on how you&apos;ve been feeling <strong>recently</strong>.
     </>
   ),
   mbti: (
     <>
-      Answer honestly based on your <strong>general preferences</strong> and
-      typical behavior.
+      Answer honestly based on your <strong>general preferences</strong> and typical behavior.
     </>
   ),
   gpius2: (
     <>
-      Answer honestly based on your <strong>internet usage habits</strong> in
-      recent times.
+      Answer honestly based on your <strong>internet usage habits</strong> in recent times.
     </>
   ),
   srs: (
     <>
-      Answer honestly based on how you <strong>generally cope</strong> with
-      challenges and setbacks.
+      Answer honestly based on how you <strong>generally cope</strong> with challenges and setbacks.
     </>
   ),
 };
 
-function getBriefingBullets(
-  testId: string,
-  itemCount: number,
-  duration: string,
-): Bullet[] {
+function getBriefingBullets(testId: string, itemCount: number, duration: string): Bullet[] {
   const timeframeText = TIMEFRAME_OVERRIDES[testId] ?? (
     <>
-      Answer honestly based on how you&apos;ve been feeling over the{" "}
-      <strong>past 2 weeks</strong>.
+      Answer honestly based on how you&apos;ve been feeling over the <strong>past 2 weeks</strong>.
     </>
   );
 
@@ -90,8 +72,8 @@ function getBriefingBullets(
       icon: CheckCircle2,
       text: (
         <>
-          This assessment contains <strong>{itemCount} items</strong> and takes
-          approximately <strong>{duration}</strong>.
+          This assessment contains <strong>{itemCount} items</strong> and takes approximately{" "}
+          <strong>{duration}</strong>.
         </>
       ),
     },
@@ -99,8 +81,8 @@ function getBriefingBullets(
       icon: Eye,
       text: (
         <>
-          Your responses are <strong>anonymous</strong> and will be used only for
-          screening/research purposes.
+          Your responses are <strong>anonymous</strong> and will be used only for screening/research
+          purposes.
         </>
       ),
     },
@@ -108,8 +90,8 @@ function getBriefingBullets(
       icon: AlertTriangle,
       text: (
         <>
-          This is <strong>not a clinical diagnosis</strong>. Results are for
-          informational purposes only.
+          This is <strong>not a clinical diagnosis</strong>. Results are for informational purposes
+          only.
         </>
       ),
     },
@@ -192,19 +174,40 @@ export default async function BriefingPage({ params }: PageProps) {
                 return (
                   <div key={i} className="flex items-start gap-3">
                     <div className="mt-0.5 shrink-0">
-                      <BulletIcon
-                        size={18}
-                        strokeWidth={2.2}
-                        style={{ color: meta.color }}
-                      />
+                      <BulletIcon size={18} strokeWidth={2.2} style={{ color: meta.color }} />
                     </div>
-                    <p className="text-[14.5px] leading-relaxed text-muted-foreground">
-                      {b.text}
-                    </p>
+                    <p className="text-[14.5px] leading-relaxed text-muted-foreground">{b.text}</p>
                   </div>
                 );
               })}
             </div>
+          </div>
+
+          {/* Guest warning disclaimer */}
+          <div
+            style={{
+              margin: "16px 32px 0",
+              padding: "12px 16px",
+              background: "#FFF8E1",
+              border: "1.5px solid #FFE082",
+              borderRadius: 12,
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 10,
+            }}
+          >
+            <AlertTriangle size={16} style={{ color: "#F57F17", flexShrink: 0, marginTop: 2 }} />
+            <p
+              style={{
+                margin: 0,
+                fontSize: 13,
+                color: "#5D4037",
+                lineHeight: 1.55,
+              }}
+            >
+              <span style={{ fontWeight: 700 }}>Important:</span> Your progress will not be saved if
+              you are browsing as a guest.
+            </p>
           </div>
 
           {/* Metadata strip */}
@@ -221,28 +224,19 @@ export default async function BriefingPage({ params }: PageProps) {
                 key={item.label}
                 className="flex-1 py-3.5 text-center"
                 style={{
-                  borderRight:
-                    i < arr.length - 1
-                      ? "1px solid oklch(0 0 0 / 0.06)"
-                      : "none",
+                  borderRight: i < arr.length - 1 ? "1px solid oklch(0 0 0 / 0.06)" : "none",
                 }}
               >
                 <p className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">
                   {item.label}
                 </p>
-                <p className="text-[15px] font-semibold text-foreground">
-                  {item.value}
-                </p>
+                <p className="text-[15px] font-semibold text-foreground">{item.value}</p>
               </div>
             ))}
           </div>
 
           {/* Action buttons (client island) */}
-          <BriefingActions
-            slug={meta.id}
-            color={meta.color}
-            colorDark={colorDark}
-          />
+          <BriefingActions slug={meta.id} color={meta.color} colorDark={colorDark} />
         </div>
 
         {/* Privacy note below card */}
@@ -253,15 +247,11 @@ export default async function BriefingPage({ params }: PageProps) {
             borderColor: `${meta.color}15`,
           }}
         >
-          <Shield
-            size={16}
-            className="mt-0.5 shrink-0"
-            style={{ color: meta.color }}
-          />
+          <Shield size={16} className="mt-0.5 shrink-0" style={{ color: meta.color }} />
           <p className="text-[13px] leading-relaxed text-muted-foreground">
-            Your data is processed locally in your browser and is not stored on
-            any server. This tool is intended for educational and research
-            purposes only and does not replace professional clinical assessment.
+            Your data is processed locally in your browser and is not stored on any server. This
+            tool is intended for educational and research purposes only and does not replace
+            professional clinical assessment.
           </p>
         </div>
       </div>
