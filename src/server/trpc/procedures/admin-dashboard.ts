@@ -3,12 +3,18 @@
  *
  * Provides aggregate platform metrics for the admin dashboard.
  * All queries use the adminProcedure middleware (JWT validation).
+ *
+ * Returns:
+ *  - totalCompleted, activeSessions, completionRate, pendingReports
+ *  - popularTest: most-taken test by completed session count
+ *  - recentResults: last 100 results with demographics (name/province/city)
  */
 import { sql } from "drizzle-orm";
 import { createTRPCRouter, adminProcedure } from "../index";
 import { testSessions, results } from "../../schema/sessions";
 import { reportRequests } from "../../schema/report-requests";
 import { tests } from "../../schema/tests";
+import { sessionDemographics } from "../../schema/session-demographics";
 
 export const adminDashboardRouter = createTRPCRouter({
   stats: adminProcedure.query(async ({ ctx }) => {
@@ -37,26 +43,48 @@ export const adminDashboardRouter = createTRPCRouter({
     const totalAbandoned = abandonedRow?.count ?? 0;
     const denominator = totalCompleted + totalAbandoned;
 
-    // Recent 10 completed results with test name
+    // Most popular test by completed session count
+    const [popularTestRow] = await ctx.db
+      .select({
+        title: tests.title,
+        sessionCount: sql<number>`count(*)::int`,
+      })
+      .from(testSessions)
+      .innerJoin(tests, sql`${testSessions.testId} = ${tests.id}`)
+      .where(sql`${testSessions.status} = 'completed'`)
+      .groupBy(tests.id, tests.title)
+      .orderBy(sql`count(*) DESC`)
+      .limit(1);
+
+    const popularTest = popularTestRow ?? null;
+
+    // Last 100 results with test info and respondent demographics
     const recentResults = await ctx.db
       .select({
-        id: results.id,
-        totalScore: results.totalScore,
-        resultLabel: results.resultLabel,
-        createdAt: results.createdAt,
+        scoreId: results.id,
+        sessionId: results.sessionId,
+        respondentName: sessionDemographics.name,
         testTitle: tests.title,
         testSlug: tests.slug,
+        totalScore: results.totalScore,
+        resultLabel: results.resultLabel,
+        province: sessionDemographics.province,
+        city: sessionDemographics.city,
+        createdAt: results.createdAt,
       })
       .from(results)
       .innerJoin(tests, sql`${results.testId} = ${tests.id}`)
+      .innerJoin(testSessions, sql`${results.sessionId} = ${testSessions.id}`)
+      .leftJoin(sessionDemographics, sql`${sessionDemographics.sessionId} = ${testSessions.id}`)
       .orderBy(sql`${results.createdAt} DESC`)
-      .limit(10);
+      .limit(100);
 
     return {
       totalCompleted,
       activeSessions: activeRow?.count ?? 0,
       completionRate: denominator > 0 ? Math.round((totalCompleted / denominator) * 100) : 0,
       pendingReports: pendingRow?.count ?? 0,
+      popularTest,
       recentResults,
     };
   }),
