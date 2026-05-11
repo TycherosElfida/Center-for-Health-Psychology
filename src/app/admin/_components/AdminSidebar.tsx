@@ -5,13 +5,13 @@ import { usePathname } from "next/navigation";
 import { ChpLogo } from "@/components/ui/ChpLogo";
 import { trpc } from "@/lib/trpc/client";
 import { useState, useRef, useEffect } from "react";
-import { User, Moon, LogOut, Link as LinkIcon, MoreHorizontal } from "lucide-react";
+import { User, Moon, LogOut, Link as LinkIcon, MoreHorizontal, ScrollText } from "lucide-react";
 
 function getNavItems(adminRole?: string) {
   const managementItems = [
     { label: "Assessments", href: "/admin/assessments", icon: "📝" },
     { label: "Email Requests", href: "/admin/reports", icon: "📧" },
-    { label: "Audit Log", href: "/admin/audit", icon: "🔒" },
+    { label: "Audit Log", href: "/admin/audit", icon: <ScrollText size={16} /> },
   ];
 
   // Accounts link is only visible to super_admin
