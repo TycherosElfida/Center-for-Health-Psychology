@@ -9,6 +9,8 @@ import { adminResultsRouter } from "./procedures/admin-results";
 import { adminTestsRouter } from "./procedures/admin-tests";
 import { adminQuestionsRouter } from "./procedures/admin-questions";
 import { adminScalesRouter } from "./procedures/admin-scales";
+import { adminAccountsRouter } from "./procedures/admin-accounts";
+import { adminUserAccountsRouter } from "./procedures/admin-user-accounts";
 
 export const appRouter = createTRPCRouter({
   health: healthRouter,
@@ -21,6 +23,8 @@ export const appRouter = createTRPCRouter({
   adminTests: adminTestsRouter,
   adminQuestions: adminQuestionsRouter,
   adminScales: adminScalesRouter,
+  adminAccounts: adminAccountsRouter,
+  adminUserAccounts: adminUserAccountsRouter,
 });
 
 export type AppRouter = typeof appRouter;
