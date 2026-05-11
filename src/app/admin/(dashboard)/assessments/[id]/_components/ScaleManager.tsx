@@ -60,6 +60,10 @@ type EditState = {
   severity: string;
 };
 
+type AddSubscaleState = EditState & {
+  subscaleName: string;
+};
+
 // ── Constants ────────────────────────────────────────────────────────
 
 const SEVERITY_STYLES: Record<string, { bg: string; color: string; label: string }> = {
@@ -109,6 +113,9 @@ export function ScaleManager({ testId }: ScaleManagerProps) {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [addingToDimension, setAddingToDimension] = useState<string | null>(null);
   const [addState, setAddState] = useState<EditState | null>(null);
+  const [showFirstRangeForm, setShowFirstRangeForm] = useState(false);
+  const [showAddSubscaleForm, setShowAddSubscaleForm] = useState(false);
+  const [subscaleFormState, setSubscaleFormState] = useState<AddSubscaleState | null>(null);
 
   // Derived
   const isLocked = data?.isLocked ?? false;
@@ -200,6 +207,52 @@ export function ScaleManager({ testId }: ScaleManagerProps) {
     if (!deleteConfirmId) return;
     deleteMutation.mutate({ id: deleteConfirmId }, { onSuccess: () => setDeleteConfirmId(null) });
   }, [deleteConfirmId, deleteMutation]);
+
+  // ── Subscale form handlers ─────────────────────────────────────────
+
+  const openSubscaleForm = useCallback((isFirstRange: boolean) => {
+    const fresh: AddSubscaleState = {
+      subscaleName: "",
+      label: "",
+      minScore: "0.00",
+      maxScore: "0.00",
+      description: "",
+      recommendation: "",
+      severity: "low",
+    };
+    setSubscaleFormState(fresh);
+    if (isFirstRange) {
+      setShowFirstRangeForm(true);
+      setShowAddSubscaleForm(false);
+    } else {
+      setShowAddSubscaleForm(true);
+      setShowFirstRangeForm(false);
+    }
+  }, []);
+
+  const closeSubscaleForm = useCallback(() => {
+    setShowFirstRangeForm(false);
+    setShowAddSubscaleForm(false);
+    setSubscaleFormState(null);
+  }, []);
+
+  const submitSubscaleForm = useCallback(() => {
+    if (!subscaleFormState) return;
+    const dimValue = subscaleFormState.subscaleName.trim() || null;
+    addMutation.mutate(
+      {
+        testId,
+        dimension: dimValue,
+        label: subscaleFormState.label,
+        minScore: subscaleFormState.minScore,
+        maxScore: subscaleFormState.maxScore,
+        description: subscaleFormState.description,
+        recommendation: subscaleFormState.recommendation || null,
+        severity: subscaleFormState.severity as "low" | "moderate" | "high" | "critical",
+      },
+      { onSuccess: () => closeSubscaleForm() }
+    );
+  }, [subscaleFormState, testId, addMutation, closeSubscaleForm]);
 
   // ── Toggle dimension ───────────────────────────────────────────────
 
@@ -363,10 +416,118 @@ export function ScaleManager({ testId }: ScaleManagerProps) {
     </div>
   );
 
+  // ── Subscale form renderer ─────────────────────────────────────────
+
+  const renderSubscaleForm = (state: AddSubscaleState, isSubmitting: boolean) => (
+    <div
+      style={{
+        background: WHITE,
+        borderRadius: 14,
+        border: `1.5px solid ${BRAND}`,
+        padding: "20px 18px",
+        marginTop: 16,
+      }}
+      className="admin-fade-in"
+    >
+      <h4
+        style={{
+          fontSize: 14,
+          fontWeight: 700,
+          color: BRAND_DEEP,
+          margin: "0 0 14px",
+          fontFamily: "'DM Sans', 'Inter', sans-serif",
+        }}
+      >
+        {showFirstRangeForm ? "Configure First Interpretation Range" : "Add New Subscale"}
+      </h4>
+
+      {/* Subscale name */}
+      <div style={{ marginBottom: 14 }}>
+        <label style={labelStyle}>Subscale Name</label>
+        <input
+          style={inputStyle}
+          value={state.subscaleName}
+          onChange={(e) =>
+            setSubscaleFormState((prev) =>
+              prev ? { ...prev, subscaleName: e.target.value } : prev
+            )
+          }
+          onFocus={onInputFocus}
+          onBlur={onInputBlur}
+          placeholder="e.g. Overall Score, Anxiety, Resilience..."
+        />
+        <p
+          style={{
+            fontSize: 11,
+            color: LIGHT_TEXT,
+            margin: "4px 0 0",
+            fontStyle: "italic",
+          }}
+        >
+          Leave blank for unidimensional assessments
+        </p>
+      </div>
+
+      {/* Range fields */}
+      {renderEditFields(
+        state,
+        (s) => setSubscaleFormState((prev) => (prev ? { ...prev, ...s } : prev)),
+        false
+      )}
+
+      {/* Actions */}
+      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+        <button
+          className="admin-btn-primary"
+          onClick={submitSubscaleForm}
+          disabled={isSubmitting || !state.label || !state.description}
+          style={{ fontSize: 12, padding: "6px 14px" }}
+        >
+          {isSubmitting ? <Loader2 size={12} className="admin-spin" /> : <Plus size={12} />}
+          {showFirstRangeForm ? "Create Range" : "Add Subscale"}
+        </button>
+        <button
+          className="admin-btn-ghost"
+          onClick={closeSubscaleForm}
+          style={{ fontSize: 12, padding: "6px 14px" }}
+        >
+          <X size={12} /> Cancel
+        </button>
+      </div>
+    </div>
+  );
+
   // ── Main render ────────────────────────────────────────────────────
 
   return (
     <div style={{ padding: "24px 0" }}>
+      {/* ── Header with Add Subscale ── */}
+      {dimensions.length > 0 && !isLocked && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            marginBottom: 12,
+          }}
+        >
+          <button
+            className="admin-btn-ghost"
+            onClick={() => openSubscaleForm(false)}
+            style={{ fontSize: 12, padding: "5px 12px" }}
+            disabled={showAddSubscaleForm}
+          >
+            <Plus size={12} /> Add Subscale
+          </button>
+        </div>
+      )}
+
+      {/* ── Add Subscale Form (header-level) ── */}
+      {showAddSubscaleForm && subscaleFormState && (
+        <div style={{ marginBottom: 16 }}>
+          {renderSubscaleForm(subscaleFormState, addMutation.isPending)}
+        </div>
+      )}
+
       {/* ── Lock Banner ── */}
       {isLocked && (
         <div
@@ -430,8 +591,22 @@ export function ScaleManager({ testId }: ScaleManagerProps) {
           >
             {isLocked
               ? "This validated instrument has no interpretation ranges."
-              : "No interpretation ranges configured for this assessment."}
+              : "Define how scores are interpreted by adding ranges with labels, thresholds, and recommendations."}
           </p>
+          {!isLocked && !showFirstRangeForm && (
+            <button
+              className="admin-btn-primary"
+              onClick={() => openSubscaleForm(true)}
+              style={{ fontSize: 13, padding: "8px 20px" }}
+            >
+              <Plus size={14} /> Configure Interpretation Ranges
+            </button>
+          )}
+          {showFirstRangeForm && subscaleFormState && (
+            <div style={{ textAlign: "left", maxWidth: 520, margin: "0 auto" }}>
+              {renderSubscaleForm(subscaleFormState, addMutation.isPending)}
+            </div>
+          )}
         </div>
       ) : (
         /* ── Dimension Accordion Cards ── */
