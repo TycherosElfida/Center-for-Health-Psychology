@@ -11,7 +11,16 @@
  * - ipHash in auditLogs uses SHA-256, consistent with session domain
  * - auditLogs.adminUserId is SET NULL on admin deletion to preserve logs
  */
-import { pgTable, uuid, text, timestamp, boolean, jsonb, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  boolean,
+  jsonb,
+  index,
+  integer,
+} from "drizzle-orm/pg-core";
 import { roleEnum } from "./enums";
 
 // ── adminUsers ───────────────────────────────────────────────────────
@@ -24,6 +33,9 @@ export const adminUsers = pgTable("admin_users", {
   role: roleEnum("role").default("admin").notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   mustChangePassword: boolean("must_change_password").default(true).notNull(),
+  failedLoginCount: integer("failed_login_count").default(0).notNull(),
+  lockedAt: timestamp("locked_at", { withTimezone: true, mode: "date" }),
+  lockedReason: text("locked_reason"),
   sessionInvalidatedAt: timestamp("session_invalidated_at", {
     withTimezone: true,
     mode: "date",
