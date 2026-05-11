@@ -190,6 +190,18 @@ function CreateAdminDialog({ onClose, onSuccess }: { onClose: () => void; onSucc
             <option value="researcher">Researcher</option>
           </select>
         </div>
+        {form.password.length > 0 && form.password.length < 12 && (
+          <div
+            style={{
+              fontSize: 11,
+              color: "#C62828",
+              marginBottom: 12,
+              marginTop: -8,
+            }}
+          >
+            Password must be at least 12 characters ({form.password.length}/12)
+          </div>
+        )}
         <button
           onClick={() => createMutation.mutate(form)}
           disabled={
@@ -199,12 +211,16 @@ function CreateAdminDialog({ onClose, onSuccess }: { onClose: () => void; onSucc
             width: "100%",
             padding: "10px",
             borderRadius: 10,
-            background: DT.TEAL,
+            background:
+              !form.name || !form.email || form.password.length < 12 ? "#C4B8DC" : DT.TEAL,
             color: DT.WHITE,
             fontWeight: 600,
             fontSize: 13,
             border: "none",
-            cursor: "pointer",
+            cursor:
+              createMutation.isPending || !form.name || !form.email || form.password.length < 12
+                ? "not-allowed"
+                : "pointer",
             opacity: createMutation.isPending ? 0.6 : 1,
           }}
         >
