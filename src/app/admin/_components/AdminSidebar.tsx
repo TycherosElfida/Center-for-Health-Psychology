@@ -7,24 +7,33 @@ import { trpc } from "@/lib/trpc/client";
 import { useState, useRef, useEffect } from "react";
 import { User, Moon, LogOut, Link as LinkIcon, MoreHorizontal } from "lucide-react";
 
-const NAV_ITEMS = [
-  {
-    section: "General",
-    items: [{ label: "Dashboard", href: "/admin/dashboard", icon: "📊" }],
-  },
-  {
-    section: "Data",
-    items: [{ label: "Results", href: "/admin/results", icon: "📋" }],
-  },
-  {
-    section: "Management",
-    items: [
-      { label: "Assessments", href: "/admin/assessments", icon: "📝" },
-      { label: "Email Requests", href: "/admin/reports", icon: "📧" },
-      { label: "Audit Log", href: "/admin/audit", icon: "🔒" },
-    ],
-  },
-];
+function getNavItems(adminRole?: string) {
+  const managementItems = [
+    { label: "Assessments", href: "/admin/assessments", icon: "📝" },
+    { label: "Email Requests", href: "/admin/reports", icon: "📧" },
+    { label: "Audit Log", href: "/admin/audit", icon: "🔒" },
+  ];
+
+  // Accounts link is only visible to super_admin
+  if (adminRole === "super_admin") {
+    managementItems.push({ label: "Accounts", href: "/admin/accounts", icon: "👥" });
+  }
+
+  return [
+    {
+      section: "General",
+      items: [{ label: "Dashboard", href: "/admin/dashboard", icon: "📊" }],
+    },
+    {
+      section: "Data",
+      items: [{ label: "Results", href: "/admin/results", icon: "📋" }],
+    },
+    {
+      section: "Management",
+      items: managementItems,
+    },
+  ];
+}
 
 function UserProfileDropdown({ adminName }: { adminName: string }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -112,8 +121,15 @@ function UserProfileDropdown({ adminName }: { adminName: string }) {
   );
 }
 
-export function AdminSidebar({ adminName = "Admin" }: { adminName?: string }) {
+export function AdminSidebar({
+  adminName = "Admin",
+  adminRole,
+}: {
+  adminName?: string;
+  adminRole?: string;
+}) {
   const pathname = usePathname();
+  const navItems = getNavItems(adminRole);
 
   return (
     <aside className="admin-sidebar">
@@ -128,7 +144,7 @@ export function AdminSidebar({ adminName = "Admin" }: { adminName?: string }) {
 
       {/* Navigation */}
       <nav className="flex-1 flex flex-col gap-1 px-3">
-        {NAV_ITEMS.map((section) => (
+        {navItems.map((section) => (
           <div key={section.section} className="mb-3">
             <div className="admin-sidebar-label">{section.section}</div>
             {section.items.map((item) => {

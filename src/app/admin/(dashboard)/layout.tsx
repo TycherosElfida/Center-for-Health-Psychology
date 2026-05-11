@@ -43,7 +43,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
 
   return (
     <div className="admin-shell">
-      <AdminSidebar adminName={meQuery.data.name} />
+      <AdminSidebar adminName={meQuery.data.name} adminRole={meQuery.data.role} />
       <div className="admin-content">
         <AdminHeader adminName={meQuery.data.name} />
         <main className="p-6 admin-fade-in">{children}</main>
