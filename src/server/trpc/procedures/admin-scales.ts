@@ -99,7 +99,7 @@ export const adminScalesRouter = createTRPCRouter({
       .from(resultInterpretations)
       .where(eq(resultInterpretations.testId, input.testId))
       .orderBy(
-        asc(sql`${resultInterpretations.dimension} NULLS FIRST`),
+        sql`${resultInterpretations.dimension} ASC NULLS FIRST`,
         asc(resultInterpretations.minScore)
       );
 
