@@ -49,6 +49,7 @@ const SECURITY_ACTIONS = [
   "account.admin_unlocked",
   "account.session_invalidated",
   "account.password_reset_forced",
+  "account.password_changed",
 ];
 
 // ── Router ───────────────────────────────────────────────────────────
