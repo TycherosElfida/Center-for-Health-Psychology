@@ -5,7 +5,7 @@
  * Navigation: entered via window.location.href (admin cookie rule).
  *
  * Features:
- * - Tab system: Identity (form) | Questions (placeholder)
+ * - Tab system: Identity (form) | Questions (QuestionManager) | Scales (ScaleManager)
  * - Structural lock indicators (slug/scoringMethod when sessions > 0)
  * - Status lifecycle actions (same as list view)
  * - Field-level editing with save
@@ -40,9 +40,9 @@ import {
 import { StatusActions } from "../_components/StatusActions";
 import { CreatableSelect } from "../../../_components/CreatableSelect";
 import { QuestionManager } from "./_components/QuestionManager";
+import { ScaleManager } from "./_components/ScaleManager";
 import {
   BRAND_DEEP,
-  BRAND_LIGHT,
   WHITE,
   DARK_TEXT,
   LIGHT_TEXT,
@@ -661,46 +661,8 @@ export default function AssessmentEditPage() {
         <QuestionManager testId={testId} sessionCount={test.sessionCount} />
       )}
 
-      {/* ── Scales Tab Content (Placeholder) ── */}
-      {activeTab === "scales" && (
-        <div
-          style={{
-            background: WHITE,
-            borderRadius: 14,
-            border: `1px solid ${BORDER}`,
-            padding: "60px 28px",
-            textAlign: "center",
-          }}
-        >
-          <BarChart2
-            size={48}
-            style={{ color: BRAND_LIGHT, margin: "0 auto 16px", display: "block" }}
-          />
-          <h3
-            style={{
-              fontSize: 16,
-              fontWeight: 700,
-              color: DARK_TEXT,
-              margin: "0 0 8px",
-              fontFamily: "'DM Sans', 'Inter', sans-serif",
-            }}
-          >
-            Scale Configuration
-          </h3>
-          <p
-            style={{
-              fontSize: 13,
-              color: LIGHT_TEXT,
-              margin: "0 0 20px",
-              maxWidth: 400,
-              marginLeft: "auto",
-              marginRight: "auto",
-            }}
-          >
-            Configure dimensional scales and interpretation bands for this assessment.
-          </p>
-        </div>
-      )}
+      {/* ── Scales Tab Content ── */}
+      {activeTab === "scales" && <ScaleManager testId={testId} />}
 
       {/* ── Metadata Footer ── */}
       <div
