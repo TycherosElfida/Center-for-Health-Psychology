@@ -148,3 +148,17 @@ export const adminMutationProcedure = adminProcedure.use(async ({ ctx, next }) =
   }
   return next({ ctx });
 });
+
+/**
+ * Super-admin procedure — restricts to super_admin role only.
+ * Used for account management operations (1D.12).
+ */
+export const superAdminProcedure = adminProcedure.use(async ({ ctx, next }) => {
+  if (ctx.adminSession.role !== "super_admin") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Only Super Admins can manage accounts.",
+    });
+  }
+  return next({ ctx });
+});
