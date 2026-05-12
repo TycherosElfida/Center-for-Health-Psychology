@@ -93,7 +93,7 @@ function GaugeChart({
         <circle cx={cx} cy={cy} r="2.5" fill="#fff" />
       </svg>
       <div style={{ marginTop: -8, textAlign: "center" }}>
-        <div style={{ fontWeight: 800, fontSize: 28, color: catStyle.text, lineHeight: 1 }}>
+        <div style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: 28, color: catStyle.text, lineHeight: 1 }}>
           {score}
           <span style={{ fontSize: 14, fontWeight: 500, color: DT.LIGHT_TEXT }}>/{max}</span>
         </div>
@@ -424,7 +424,7 @@ export default function DetailedReportPage() {
                 flexShrink: 0,
               }}
             >
-              <span style={{ fontWeight: 800, fontSize: 24, color: DT.WHITE }}>
+              <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: 24, color: DT.WHITE }}>
                 {profile.name
                   .split(" ")
                   .map((n) => n[0])
@@ -435,6 +435,7 @@ export default function DetailedReportPage() {
             <div style={{ flex: 1, minWidth: 0, paddingBottom: 4 }}>
               <h2
                 style={{
+                  fontFamily: "'DM Sans', sans-serif",
                   fontWeight: 800,
                   fontSize: 22,
                   color: DT.DARK_TEXT,
@@ -510,7 +511,7 @@ export default function DetailedReportPage() {
               >
                 Result
               </div>
-              <div style={{ fontWeight: 800, fontSize: 15, color: catStyle.text }}>
+              <div style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: 15, color: catStyle.text }}>
                 {data.resultLabel ?? "—"}
               </div>
             </div>
@@ -528,7 +529,7 @@ export default function DetailedReportPage() {
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <Shield size={14} color={DT.TEAL_DARK} />
-              <span style={{ fontSize: 13, fontWeight: 700, color: DT.TEAL_DARK }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: DT.TEAL_DARK, fontFamily: "'DM Sans', sans-serif" }}>
                 Profile Summary
               </span>
             </div>
@@ -625,7 +626,7 @@ export default function DetailedReportPage() {
             >
               <FileText size={12} color={catStyle.text} />
             </div>
-            <span style={{ fontSize: 13, fontWeight: 700, color: DT.DARK_TEXT }}>Global Score</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: DT.DARK_TEXT, fontFamily: "'DM Sans', sans-serif" }}>Global Score</span>
           </div>
           <GaugeChart score={data.totalScore} max={data.maxPossibleScore} globalAverage={data.globalAverage} catStyle={catStyle} />
           <div
@@ -670,7 +671,7 @@ export default function DetailedReportPage() {
                 >
                   <FileText size={12} color="#1565C0" />
                 </div>
-                <span style={{ fontSize: 13, fontWeight: 700, color: DT.DARK_TEXT }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: DT.DARK_TEXT, fontFamily: "'DM Sans', sans-serif" }}>
                   Dimension Scores
                 </span>
               </div>
@@ -697,7 +698,7 @@ export default function DetailedReportPage() {
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <CheckCircle2 size={15} color={DT.TEAL_DARK} />
-            <span style={{ fontSize: 14, fontWeight: 700, color: DT.DARK_TEXT }}>
+            <span style={{ fontSize: 14, fontWeight: 700, color: DT.DARK_TEXT, fontFamily: "'DM Sans', sans-serif" }}>
               Interpretation
             </span>
           </div>
@@ -753,7 +754,7 @@ export default function DetailedReportPage() {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <h3 style={{ fontWeight: 700, fontSize: 15, color: DT.DARK_TEXT, margin: 0 }}>
+            <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: 15, color: DT.DARK_TEXT, margin: 0 }}>
               Item-Level Response Analysis
             </h3>
             <span
@@ -921,7 +922,7 @@ export default function DetailedReportPage() {
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
           <Send size={15} color={DT.TEAL_DARK} />
-          <span style={{ fontSize: 14, fontWeight: 700, color: DT.DARK_TEXT }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: DT.DARK_TEXT, fontFamily: "'DM Sans', sans-serif" }}>
             Report Delivery
           </span>
         </div>
@@ -996,7 +997,7 @@ export default function DetailedReportPage() {
               >
                 <Trash2 size={20} color={DT.RED} />
               </div>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: DT.DARK_TEXT }}>
+              <h3 style={{ fontFamily: "'DM Sans', sans-serif", margin: 0, fontSize: 16, fontWeight: 700, color: DT.DARK_TEXT }}>
                 Delete Result?
               </h3>
             </div>
