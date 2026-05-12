@@ -36,12 +36,15 @@ import {
   AlertTriangle,
   ClipboardList,
   BarChart2,
+  Image as ImageIcon,
+  X,
 } from "lucide-react";
 import { StatusActions } from "../_components/StatusActions";
 import { CreatableSelect } from "../../../_components/CreatableSelect";
 import { QuestionManager } from "./_components/QuestionManager";
 import { ScaleManager } from "./_components/ScaleManager";
 import {
+  BRAND,
   BRAND_DEEP,
   WHITE,
   DARK_TEXT,
@@ -68,7 +71,6 @@ function buildFormFromData(d: {
   slug: string;
   description: string | null;
   category: string | null;
-  estimatedMinutes: number | null;
   scoringMethod: string | null;
   instructions: string | null;
   thumbnailUrl: string | null;
@@ -81,7 +83,6 @@ function buildFormFromData(d: {
     slug: d.slug,
     description: d.description ?? "",
     category: d.category ?? "",
-    estimatedMinutes: String(d.estimatedMinutes ?? ""),
     scoringMethod: (d.scoringMethod ?? "summative") as ScoringMethodType,
     instructions: d.instructions ?? "",
     thumbnailUrl: d.thumbnailUrl ?? "",
@@ -96,7 +97,6 @@ const EMPTY_FORM = {
   slug: "",
   description: "",
   category: "",
-  estimatedMinutes: "",
   scoringMethod: "summative" as ScoringMethodType,
   instructions: "",
   thumbnailUrl: "",
@@ -138,6 +138,8 @@ export default function AssessmentEditPage() {
   const testId = params.id;
 
   const [activeTab, setActiveTab] = useState<EditorTab>("identity");
+  const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
+  const [thumbnailError, setThumbnailError] = useState<string | null>(null);
 
   const testQuery = trpc.adminTests.getTestById.useQuery(
     { id: testId },
@@ -200,8 +202,6 @@ export default function AssessmentEditPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const minutes = parseInt(form.estimatedMinutes, 10);
-    if (isNaN(minutes) || minutes < 1) return;
 
     updateMutation.mutate({
       id: testId,
@@ -209,7 +209,6 @@ export default function AssessmentEditPage() {
       slug: form.slug,
       description: form.description || "",
       category: form.category,
-      estimatedMinutes: minutes,
       scoringMethod: form.scoringMethod,
       instructions: form.instructions || "",
       thumbnailUrl: form.thumbnailUrl || "",
@@ -397,239 +396,447 @@ export default function AssessmentEditPage() {
             style={{
               display: "grid",
               gridTemplateColumns: "1fr 1fr",
-              gap: 20,
-              marginBottom: 20,
+              gap: 24,
             }}
           >
-            {/* Title */}
+            {/* ── Left Column ── */}
             <div>
-              <label style={lblStyle}>Title</label>
-              <input
-                type="text"
-                required
-                maxLength={200}
-                value={form.title}
-                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                style={sharedInputStyle}
-                onFocus={onInputFocus}
-                onBlur={onInputBlur}
-              />
+              {/* Title */}
+              <div style={{ marginBottom: 18 }}>
+                <label style={lblStyle}>Assessment Name</label>
+                <input
+                  type="text"
+                  required
+                  maxLength={200}
+                  value={form.title}
+                  onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                  style={sharedInputStyle}
+                  onFocus={onInputFocus}
+                  onBlur={onInputBlur}
+                />
+              </div>
+
+              {/* Abbreviation */}
+              <div style={{ marginBottom: 18 }}>
+                <label style={lblStyle}>Abbreviation</label>
+                <input
+                  type="text"
+                  required
+                  maxLength={50}
+                  value={form.abbreviation}
+                  onChange={(e) => setForm((f) => ({ ...f, abbreviation: e.target.value }))}
+                  style={sharedInputStyle}
+                  onFocus={onInputFocus}
+                  onBlur={onInputBlur}
+                />
+              </div>
+
+              {/* Slug (Only visible if needed or locked, let's keep it under abbreviation) */}
+              <div style={{ marginBottom: 18 }}>
+                <label style={lblStyle}>
+                  Slug
+                  {isStructurallyLocked && (
+                    <Lock size={11} style={{ color: WARNING, marginLeft: 4 }} />
+                  )}
+                </label>
+                <input
+                  type="text"
+                  required
+                  maxLength={100}
+                  value={form.slug}
+                  onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
+                  disabled={isStructurallyLocked}
+                  style={{
+                    ...(isStructurallyLocked ? lockedInputStyle : sharedInputStyle),
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: 12,
+                  }}
+                  onFocus={(e) => {
+                    if (!isStructurallyLocked) onInputFocus(e);
+                  }}
+                  onBlur={onInputBlur}
+                />
+              </div>
+
+              {/* Cover Photo / Thumbnail Upload */}
+              <div style={{ marginBottom: 18 }}>
+                <label style={lblStyle}>Cover Photo</label>
+                {thumbnailError && (
+                  <div style={{ fontSize: 12, color: RED, marginBottom: 8 }}>{thumbnailError}</div>
+                )}
+                {form.thumbnailUrl ? (
+                  <div
+                    style={{
+                      position: "relative",
+                      width: "100%",
+                      height: 160,
+                      borderRadius: 12,
+                      overflow: "hidden",
+                      border: `1px solid ${BORDER}`,
+                      backgroundImage: `url(${form.thumbnailUrl})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setForm((f) => ({ ...f, thumbnailUrl: "" }))}
+                      style={{
+                        position: "absolute",
+                        top: 8,
+                        right: 8,
+                        background: "rgba(255, 255, 255, 0.9)",
+                        border: "none",
+                        borderRadius: "50%",
+                        width: 28,
+                        height: 28,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                      }}
+                      title="Remove image"
+                    >
+                      <X size={14} style={{ color: DARK_TEXT }} />
+                    </button>
+                  </div>
+                ) : (
+                  <label
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "100%",
+                      height: 160,
+                      borderRadius: 12,
+                      border: `2px dashed ${BORDER}`,
+                      background: "#FAFAFA",
+                      cursor: isUploadingThumbnail ? "wait" : "pointer",
+                      transition: "all 0.2s ease",
+                      opacity: isUploadingThumbnail ? 0.6 : 1,
+                    }}
+                  >
+                    <input
+                      type="file"
+                      accept="image/png, image/jpeg, image/webp"
+                      style={{ display: "none" }}
+                      disabled={isUploadingThumbnail}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        if (file.size > 2 * 1024 * 1024) {
+                          setThumbnailError("File size must be under 2MB");
+                          return;
+                        }
+
+                        setIsUploadingThumbnail(true);
+                        setThumbnailError(null);
+
+                        try {
+                          const formData = new FormData();
+                          formData.append("file", file);
+
+                          const res = await fetch("/api/upload", {
+                            method: "POST",
+                            body: formData,
+                          });
+
+                          if (!res.ok) {
+                            throw new Error("Upload failed");
+                          }
+
+                          const data = await res.json();
+                          if (data.url) {
+                            setForm((f) => ({ ...f, thumbnailUrl: data.url }));
+                          } else {
+                            throw new Error("No URL returned");
+                          }
+                        } catch (err) {
+                          console.error("Upload error:", err);
+                          setThumbnailError("Failed to upload image. Please try again.");
+                        } finally {
+                          setIsUploadingThumbnail(false);
+                          e.target.value = "";
+                        }
+                      }}
+                    />
+                    {isUploadingThumbnail ? (
+                      <>
+                        <Loader2
+                          size={24}
+                          style={{ color: LIGHT_TEXT, marginBottom: 12 }}
+                          className="admin-spin"
+                        />
+                        <span style={{ fontSize: 13, color: LIGHT_TEXT, fontWeight: 500 }}>
+                          Uploading...
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <div
+                          style={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: "50%",
+                            background: WHITE,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            marginBottom: 12,
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                            border: `1px solid ${BORDER}`,
+                          }}
+                        >
+                          <ImageIcon size={20} style={{ color: LIGHT_TEXT }} />
+                        </div>
+                        <span
+                          style={{
+                            fontSize: 14,
+                            fontWeight: 600,
+                            color: DARK_TEXT,
+                            marginBottom: 4,
+                          }}
+                        >
+                          Click to upload cover photo
+                        </span>
+                        <span style={{ fontSize: 12, color: LIGHT_TEXT }}>
+                          SVG, PNG, JPG or WEBP (max. 2MB)
+                        </span>
+                      </>
+                    )}
+                  </label>
+                )}
+              </div>
+
+              {/* Release Year */}
+              <div style={{ marginBottom: 18 }}>
+                <label style={lblStyle}>Release Year</label>
+                <input
+                  type="number"
+                  min={1900}
+                  max={new Date().getFullYear()}
+                  placeholder={String(new Date().getFullYear())}
+                  value={form.releaseYear}
+                  onChange={(e) => setForm((f) => ({ ...f, releaseYear: e.target.value }))}
+                  style={sharedInputStyle}
+                  onFocus={onInputFocus}
+                  onBlur={onInputBlur}
+                />
+              </div>
+
+              {/* Category */}
+              <div style={{ marginBottom: 18 }}>
+                <label style={lblStyle}>Category</label>
+                <CreatableSelect
+                  value={form.category}
+                  onChange={(val: string) => setForm((f) => ({ ...f, category: val }))}
+                  options={categories}
+                  disabled={false}
+                  placeholder="Select or type to create a new category..."
+                />
+              </div>
+
+              {/* Author */}
+              <div style={{ marginBottom: 18 }}>
+                <label style={lblStyle}>Assessment&apos;s Author</label>
+                <input
+                  type="text"
+                  maxLength={200}
+                  value={form.author}
+                  onChange={(e) => setForm((f) => ({ ...f, author: e.target.value }))}
+                  style={sharedInputStyle}
+                  onFocus={onInputFocus}
+                  onBlur={onInputBlur}
+                />
+              </div>
+
+              {/* Scoring Method */}
+              <div style={{ marginBottom: 18 }}>
+                <label style={lblStyle}>
+                  Scoring Method
+                  {isStructurallyLocked && (
+                    <Lock size={11} style={{ color: WARNING, marginLeft: 4 }} />
+                  )}
+                </label>
+                <select
+                  required
+                  value={form.scoringMethod}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      scoringMethod: e.target.value as typeof form.scoringMethod,
+                    }))
+                  }
+                  disabled={isStructurallyLocked}
+                  style={{
+                    ...(isStructurallyLocked ? lockedInputStyle : selectStyle),
+                    cursor: isStructurallyLocked ? "not-allowed" : "pointer",
+                    width: "100%",
+                  }}
+                >
+                  <option value="summative">Summative</option>
+                  <option value="dimensional">Dimensional</option>
+                  <option value="binary_cluster">Binary Cluster</option>
+                </select>
+              </div>
             </div>
 
-            {/* Slug — locked when structural lock active */}
+            {/* ── Right Column ── */}
             <div>
-              <label style={lblStyle}>
-                Slug
-                {isStructurallyLocked && <Lock size={11} style={{ color: WARNING }} />}
-              </label>
-              <input
-                type="text"
-                required
-                maxLength={100}
-                value={form.slug}
-                onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
-                disabled={isStructurallyLocked}
+              {/* Description */}
+              <div style={{ marginBottom: 18 }}>
+                <label style={lblStyle}>Full Description</label>
+                <textarea
+                  maxLength={1000}
+                  value={form.description}
+                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                  placeholder="Brief description of the assessment..."
+                  rows={4}
+                  style={{ ...sharedInputStyle, resize: "vertical", minHeight: 90 }}
+                  onFocus={onInputFocus}
+                  onBlur={onInputBlur}
+                />
+              </div>
+
+              {/* Instructions */}
+              <div style={{ marginBottom: 18 }}>
+                <label style={lblStyle}>Instructions</label>
+                <textarea
+                  maxLength={5000}
+                  value={form.instructions}
+                  onChange={(e) => setForm((f) => ({ ...f, instructions: e.target.value }))}
+                  placeholder="Instructions shown to participants before starting..."
+                  rows={4}
+                  style={{ ...sharedInputStyle, resize: "vertical", minHeight: 90 }}
+                  onFocus={onInputFocus}
+                  onBlur={onInputBlur}
+                />
+              </div>
+
+              {/* Assessment Summary Box */}
+              <div style={{ background: "#F9F7FD", borderRadius: 12, padding: 16, marginTop: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                  <AlertCircle size={14} style={{ color: BRAND }} />
+                  <span style={{ fontSize: 12, fontWeight: 700, color: DARK_TEXT }}>
+                    Assessment Summary
+                  </span>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  <div
+                    style={{
+                      background: WHITE,
+                      borderRadius: 8,
+                      padding: "10px 14px",
+                      border: `1px solid ${BORDER}`,
+                    }}
+                  >
+                    <div style={{ fontSize: 10, color: LIGHT_TEXT, marginBottom: 2 }}>
+                      Questions
+                    </div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: BRAND_DEEP }}>
+                      {test.questionCount}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      background: WHITE,
+                      borderRadius: 8,
+                      padding: "10px 14px",
+                      border: `1px solid ${BORDER}`,
+                    }}
+                  >
+                    <div style={{ fontSize: 10, color: LIGHT_TEXT, marginBottom: 2 }}>
+                      Sessions Completed
+                    </div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: BRAND_DEEP }}>
+                      {test.sessionCount}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      background: WHITE,
+                      borderRadius: 8,
+                      padding: "10px 14px",
+                      border: `1px solid ${BORDER}`,
+                    }}
+                  >
+                    <div style={{ fontSize: 10, color: LIGHT_TEXT, marginBottom: 2 }}>Version</div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: BRAND_DEEP }}>
+                      v{test.version}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      background: WHITE,
+                      borderRadius: 8,
+                      padding: "10px 14px",
+                      border: `1px solid ${BORDER}`,
+                    }}
+                  >
+                    <div style={{ fontSize: 10, color: LIGHT_TEXT, marginBottom: 2 }}>Type</div>
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: BRAND_DEEP,
+                        textTransform: "capitalize",
+                        marginTop: 2,
+                      }}
+                    >
+                      {(test.scoringMethod || "summative").replace("_", " ")}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style={{ marginTop: 24 }}>
+            {/* Error */}
+            {updateMutation.error && (
+              <div
                 style={{
-                  ...(isStructurallyLocked ? lockedInputStyle : sharedInputStyle),
-                  fontFamily: "'JetBrains Mono', monospace",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 8,
+                  padding: "10px 14px",
+                  borderRadius: 8,
+                  background: RED_LIGHT,
+                  border: `1px solid ${RED_BORDER}`,
                   fontSize: 12,
-                }}
-                onFocus={(e) => {
-                  if (!isStructurallyLocked) onInputFocus(e);
-                }}
-                onBlur={onInputBlur}
-              />
-            </div>
-
-            {/* Abbreviation */}
-            <div>
-              <label style={lblStyle}>Abbreviation</label>
-              <input
-                type="text"
-                required
-                maxLength={50}
-                value={form.abbreviation}
-                onChange={(e) => setForm((f) => ({ ...f, abbreviation: e.target.value }))}
-                style={sharedInputStyle}
-                onFocus={onInputFocus}
-                onBlur={onInputBlur}
-              />
-            </div>
-
-            {/* Author */}
-            <div>
-              <label style={lblStyle}>Author</label>
-              <input
-                type="text"
-                maxLength={200}
-                value={form.author}
-                onChange={(e) => setForm((f) => ({ ...f, author: e.target.value }))}
-                style={sharedInputStyle}
-                onFocus={onInputFocus}
-                onBlur={onInputBlur}
-              />
-            </div>
-
-            {/* Release Year */}
-            <div>
-              <label style={lblStyle}>Release Year</label>
-              <input
-                type="number"
-                min={1900}
-                max={new Date().getFullYear()}
-                placeholder={String(new Date().getFullYear())}
-                value={form.releaseYear}
-                onChange={(e) => setForm((f) => ({ ...f, releaseYear: e.target.value }))}
-                style={sharedInputStyle}
-                onFocus={onInputFocus}
-                onBlur={onInputBlur}
-              />
-            </div>
-
-            {/* Category */}
-            <div>
-              <label style={lblStyle}>Category</label>
-              <CreatableSelect
-                value={form.category}
-                onChange={(val: string) => setForm((f) => ({ ...f, category: val }))}
-                options={categories}
-                disabled={false}
-                placeholder="Select or type to create a new category..."
-              />
-            </div>
-
-            {/* Estimated Minutes */}
-            <div>
-              <label style={lblStyle}>Estimated Minutes</label>
-              <input
-                type="number"
-                required
-                min={1}
-                max={120}
-                value={form.estimatedMinutes}
-                onChange={(e) => setForm((f) => ({ ...f, estimatedMinutes: e.target.value }))}
-                style={sharedInputStyle}
-                onFocus={onInputFocus}
-                onBlur={onInputBlur}
-              />
-            </div>
-
-            {/* Scoring Method — locked when structural lock active */}
-            <div>
-              <label style={lblStyle}>
-                Scoring Method
-                {isStructurallyLocked && <Lock size={11} style={{ color: WARNING }} />}
-              </label>
-              <select
-                required
-                value={form.scoringMethod}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    scoringMethod: e.target.value as typeof form.scoringMethod,
-                  }))
-                }
-                disabled={isStructurallyLocked}
-                style={{
-                  ...(isStructurallyLocked ? lockedInputStyle : selectStyle),
-                  cursor: isStructurallyLocked ? "not-allowed" : "pointer",
+                  color: RED,
+                  marginBottom: 16,
                 }}
               >
-                <option value="summative">Summative</option>
-                <option value="dimensional">Dimensional</option>
-                <option value="binary_cluster">Binary Cluster</option>
-              </select>
-            </div>
+                <AlertCircle size={14} style={{ marginTop: 1, flexShrink: 0 }} />
+                {updateMutation.error.message}
+              </div>
+            )}
 
-            {/* Thumbnail URL */}
-            <div>
-              <label style={lblStyle}>Thumbnail URL</label>
-              <input
-                type="text"
-                maxLength={500}
-                value={form.thumbnailUrl}
-                onChange={(e) => setForm((f) => ({ ...f, thumbnailUrl: e.target.value }))}
-                placeholder="https://..."
-                style={sharedInputStyle}
-                onFocus={onInputFocus}
-                onBlur={onInputBlur}
-              />
-            </div>
-          </div>
-
-          {/* Description — full width */}
-          <div style={{ marginBottom: 20 }}>
-            <label style={lblStyle}>Description</label>
-            <textarea
-              maxLength={1000}
-              value={form.description}
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              placeholder="Brief description of the assessment..."
-              rows={3}
-              style={{ ...sharedInputStyle, resize: "vertical", minHeight: 72 }}
-              onFocus={onInputFocus}
-              onBlur={onInputBlur}
-            />
-          </div>
-
-          {/* Instructions — full width */}
-          <div style={{ marginBottom: 24 }}>
-            <label style={lblStyle}>Instructions</label>
-            <textarea
-              maxLength={5000}
-              value={form.instructions}
-              onChange={(e) => setForm((f) => ({ ...f, instructions: e.target.value }))}
-              placeholder="Instructions shown to participants before starting..."
-              rows={4}
-              style={{ ...sharedInputStyle, resize: "vertical", minHeight: 80 }}
-              onFocus={onInputFocus}
-              onBlur={onInputBlur}
-            />
-          </div>
-
-          {/* Error */}
-          {updateMutation.error && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 8,
-                padding: "10px 14px",
-                borderRadius: 8,
-                background: RED_LIGHT,
-                border: `1px solid ${RED_BORDER}`,
-                fontSize: 12,
-                color: RED,
-                marginBottom: 16,
-              }}
-            >
-              <AlertCircle size={14} style={{ marginTop: 1, flexShrink: 0 }} />
-              {updateMutation.error.message}
-            </div>
-          )}
-
-          {/* Success */}
-          {saveSuccess && (
-            <div
-              className="admin-success-flash"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "10px 14px",
-                borderRadius: 8,
-                background: GREEN_LIGHT,
-                border: `1px solid ${GREEN_BORDER}`,
-                fontSize: 12,
-                color: GREEN,
-                marginBottom: 16,
-              }}
-            >
-              <CheckCircle size={14} />
-              Changes saved.
-            </div>
-          )}
-
+            {/* Success */}
+            {saveSuccess && (
+              <div
+                className="admin-success-flash"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "10px 14px",
+                  borderRadius: 8,
+                  background: GREEN_LIGHT,
+                  border: `1px solid ${GREEN_BORDER}`,
+                  fontSize: 12,
+                  color: GREEN,
+                  marginBottom: 16,
+                }}
+              >
+                <CheckCircle size={14} />
+                Changes saved.
+              </div>
+            )}
+          </div>{" "}
           {/* Submit */}
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <button

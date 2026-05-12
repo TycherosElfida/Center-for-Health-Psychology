@@ -60,7 +60,6 @@ interface FormState {
   slug: string;
   description: string;
   category: string;
-  estimatedMinutes: string;
   scoringMethod: "summative" | "dimensional" | "binary_cluster";
   instructions: string;
   thumbnailUrl: string;
@@ -72,7 +71,6 @@ const INITIAL_FORM: FormState = {
   slug: "",
   description: "",
   category: "",
-  estimatedMinutes: "",
   scoringMethod: "summative",
   instructions: "",
   thumbnailUrl: "",
@@ -110,19 +108,12 @@ export function CreateTestSheet({ open, onOpenChange, onCreated }: CreateTestShe
     e.preventDefault();
     setError(null);
 
-    const minutes = parseInt(form.estimatedMinutes, 10);
-    if (isNaN(minutes) || minutes < 1) {
-      setError("Estimated minutes must be at least 1.");
-      return;
-    }
-
     createMutation.mutate({
       title: form.title,
       abbreviation: form.abbreviation,
       slug: form.slug,
       description: form.description || "",
       category: form.category,
-      estimatedMinutes: minutes,
       scoringMethod: form.scoringMethod,
       // Empty string coercion — prevent sending "" as valid URL
       instructions: form.instructions || "",
@@ -268,36 +259,17 @@ export function CreateTestSheet({ open, onOpenChange, onCreated }: CreateTestShe
             />
           </div>
 
-          {/* Category + Estimated Minutes (side-by-side) */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 120px", gap: 12 }}>
-            <div>
-              <label style={lblStyle}>
-                Category <span style={{ color: RED }}>*</span>
-              </label>
-              <CreatableSelect
-                value={form.category}
-                onChange={(val) => setForm((f) => ({ ...f, category: val }))}
-                options={categories}
-                placeholder="Select or type to create a new category..."
-              />
-            </div>
-            <div>
-              <label style={lblStyle}>
-                Minutes <span style={{ color: RED }}>*</span>
-              </label>
-              <input
-                type="number"
-                required
-                min={1}
-                max={120}
-                value={form.estimatedMinutes}
-                onChange={(e) => setForm((f) => ({ ...f, estimatedMinutes: e.target.value }))}
-                placeholder="10"
-                style={sharedInputStyle}
-                onFocus={onInputFocus}
-                onBlur={onInputBlur}
-              />
-            </div>
+          {/* Category */}
+          <div>
+            <label style={lblStyle}>
+              Category <span style={{ color: RED }}>*</span>
+            </label>
+            <CreatableSelect
+              value={form.category}
+              onChange={(val) => setForm((f) => ({ ...f, category: val }))}
+              options={categories}
+              placeholder="Select or type to create a new category..."
+            />
           </div>
 
           {/* Scoring Method */}

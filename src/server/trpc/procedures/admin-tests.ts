@@ -33,7 +33,6 @@ export const createTestSchema = z.object({
   abbreviation: z.string().min(2).max(20),
   releaseYear: z.number().int().max(new Date().getFullYear()).nullable().optional(),
   author: z.string().min(1).max(200).nullable().optional(),
-  estimatedMinutes: z.number().int().min(1).max(120),
   scoringMethod: z.enum(["summative", "dimensional", "binary_cluster"]),
   instructions: z.string().max(5000).optional().default(""),
   thumbnailUrl: z.string().url().max(500).or(z.literal("")).optional().default(""),
@@ -53,7 +52,6 @@ export const updateTestSchema = z.object({
   abbreviation: z.string().min(2).max(20).optional(),
   releaseYear: z.number().int().max(new Date().getFullYear()).nullable().optional(),
   author: z.string().min(1).max(200).nullable().optional(),
-  estimatedMinutes: z.number().int().min(1).max(120).optional(),
   scoringMethod: z.enum(["summative", "dimensional", "binary_cluster"]).optional(),
   instructions: z.string().max(5000).optional(),
   thumbnailUrl: z.string().url().max(500).or(z.literal("")).optional(),
@@ -79,7 +77,6 @@ export const adminTestsRouter = createTRPCRouter({
         abbreviation: tests.abbreviation,
         releaseYear: tests.releaseYear,
         author: tests.author,
-        estimatedMinutes: tests.estimatedMinutes,
         status: tests.status,
         scoringMethod: tests.scoringMethod,
         instructions: tests.instructions,
@@ -123,7 +120,6 @@ export const adminTestsRouter = createTRPCRouter({
           abbreviation: tests.abbreviation,
           releaseYear: tests.releaseYear,
           author: tests.author,
-          estimatedMinutes: tests.estimatedMinutes,
           status: tests.status,
           scoringMethod: tests.scoringMethod,
           instructions: tests.instructions,
@@ -157,16 +153,14 @@ export const adminTestsRouter = createTRPCRouter({
   /**
    * getCategories — Returns distinct categories used across all tests.
    */
-  getCategories: adminProcedure
-    .input(getCategoriesSchema)
-    .query(async ({ ctx }) => {
-      const rows = await ctx.db
-        .selectDistinct({ category: tests.category })
-        .from(tests)
-        .where(sql`${tests.category} != ''`);
+  getCategories: adminProcedure.input(getCategoriesSchema).query(async ({ ctx }) => {
+    const rows = await ctx.db
+      .selectDistinct({ category: tests.category })
+      .from(tests)
+      .where(sql`${tests.category} != ''`);
 
-      return rows.map((r) => r.category);
-    }),
+    return rows.map((r) => r.category);
+  }),
 
   /**
    * createTest — Create a new draft assessment.
@@ -197,7 +191,6 @@ export const adminTestsRouter = createTRPCRouter({
         abbreviation: input.abbreviation,
         releaseYear: input.releaseYear || null,
         author: input.author || null,
-        estimatedMinutes: input.estimatedMinutes,
         scoringMethod: input.scoringMethod,
         instructions: input.instructions || null,
         thumbnailUrl: input.thumbnailUrl || null,
@@ -286,8 +279,6 @@ export const adminTestsRouter = createTRPCRouter({
     if (input.abbreviation !== undefined) updatePayload.abbreviation = input.abbreviation;
     if (input.releaseYear !== undefined) updatePayload.releaseYear = input.releaseYear;
     if (input.author !== undefined) updatePayload.author = input.author;
-    if (input.estimatedMinutes !== undefined)
-      updatePayload.estimatedMinutes = input.estimatedMinutes;
     if (input.scoringMethod !== undefined) updatePayload.scoringMethod = input.scoringMethod;
     if (input.instructions !== undefined) updatePayload.instructions = input.instructions || null;
     if (input.thumbnailUrl !== undefined) updatePayload.thumbnailUrl = input.thumbnailUrl || null;

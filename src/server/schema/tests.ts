@@ -44,7 +44,6 @@ export const tests = pgTable(
     releaseYear: integer("release_year"),
     author: text("author"),
     category: text("category").notNull().default(""),
-    estimatedMinutes: integer("estimated_minutes").notNull(),
     status: testStatusEnum("status").default("draft").notNull(),
     scoringMethod: scoringMethodEnum("scoring_method"),
     instructions: text("instructions"),
