@@ -19,10 +19,12 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   const loginMutation = trpc.admin.login.useMutation({
-    onSuccess() {
-      // mustChangePassword is intentionally not enforced here.
-      // Enforcement + redirect to /settings/change-password is deferred to a later phase.
-      window.location.href = "/admin/dashboard";
+    onSuccess(data) {
+      if (data.mustChangePassword) {
+        window.location.href = "/admin/change-password";
+      } else {
+        window.location.href = "/admin/dashboard";
+      }
     },
     onError(err) {
       setError(err.message);

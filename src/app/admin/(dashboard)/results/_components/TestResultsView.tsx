@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { Filter, ArrowLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Filter } from "lucide-react";
+
 import { trpc } from "@/lib/trpc/client";
 import { FilterBar } from "./FilterBar";
 import { AnalyticsCards } from "./AnalyticsCards";
@@ -24,7 +24,11 @@ const PAGE_SIZE = 20;
 /**
  * Generates a CSV or XLSX from result rows and triggers a browser download.
  */
-function downloadData(rows: Array<Record<string, unknown>>, filename: string, format: "csv" | "xlsx") {
+function downloadData(
+  rows: Array<Record<string, unknown>>,
+  filename: string,
+  format: "csv" | "xlsx"
+) {
   if (rows.length === 0) return;
 
   const exportData = rows.map((r) => ({
@@ -180,52 +184,58 @@ export function TestResultsView({ testConfig }: TestResultsViewProps) {
     [sortField]
   );
 
-  const handleExportFiltered = useCallback(async (format: "csv" | "xlsx") => {
-    setIsExporting(true);
-    try {
-      const data = await utils.client.adminResults.export.query({
-        testSlug: slug,
-        search: filters.search || undefined,
-        sex: (filters.sex || undefined) as "Male" | "Female" | undefined,
-        province: filters.province || undefined,
-        city: filters.city || undefined,
-        ageMin: filters.ageMin ? Number(filters.ageMin) : undefined,
-        ageMax: filters.ageMax ? Number(filters.ageMax) : undefined,
-        scoreMin: filters.scoreMin ? Number(filters.scoreMin) : undefined,
-        scoreMax: filters.scoreMax ? Number(filters.scoreMax) : undefined,
-        category: filters.category || undefined,
-        dateFrom: filters.dateFrom || undefined,
-        dateTo: filters.dateTo || undefined,
-        sortBy: sortField,
-        sortDir: sortDirection,
-      });
-      downloadData(
-        data.rows as unknown as Array<Record<string, unknown>>,
-        `${shortName}-filtered-results`,
-        format
-      );
-    } finally {
-      setIsExporting(false);
-    }
-  }, [slug, filters, sortField, sortDirection, shortName, utils]);
+  const handleExportFiltered = useCallback(
+    async (format: "csv" | "xlsx") => {
+      setIsExporting(true);
+      try {
+        const data = await utils.client.adminResults.export.query({
+          testSlug: slug,
+          search: filters.search || undefined,
+          sex: (filters.sex || undefined) as "Male" | "Female" | undefined,
+          province: filters.province || undefined,
+          city: filters.city || undefined,
+          ageMin: filters.ageMin ? Number(filters.ageMin) : undefined,
+          ageMax: filters.ageMax ? Number(filters.ageMax) : undefined,
+          scoreMin: filters.scoreMin ? Number(filters.scoreMin) : undefined,
+          scoreMax: filters.scoreMax ? Number(filters.scoreMax) : undefined,
+          category: filters.category || undefined,
+          dateFrom: filters.dateFrom || undefined,
+          dateTo: filters.dateTo || undefined,
+          sortBy: sortField,
+          sortDir: sortDirection,
+        });
+        downloadData(
+          data.rows as unknown as Array<Record<string, unknown>>,
+          `${shortName}-filtered-results`,
+          format
+        );
+      } finally {
+        setIsExporting(false);
+      }
+    },
+    [slug, filters, sortField, sortDirection, shortName, utils]
+  );
 
-  const handleExportAll = useCallback(async (format: "csv" | "xlsx") => {
-    setIsExporting(true);
-    try {
-      const data = await utils.client.adminResults.export.query({
-        testSlug: slug,
-        sortBy: sortField,
-        sortDir: sortDirection,
-      });
-      downloadData(
-        data.rows as unknown as Array<Record<string, unknown>>,
-        `${shortName}-all-results`,
-        format
-      );
-    } finally {
-      setIsExporting(false);
-    }
-  }, [slug, sortField, sortDirection, shortName, utils]);
+  const handleExportAll = useCallback(
+    async (format: "csv" | "xlsx") => {
+      setIsExporting(true);
+      try {
+        const data = await utils.client.adminResults.export.query({
+          testSlug: slug,
+          sortBy: sortField,
+          sortDir: sortDirection,
+        });
+        downloadData(
+          data.rows as unknown as Array<Record<string, unknown>>,
+          `${shortName}-all-results`,
+          format
+        );
+      } finally {
+        setIsExporting(false);
+      }
+    },
+    [slug, sortField, sortDirection, shortName, utils]
+  );
 
   // ── Render ────────────────────────────────────────────────────
   const total = listQuery.data?.total ?? 0;
@@ -388,7 +398,7 @@ export function TestResultsView({ testConfig }: TestResultsViewProps) {
           </>
         }
       />
-      
+
       {/* Modals */}
       {importModalOpen && (
         <ImportModal onClose={() => setImportModalOpen(false)} shortName={shortName} />

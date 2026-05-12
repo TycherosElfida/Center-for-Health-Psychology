@@ -17,9 +17,13 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
       // Use window.location.href (not router.replace) to ensure cookie headers
       // are properly read on the next request — same pattern as login page.
       window.location.href = "/admin/login";
+      return;
     }
-    // mustChangePassword enforcement is intentionally not implemented here.
-    // Redirect to a change-password page is deferred to a later phase.
+
+    if (meQuery.isSuccess && meQuery.data?.mustChangePassword) {
+      window.location.href = "/admin/change-password";
+      return;
+    }
   }, [meQuery.isError, meQuery.isSuccess, meQuery.data]);
 
   // Loading state
