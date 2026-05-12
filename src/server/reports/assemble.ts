@@ -303,9 +303,7 @@ export async function assembleReportData(resultId: string): Promise<ReportData> 
     .innerJoin(testSessions, eq(testSessions.id, results.sessionId))
     .where(eq(testSessions.testId, session.testId));
 
-  const globalAverage = avgRow?.avg 
-    ? Math.round(parseFloat(avgRow.avg)) 
-    : null;
+  const globalAverage = avgRow?.avg ? Math.round(parseFloat(avgRow.avg)) : null;
 
   // 9. Calculate max possible score from questions × max option value
   // Approximate: number of questions × 4 (typical Likert 0-4)

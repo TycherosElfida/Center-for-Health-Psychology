@@ -11,8 +11,8 @@ const getDetailedReportSchema = z.object({
 
 describe("deleteResult input schema", () => {
   it("1 — accepts valid UUID scoreId", () => {
-    const r = deleteResultSchema.safeParse({ 
-      scoreId: "123e4567-e89b-12d3-a456-426614174000" 
+    const r = deleteResultSchema.safeParse({
+      scoreId: "123e4567-e89b-12d3-a456-426614174000",
     });
     expect(r.success).toBe(true);
   });
@@ -26,7 +26,7 @@ describe("deleteResult input schema", () => {
 describe("getDetailedReport globalAverage", () => {
   it("3 — getDetailedReport schema accepts valid scoreId", () => {
     const r = getDetailedReportSchema.safeParse({
-      scoreId: "123e4567-e89b-12d3-a456-426614174000"
+      scoreId: "123e4567-e89b-12d3-a456-426614174000",
     });
     expect(r.success).toBe(true);
   });

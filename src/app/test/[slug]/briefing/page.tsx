@@ -213,10 +213,6 @@ export default async function BriefingPage({ params }: PageProps) {
           {/* Metadata strip */}
           <div className="flex justify-center px-8 pt-6">
             {[
-              {
-                label: "Reliability",
-                value: meta.alpha ? `α = ${meta.alpha}` : "N/A",
-              },
               { label: "Author", value: meta.author ?? "—" },
               { label: "Year", value: meta.year ? String(meta.year) : "—" },
             ].map((item, i, arr) => (

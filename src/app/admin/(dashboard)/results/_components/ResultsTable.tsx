@@ -477,10 +477,8 @@ function ResultsTableRow({
         <div style={{ fontSize: 12, color: DT.DARK_TEXT, fontWeight: 500 }}>
           {row.city || row.province}
         </div>
-        {(row.city && row.province) && (
-          <div style={{ fontSize: 10, color: DT.LIGHT_TEXT, marginTop: 2 }}>
-            {row.province}
-          </div>
+        {row.city && row.province && (
+          <div style={{ fontSize: 10, color: DT.LIGHT_TEXT, marginTop: 2 }}>{row.province}</div>
         )}
       </td>
       <td style={{ padding: "12px 16px", fontSize: 13, color: DT.DARK_TEXT, fontWeight: 600 }}>
@@ -491,7 +489,15 @@ function ResultsTableRow({
           <div style={{ fontSize: 12, fontWeight: 700, color: color }}>
             {row.totalScore}/{maxScore}
           </div>
-          <div style={{ height: 4, borderRadius: 2, background: `${color}20`, overflow: "hidden", width: "100%" }}>
+          <div
+            style={{
+              height: 4,
+              borderRadius: 2,
+              background: `${color}20`,
+              overflow: "hidden",
+              width: "100%",
+            }}
+          >
             <div
               style={{
                 width: `${scorePercent(row.totalScore)}%`,
@@ -536,7 +542,7 @@ function ResultsTableRow({
           >
             <Eye size={14} />
           </button>
-          
+
           <div ref={menuRef} style={{ position: "relative" }}>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
@@ -574,7 +580,9 @@ function ResultsTableRow({
               >
                 <button
                   onClick={() => {
-                    const ok = window.confirm("Are you sure you want to delete this result? This action cannot be undone.");
+                    const ok = window.confirm(
+                      "Are you sure you want to delete this result? This action cannot be undone."
+                    );
                     if (ok) {
                       setIsDeleting(true);
                       deleteMutation.mutate({ scoreId: row.id });

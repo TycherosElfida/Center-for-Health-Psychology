@@ -108,11 +108,79 @@ export function ImportModal({ onClose, shortName }: ImportModalProps) {
               </span>
             </div>
             <p style={{ margin: 0, fontSize: 12, color: DT.MID_TEXT, lineHeight: 1.5 }}>
-              Your file must include exactly: <code style={{ background: DT.WHITE, padding: "2px 6px", borderRadius: 4, border: `1px solid ${DT.BORDER}`, fontSize: 11 }}>Name</code>,{" "}
-              <code style={{ background: DT.WHITE, padding: "2px 6px", borderRadius: 4, border: `1px solid ${DT.BORDER}`, fontSize: 11 }}>Sex</code>,{" "}
-              <code style={{ background: DT.WHITE, padding: "2px 6px", borderRadius: 4, border: `1px solid ${DT.BORDER}`, fontSize: 11 }}>Age</code>, and{" "}
-              <code style={{ background: DT.WHITE, padding: "2px 6px", borderRadius: 4, border: `1px solid ${DT.BORDER}`, fontSize: 11 }}>Score</code>.
-              Additional columns like <code style={{ background: DT.WHITE, padding: "2px 6px", borderRadius: 4, border: `1px solid ${DT.BORDER}`, fontSize: 11 }}>City</code> and <code style={{ background: DT.WHITE, padding: "2px 6px", borderRadius: 4, border: `1px solid ${DT.BORDER}`, fontSize: 11 }}>Province</code> are optional.
+              Your file must include exactly:{" "}
+              <code
+                style={{
+                  background: DT.WHITE,
+                  padding: "2px 6px",
+                  borderRadius: 4,
+                  border: `1px solid ${DT.BORDER}`,
+                  fontSize: 11,
+                }}
+              >
+                Name
+              </code>
+              ,{" "}
+              <code
+                style={{
+                  background: DT.WHITE,
+                  padding: "2px 6px",
+                  borderRadius: 4,
+                  border: `1px solid ${DT.BORDER}`,
+                  fontSize: 11,
+                }}
+              >
+                Sex
+              </code>
+              ,{" "}
+              <code
+                style={{
+                  background: DT.WHITE,
+                  padding: "2px 6px",
+                  borderRadius: 4,
+                  border: `1px solid ${DT.BORDER}`,
+                  fontSize: 11,
+                }}
+              >
+                Age
+              </code>
+              , and{" "}
+              <code
+                style={{
+                  background: DT.WHITE,
+                  padding: "2px 6px",
+                  borderRadius: 4,
+                  border: `1px solid ${DT.BORDER}`,
+                  fontSize: 11,
+                }}
+              >
+                Score
+              </code>
+              . Additional columns like{" "}
+              <code
+                style={{
+                  background: DT.WHITE,
+                  padding: "2px 6px",
+                  borderRadius: 4,
+                  border: `1px solid ${DT.BORDER}`,
+                  fontSize: 11,
+                }}
+              >
+                City
+              </code>{" "}
+              and{" "}
+              <code
+                style={{
+                  background: DT.WHITE,
+                  padding: "2px 6px",
+                  borderRadius: 4,
+                  border: `1px solid ${DT.BORDER}`,
+                  fontSize: 11,
+                }}
+              >
+                Province
+              </code>{" "}
+              are optional.
             </p>
           </div>
 
@@ -150,7 +218,7 @@ export function ImportModal({ onClose, shortName }: ImportModalProps) {
               Upload Data
             </button>
           </div>
-          
+
           <p
             style={{
               margin: 0,

@@ -160,7 +160,9 @@ export function SplitExportButtons({
             gap: 8,
             padding: "8px 14px",
             borderRadius: 12,
-            background: hasAnyFilter ? `linear-gradient(135deg, ${DT.TEAL}, ${DT.TEAL_DARK})` : DT.BG_ALT,
+            background: hasAnyFilter
+              ? `linear-gradient(135deg, ${DT.TEAL}, ${DT.TEAL_DARK})`
+              : DT.BG_ALT,
             border: hasAnyFilter ? "none" : `1px solid ${DT.BORDER}`,
             color: hasAnyFilter ? DT.WHITE : DT.MID_TEXT,
             fontSize: 12,

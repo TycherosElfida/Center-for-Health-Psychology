@@ -2,10 +2,10 @@
 
 import { useRef, type MouseEvent } from "react";
 import Link from "next/link";
-import { Clock, Users, ArrowRight, BadgeCheck, Brain } from "lucide-react";
+import { ArrowRight, BadgeCheck, Brain } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import type { TestMeta, TestStatus } from "@/lib/data/tests";
-import { ICON_MAP, STATUS_STYLES } from "@/lib/data/tests";
+import type { TestMeta } from "@/lib/data/tests";
+import { ICON_MAP } from "@/lib/data/tests";
 
 /** Resolve icon from the map; falls back to Brain if key is unknown */
 function TestIcon({
@@ -35,7 +35,6 @@ interface AssessmentCardProps {
 
 export function AssessmentCard({ test, index }: AssessmentCardProps) {
   const cardRef = useRef<HTMLAnchorElement>(null);
-  const sts = STATUS_STYLES[test.status as TestStatus];
 
   /** 3D perspective tilt — follows cursor position over the card */
   function handleMouseMove(e: MouseEvent<HTMLAnchorElement>) {
@@ -75,18 +74,8 @@ export function AssessmentCard({ test, index }: AssessmentCardProps) {
         <div className="h-1 w-full rounded-t-3xl bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-primary-dark)]" />
 
         <div className="flex flex-1 flex-col p-5">
-          {/* Status + Category badges */}
+          {/* Category badge */}
           <div className="mb-4 flex flex-wrap items-center gap-2">
-            <span
-              className="rounded-full px-2.5 py-1 text-[11px] font-semibold"
-              style={{
-                background: sts.bg,
-                color: sts.text,
-                border: `1px solid ${sts.border}`,
-              }}
-            >
-              {test.status}
-            </span>
             <span
               className="rounded-full px-2.5 py-1 text-[11px] font-medium"
               style={{
@@ -128,13 +117,9 @@ export function AssessmentCard({ test, index }: AssessmentCardProps) {
             {test.longDescription}
           </p>
 
-          {/* Stats row — Gap #6: surface-subtle bg with · dividers */}
+          {/* Stats row */}
           <div className="mb-4 flex items-center gap-3 rounded-xl bg-[var(--surface-subtle,#F5F3FA)] px-3 py-2 text-xs text-muted-foreground">
             <span>{test.itemCount} Items</span>
-            <span aria-hidden="true">·</span>
-            <span>{test.duration}</span>
-            <span aria-hidden="true">·</span>
-            <span>α {test.alpha ?? "—"}</span>
           </div>
 
           {/* Validation badge — Gap #7: always show with fallback */}
@@ -143,18 +128,8 @@ export function AssessmentCard({ test, index }: AssessmentCardProps) {
             <span>{test.validationNote ?? "Instrumen tervalidasi klinis"}</span>
           </div>
 
-          {/* Footer: meta + CTA */}
-          <div className="mt-auto flex items-center justify-between border-t border-border/50 pt-4">
-            <div className="flex items-center gap-3">
-              <span className="flex items-center gap-1 text-[11.5px] text-muted-foreground">
-                <Clock size={12} />
-                {test.duration}
-              </span>
-              <span className="flex items-center gap-1 text-[11.5px] text-muted-foreground">
-                <Users size={12} />
-                {(test.respondentCount ?? 0).toLocaleString("id-ID")}
-              </span>
-            </div>
+          {/* Footer: CTA */}
+          <div className="mt-auto flex items-center justify-end border-t border-border/50 pt-4">
             <div
               className="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-semibold text-white shadow-md transition-all hover:shadow-lg active:scale-95"
               style={{

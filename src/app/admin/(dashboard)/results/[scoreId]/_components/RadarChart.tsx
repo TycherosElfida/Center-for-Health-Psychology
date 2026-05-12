@@ -1,4 +1,3 @@
-
 import { DT } from "../../_components/types";
 import type { DimensionScore } from "@/server/reports/assemble";
 
@@ -40,7 +39,15 @@ export function RadarChart({
   });
 
   return (
-    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%", padding: "10px 0" }}>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        width: "100%",
+        padding: "10px 0",
+      }}
+    >
       <svg width={320} height={320} viewBox="0 0 300 300" style={{ overflow: "visible" }}>
         {/* Webs */}
         {webPaths.map((pts, i) => (
@@ -79,7 +86,15 @@ export function RadarChart({
         />
         {/* Data points */}
         {points.map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r={4} fill={catStyle.text} stroke={DT.WHITE} strokeWidth={1.5} />
+          <circle
+            key={i}
+            cx={p.x}
+            cy={p.y}
+            r={4}
+            fill={catStyle.text}
+            stroke={DT.WHITE}
+            strokeWidth={1.5}
+          />
         ))}
         {/* Labels */}
         {points.map((p, i) => (

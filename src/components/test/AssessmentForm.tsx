@@ -9,7 +9,7 @@
  *   - Scroll-focus system with questionRefs and auto-advance
  *   - Warning shake for unanswered questions
  *   - Opacity states: focused 1.0, answered 0.70, unanswered 0.45, locked 0.28
- *   - Encouragement text + time remaining for ProgressBar
+ *   - Scroll-focus system with questionRefs and auto-advance
  */
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
@@ -73,32 +73,6 @@ const SURVEY_STYLES = `
     outline-offset: 2px;
   }
 `;
-
-/* ═══════════════════════════════════════════════════════
-   Encouragement Engine
-   ═══════════════════════════════════════════════════════ */
-
-const ENCOURAGEMENTS = [
-  { min: 0, max: 10, text: "Ambil waktumu — tidak ada jawaban benar atau salah." },
-  { min: 11, max: 25, text: "Awal yang baik! Jawab dengan jujur untuk hasil terbaik." },
-  { min: 26, max: 40, text: "Kemajuan yang luar biasa! Setiap jawabanmu berarti." },
-  { min: 41, max: 55, text: "Sudah setengah jalan. Terus di jalanmu." },
-  { min: 56, max: 70, text: "Lebih dari setengahnya selesai! Kamu melakukannya dengan baik." },
-  { min: 71, max: 85, text: "Hampir selesai — hanya beberapa pertanyaan lagi." },
-  { min: 86, max: 95, text: "Hampir selesai! Wawasanmu hampir siap." },
-  { min: 96, max: 100, text: "Tahap akhir! Terima kasih atas kejujuranmu." },
-];
-
-function getEncouragement(progress: number): string {
-  return ENCOURAGEMENTS.find((e) => progress >= e.min && progress <= e.max)?.text ?? "";
-}
-
-function getTimeRemaining(remaining: number, avgSecondsPerQ = 12): string {
-  const totalSec = remaining * avgSecondsPerQ;
-  if (totalSec < 60) return "< 1 menit lagi";
-  const mins = Math.ceil(totalSec / 60);
-  return `~${mins} menit lagi`;
-}
 
 /* ═══════════════════════════════════════════════════════
    Props
@@ -168,7 +142,6 @@ export function AssessmentForm({
   // ── Derived state ───────────────────────────────────────
   const answeredCount = mounted ? Object.keys(answers).length : 0;
   const isComplete = mounted ? answeredCount === questions.length : false;
-  const progress = questions.length > 0 ? Math.round((answeredCount / questions.length) * 100) : 0;
 
   // ── Focus tracking ──────────────────────────────────────
   const [focusedQ, setFocusedQ] = useState(0);
@@ -350,8 +323,6 @@ export function AssessmentForm({
             current={answeredCount}
             total={questions.length}
             accentColor={testMeta.color}
-            encouragement={getEncouragement(progress)}
-            timeRemaining={getTimeRemaining(questions.length - answeredCount)}
           />
         </div>
       </div>

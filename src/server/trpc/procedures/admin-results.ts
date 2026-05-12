@@ -417,11 +417,9 @@ export const adminResultsRouter = createTRPCRouter({
         });
       }
 
-      // Step 2: Delete test_sessions — CASCADE removes results, 
+      // Step 2: Delete test_sessions — CASCADE removes results,
       // answers, session_demographics, consents automatically
-      await ctx.db
-        .delete(testSessions)
-        .where(eq(testSessions.id, result.sessionId));
+      await ctx.db.delete(testSessions).where(eq(testSessions.id, result.sessionId));
 
       // Audit log
       await ctx.db.insert(auditLogs).values({
