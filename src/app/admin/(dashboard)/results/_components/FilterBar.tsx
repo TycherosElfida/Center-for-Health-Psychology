@@ -80,6 +80,7 @@ export function FilterBar({
               fontSize: 13,
               fontWeight: 700,
               color: DT.TEAL_DARK,
+              fontFamily: "'DM Sans', sans-serif",
             }}
           >
             Filters & Search

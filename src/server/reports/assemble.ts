@@ -5,7 +5,7 @@
  * `resultId`. Queries across results → test_sessions → tests → questions →
  * answers → result_interpretations to build a typed `ReportData` object.
  */
-import { eq, asc, inArray } from "drizzle-orm";
+import { eq, asc, inArray, sql } from "drizzle-orm";
 import { db } from "@/server/db";
 import { tests, questions, resultInterpretations, options } from "@/server/schema/tests";
 import { testSessions, answers, results } from "@/server/schema/sessions";
@@ -72,6 +72,7 @@ export interface ReportData {
   /** Scores */
   totalScore: number;
   maxPossibleScore: number;
+  globalAverage: number | null;
   resultLabel: string | null;
 
   /** Dimension breakdown (if applicable) */
@@ -295,6 +296,17 @@ export async function assembleReportData(resultId: string): Promise<ReportData> 
     }
   }
 
+  // Compute global average for this test
+  const [avgRow] = await db
+    .select({ avg: sql<string>`AVG(CAST(${results.totalScore} AS numeric))` })
+    .from(results)
+    .innerJoin(testSessions, eq(testSessions.id, results.sessionId))
+    .where(eq(testSessions.testId, session.testId));
+
+  const globalAverage = avgRow?.avg 
+    ? Math.round(parseFloat(avgRow.avg)) 
+    : null;
+
   // 9. Calculate max possible score from questions × max option value
   // Approximate: number of questions × 4 (typical Likert 0-4)
   const computedScores = result.computedScores as { maxPossibleScore?: number };
@@ -309,6 +321,7 @@ export async function assembleReportData(resultId: string): Promise<ReportData> 
     profile,
     totalScore,
     maxPossibleScore,
+    globalAverage,
     resultLabel: result.resultLabel,
     dimensionScores: dimensionScoreEntries,
     interpretation: overallInterp

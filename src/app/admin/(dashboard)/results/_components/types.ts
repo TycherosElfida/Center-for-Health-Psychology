@@ -78,6 +78,7 @@ export const DT = {
   BG_ALT: "#FBFAFD",
   BG_HEADER: "#F5F3FA",
   BG_CONTENT: "#FAFAFE",
+  RED: "#E53E3E",
 } as const;
 
 /* ── Test-specific configuration ── */

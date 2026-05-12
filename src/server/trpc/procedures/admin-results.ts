@@ -15,11 +15,13 @@
  */
 import { eq, and, sql, desc, asc, ilike, gte, lte, type SQL } from "drizzle-orm";
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 
-import { createTRPCRouter, adminProcedure } from "../index";
-import { results } from "@/server/schema/sessions";
+import { createTRPCRouter, adminProcedure, adminMutationProcedure } from "../index";
+import { results, testSessions } from "@/server/schema/sessions";
 import { tests } from "@/server/schema/tests";
 import { sessionDemographics } from "@/server/schema/session-demographics";
+import { auditLogs } from "@/server/schema/admin";
 
 /* ═══════════════════════════════════════════════════════
    Shared Input Schema
@@ -396,5 +398,39 @@ export const adminResultsRouter = createTRPCRouter({
         })),
         testTitle: test.title,
       };
+    }),
+
+  deleteResult: adminMutationProcedure
+    .input(z.object({ scoreId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      // Step 1: Get sessionId from results table
+      const [result] = await ctx.db
+        .select({ sessionId: results.sessionId })
+        .from(results)
+        .where(eq(results.id, input.scoreId))
+        .limit(1);
+
+      if (!result) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Result not found.",
+        });
+      }
+
+      // Step 2: Delete test_sessions — CASCADE removes results, 
+      // answers, session_demographics, consents automatically
+      await ctx.db
+        .delete(testSessions)
+        .where(eq(testSessions.id, result.sessionId));
+
+      // Audit log
+      await ctx.db.insert(auditLogs).values({
+        adminUserId: ctx.adminSession.id,
+        action: "result.deleted",
+        entityType: "result",
+        entityId: input.scoreId,
+      });
+
+      return { success: true };
     }),
 });
