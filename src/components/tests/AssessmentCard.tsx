@@ -34,11 +34,11 @@ interface AssessmentCardProps {
 }
 
 export function AssessmentCard({ test, index }: AssessmentCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLAnchorElement>(null);
   const sts = STATUS_STYLES[test.status as TestStatus];
 
   /** 3D perspective tilt — follows cursor position over the card */
-  function handleMouseMove(e: MouseEvent<HTMLDivElement>) {
+  function handleMouseMove(e: MouseEvent<HTMLAnchorElement>) {
     const el = cardRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
@@ -59,9 +59,10 @@ export function AssessmentCard({ test, index }: AssessmentCardProps) {
   }
 
   return (
-    <div
+    <Link
+      href={`/test/${test.id}/briefing`}
       ref={cardRef}
-      className="group will-change-transform"
+      className="group block h-full will-change-transform rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{
@@ -154,8 +155,7 @@ export function AssessmentCard({ test, index }: AssessmentCardProps) {
                 {(test.respondentCount ?? 0).toLocaleString("id-ID")}
               </span>
             </div>
-            <Link
-              href={`/test/${test.id}/briefing`}
+            <div
               className="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-semibold text-white shadow-md transition-all hover:shadow-lg active:scale-95"
               style={{
                 background: `linear-gradient(135deg, ${test.color}, ${test.color}CC)`,
@@ -163,10 +163,10 @@ export function AssessmentCard({ test, index }: AssessmentCardProps) {
               }}
             >
               Mulai <ArrowRight size={13} />
-            </Link>
+            </div>
           </div>
         </div>
       </Card>
-    </div>
+    </Link>
   );
 }
