@@ -17,9 +17,11 @@ import {
   ChevronUp,
   Download,
   Shield,
+  Trash2,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { DT, CATEGORY_COLORS } from "../_components/types";
+import { RadarChart } from "./_components/RadarChart";
 
 /* ── Helpers ── */
 function getCatStyle(slug: string, label: string | null) {
@@ -30,10 +32,12 @@ function getCatStyle(slug: string, label: string | null) {
 function GaugeChart({
   score,
   max,
+  globalAverage,
   catStyle,
 }: {
   score: number;
   max: number;
+  globalAverage: number | null;
   catStyle: { bg: string; text: string };
 }) {
   const pct = Math.round((score / max) * 100);
@@ -89,10 +93,45 @@ function GaugeChart({
         <circle cx={cx} cy={cy} r="2.5" fill="#fff" />
       </svg>
       <div style={{ marginTop: -8, textAlign: "center" }}>
-        <div style={{ fontWeight: 800, fontSize: 28, color: catStyle.text, lineHeight: 1 }}>
+        <div
+          style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontWeight: 800,
+            fontSize: 28,
+            color: catStyle.text,
+            lineHeight: 1,
+          }}
+        >
           {score}
           <span style={{ fontSize: 14, fontWeight: 500, color: DT.LIGHT_TEXT }}>/{max}</span>
         </div>
+        {globalAverage !== null && (
+          <div style={{ marginTop: 6, fontSize: 12, fontWeight: 600, color: DT.MID_TEXT }}>
+            Average: {globalAverage}/{max}
+            <span
+              style={{
+                marginLeft: 6,
+                padding: "2px 6px",
+                borderRadius: 4,
+                background:
+                  score > globalAverage
+                    ? `${DT.TEAL}20`
+                    : score < globalAverage
+                      ? "#ffebee"
+                      : `${DT.BORDER}80`,
+                color:
+                  score > globalAverage
+                    ? DT.TEAL_DARK
+                    : score < globalAverage
+                      ? "#c62828"
+                      : DT.LIGHT_TEXT,
+              }}
+            >
+              {score > globalAverage ? "+" : ""}
+              {score - globalAverage} pts ({Math.round(((score - globalAverage) / max) * 100)}%)
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -155,6 +194,17 @@ export default function DetailedReportPage() {
   const params = useParams<{ scoreId: string }>();
   const router = useRouter();
   const scoreId = params.scoreId;
+
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const deleteMutation = trpc.adminResults.deleteResult.useMutation({
+    onSuccess: () => {
+      router.push("/admin/results");
+    },
+    onError: (err) => {
+      alert(`Failed to delete: ${err.message}`);
+      setIsDeleteDialogOpen(false);
+    },
+  });
 
   const { data, isLoading, error } = trpc.results.getDetailedReport.useQuery(
     { scoreId },
@@ -341,6 +391,24 @@ export default function DetailedReportPage() {
         >
           <Download size={13} /> {pdfState === "loading" ? "Generating…" : "Download PDF"}
         </button>
+        <button
+          onClick={() => setIsDeleteDialogOpen(true)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "6px 14px",
+            borderRadius: 12,
+            background: "#ffebee",
+            color: "#c62828",
+            fontWeight: 600,
+            fontSize: 12,
+            border: `1.5px solid #ffcdd2`,
+            cursor: "pointer",
+          }}
+        >
+          <Trash2 size={13} /> Delete
+        </button>
       </div>
 
       {/* ═══ 1. PROFILE HEADER ═══ */}
@@ -375,7 +443,14 @@ export default function DetailedReportPage() {
                 flexShrink: 0,
               }}
             >
-              <span style={{ fontWeight: 800, fontSize: 24, color: DT.WHITE }}>
+              <span
+                style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontWeight: 800,
+                  fontSize: 24,
+                  color: DT.WHITE,
+                }}
+              >
                 {profile.name
                   .split(" ")
                   .map((n) => n[0])
@@ -386,6 +461,7 @@ export default function DetailedReportPage() {
             <div style={{ flex: 1, minWidth: 0, paddingBottom: 4 }}>
               <h2
                 style={{
+                  fontFamily: "'DM Sans', sans-serif",
                   fontWeight: 800,
                   fontSize: 22,
                   color: DT.DARK_TEXT,
@@ -461,7 +537,14 @@ export default function DetailedReportPage() {
               >
                 Result
               </div>
-              <div style={{ fontWeight: 800, fontSize: 15, color: catStyle.text }}>
+              <div
+                style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontWeight: 800,
+                  fontSize: 15,
+                  color: catStyle.text,
+                }}
+              >
                 {data.resultLabel ?? "—"}
               </div>
             </div>
@@ -479,7 +562,14 @@ export default function DetailedReportPage() {
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <Shield size={14} color={DT.TEAL_DARK} />
-              <span style={{ fontSize: 13, fontWeight: 700, color: DT.TEAL_DARK }}>
+              <span
+                style={{
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: DT.TEAL_DARK,
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
                 Profile Summary
               </span>
             </div>
@@ -576,9 +666,23 @@ export default function DetailedReportPage() {
             >
               <FileText size={12} color={catStyle.text} />
             </div>
-            <span style={{ fontSize: 13, fontWeight: 700, color: DT.DARK_TEXT }}>Global Score</span>
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: DT.DARK_TEXT,
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              Global Score
+            </span>
           </div>
-          <GaugeChart score={data.totalScore} max={data.maxPossibleScore} catStyle={catStyle} />
+          <GaugeChart
+            score={data.totalScore}
+            max={data.maxPossibleScore}
+            globalAverage={data.globalAverage}
+            catStyle={catStyle}
+          />
           <div
             style={{
               padding: "6px 16px",
@@ -602,27 +706,45 @@ export default function DetailedReportPage() {
               border: `1px solid ${DT.BORDER}`,
               padding: 20,
               background: DT.WHITE,
+              display: "flex",
+              gap: 20,
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-              <div
-                style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: 8,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "#E3F2FD",
-                }}
-              >
-                <FileText size={12} color="#1565C0" />
+            <div style={{ flex: 1 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                <div
+                  style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: 8,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "#E3F2FD",
+                  }}
+                >
+                  <FileText size={12} color="#1565C0" />
+                </div>
+                <span
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: DT.DARK_TEXT,
+                    fontFamily: "'DM Sans', sans-serif",
+                  }}
+                >
+                  Dimension Scores
+                </span>
               </div>
-              <span style={{ fontSize: 13, fontWeight: 700, color: DT.DARK_TEXT }}>
-                Dimension Scores
-              </span>
+              <DimensionBars dimensions={dimensionScores} />
             </div>
-            <DimensionBars dimensions={dimensionScores} />
+            {dimensionScores.length >= 2 && (
+              <div
+                style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}
+              >
+                <RadarChart dimensions={dimensionScores} catStyle={catStyle} />
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -639,7 +761,14 @@ export default function DetailedReportPage() {
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <CheckCircle2 size={15} color={DT.TEAL_DARK} />
-            <span style={{ fontSize: 14, fontWeight: 700, color: DT.DARK_TEXT }}>
+            <span
+              style={{
+                fontSize: 14,
+                fontWeight: 700,
+                color: DT.DARK_TEXT,
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
               Interpretation
             </span>
           </div>
@@ -695,7 +824,15 @@ export default function DetailedReportPage() {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <h3 style={{ fontWeight: 700, fontSize: 15, color: DT.DARK_TEXT, margin: 0 }}>
+            <h3
+              style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontWeight: 700,
+                fontSize: 15,
+                color: DT.DARK_TEXT,
+                margin: 0,
+              }}
+            >
               Item-Level Response Analysis
             </h3>
             <span
@@ -863,7 +1000,14 @@ export default function DetailedReportPage() {
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
           <Send size={15} color={DT.TEAL_DARK} />
-          <span style={{ fontSize: 14, fontWeight: 700, color: DT.DARK_TEXT }}>
+          <span
+            style={{
+              fontSize: 14,
+              fontWeight: 700,
+              color: DT.DARK_TEXT,
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
             Report Delivery
           </span>
         </div>
@@ -895,6 +1039,103 @@ export default function DetailedReportPage() {
           </div>
         </div>
       </div>
+
+      {/* ═══ DELETE MODAL ═══ */}
+      {isDeleteDialogOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            background: "rgba(0, 0, 0, 0.5)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            style={{
+              background: DT.WHITE,
+              borderRadius: 16,
+              padding: 24,
+              width: 380,
+              boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.15)",
+              display: "flex",
+              flexDirection: "column",
+              gap: 16,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: "50%",
+                  background: `${DT.RED}15`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Trash2 size={20} color={DT.RED} />
+              </div>
+              <h3
+                style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  margin: 0,
+                  fontSize: 16,
+                  fontWeight: 700,
+                  color: DT.DARK_TEXT,
+                }}
+              >
+                Delete Result?
+              </h3>
+            </div>
+            <p style={{ margin: 0, fontSize: 13, color: DT.LIGHT_TEXT, lineHeight: 1.5 }}>
+              This action cannot be undone. Are you sure you want to permanently delete this test
+              result?
+            </p>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 8 }}>
+              <button
+                onClick={() => setIsDeleteDialogOpen(false)}
+                disabled={deleteMutation.isPending}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: 8,
+                  background: DT.BG_CONTENT,
+                  border: `1px solid ${DT.BORDER}`,
+                  color: DT.DARK_TEXT,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => deleteMutation.mutate({ scoreId })}
+                disabled={deleteMutation.isPending}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: 8,
+                  background: DT.RED,
+                  border: "none",
+                  color: DT.WHITE,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: deleteMutation.isPending ? "wait" : "pointer",
+                  opacity: deleteMutation.isPending ? 0.7 : 1,
+                }}
+              >
+                {deleteMutation.isPending ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

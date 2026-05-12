@@ -168,6 +168,7 @@ export function AnalyticsCards({
           >
             <span
               style={{
+                fontFamily: "'DM Sans', sans-serif",
                 fontWeight: 800,
                 fontSize: 26,
                 color: color,
