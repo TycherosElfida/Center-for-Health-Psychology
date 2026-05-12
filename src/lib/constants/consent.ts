@@ -10,4 +10,4 @@ export const CONSENT_VERSION = "1.0";
 
 /** The consent statement displayed on the briefing page checkbox. */
 export const CONSENT_TEXT =
-  "I agree to the terms and conditions and consent to my data being used for research purposes.";
+  'I have read the information in the "Before You Begin" section and agree to proceed.';

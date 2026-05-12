@@ -191,10 +191,9 @@ export function ResultsDashboard({
           <h4 className="mb-3 font-heading text-[13px] font-semibold text-muted-foreground">
             Assessment Information
           </h4>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <MetaItem label="Scale" value={testMeta.shortName} />
             <MetaItem label="Items" value={String(testMeta.itemCount)} />
-            <MetaItem label="Reliability (α)" value={testMeta.alpha ?? "N/A"} />
             <MetaItem label="Author" value={testMeta.author ?? "N/A"} />
           </div>
           {testMeta.validationNote && (
@@ -224,9 +223,7 @@ export function ResultsDashboard({
                     <div className="font-heading text-sm font-semibold text-foreground">
                       {t.shortName}
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      {t.duration} · {t.itemCount} items
-                    </div>
+                    <div className="text-xs text-muted-foreground">{t.itemCount} items</div>
                   </div>
                   <div
                     className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold"

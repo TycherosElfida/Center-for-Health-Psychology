@@ -10,13 +10,10 @@ import {
   ChevronDown,
   X,
   SlidersHorizontal,
-  Clock,
-  Users,
   ArrowRight,
   BadgeCheck,
   Brain,
   CheckCircle2,
-  Sparkles,
   Tag,
 } from "lucide-react";
 
@@ -38,11 +35,9 @@ import {
   CATEGORY_ICONS,
   SORT_OPTIONS,
   ICON_MAP,
-  STATUS_STYLES,
   filterAndSortTests,
   type SortBy,
   type TestMeta,
-  type TestStatus,
 } from "@/lib/data/tests";
 
 /** Resolve icon from the map; falls back to Brain if key is unknown */
@@ -434,7 +429,6 @@ function ListView({ tests }: { tests: TestMeta[] }) {
   return (
     <div className="flex flex-col gap-5">
       {tests.map((test, i) => {
-        const sts = STATUS_STYLES[test.status as TestStatus];
         return (
           <div
             key={test.id}
@@ -454,28 +448,6 @@ function ListView({ tests }: { tests: TestMeta[] }) {
                 }}
               >
                 <div>
-                  <div className="mb-4 flex flex-wrap items-center gap-2">
-                    <span
-                      className="rounded-full px-2.5 py-1 text-[11px] font-semibold"
-                      style={{
-                        background: sts.bg,
-                        color: sts.text,
-                        border: `1px solid ${sts.border}`,
-                      }}
-                    >
-                      {test.status}
-                    </span>
-                    <span
-                      className="rounded-full px-2.5 py-1 text-[11px] font-medium"
-                      style={{
-                        background: `${test.color}10`,
-                        color: test.color,
-                        border: `1px solid ${test.color}25`,
-                      }}
-                    >
-                      {test.primaryCategory}
-                    </span>
-                  </div>
                   <div
                     className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
                     style={{ background: `${test.color}18` }}
@@ -497,13 +469,6 @@ function ListView({ tests }: { tests: TestMeta[] }) {
                     color={test.color}
                     text={`${test.itemCount} items`}
                   />
-                  <StatRow icon={Clock} color={test.color} text={test.duration} />
-                  <StatRow
-                    icon={Users}
-                    color={test.color}
-                    text={`${(test.respondentCount ?? 0).toLocaleString("id-ID")} respondents`}
-                  />
-                  <StatRow icon={Sparkles} color={test.color} text={`α = ${test.alpha ?? "—"}`} />
                 </div>
               </div>
 
@@ -514,45 +479,6 @@ function ListView({ tests }: { tests: TestMeta[] }) {
                   <p className="mb-5 text-[15px] leading-relaxed text-foreground/80">
                     {test.longDescription}
                   </p>
-
-                  {/* Subscales */}
-                  <div className="mb-5">
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Subscales / Measures
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {test.categories.map((cat) => (
-                        <span
-                          key={cat}
-                          className="rounded-full px-3 py-1 text-xs font-medium"
-                          style={{
-                            background: `${test.color}10`,
-                            color: test.color,
-                            border: `1px solid ${test.color}25`,
-                          }}
-                        >
-                          {cat}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Tags */}
-                  <div className="mb-5">
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Tags
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {test.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="rounded-full border border-border/60 bg-secondary/40 px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
 
                   {/* Validation */}
                   {test.validationNote && (
@@ -599,9 +525,9 @@ function CompactView({ tests }: { tests: TestMeta[] }) {
       {/* Header — hidden on mobile */}
       <div
         className="hidden items-center gap-3 border-b border-border/50 bg-secondary/30 px-5 py-3 md:grid"
-        style={{ gridTemplateColumns: "2fr 1fr 80px 90px 70px 80px 100px" }}
+        style={{ gridTemplateColumns: "2fr 1fr 80px 100px" }}
       >
-        {["Instrument", "Category", "Items", "Duration", "α", "Status", ""].map((h) => (
+        {["Instrument", "Category", "Items", ""].map((h) => (
           <span
             key={h}
             className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
@@ -613,7 +539,6 @@ function CompactView({ tests }: { tests: TestMeta[] }) {
 
       {/* Rows */}
       {tests.map((test, i) => {
-        const sts = STATUS_STYLES[test.status as TestStatus];
         return (
           <div
             key={test.id}
@@ -624,7 +549,7 @@ function CompactView({ tests }: { tests: TestMeta[] }) {
             <div
               className="hidden items-center gap-3 px-5 py-4 transition-colors hover:bg-secondary/20 md:grid"
               style={{
-                gridTemplateColumns: "2fr 1fr 80px 90px 70px 80px 100px",
+                gridTemplateColumns: "2fr 1fr 80px 100px",
                 borderBottom: i < tests.length - 1 ? "1px solid var(--border)" : "none",
               }}
             >
@@ -656,20 +581,6 @@ function CompactView({ tests }: { tests: TestMeta[] }) {
                 {test.primaryCategory}
               </span>
               <span className="text-[13px] font-medium text-foreground/70">{test.itemCount}</span>
-              <span className="text-[13px] text-foreground/70">{test.duration}</span>
-              <span className="font-heading text-[13px] font-semibold text-foreground">
-                {test.alpha ?? "—"}
-              </span>
-              <span
-                className="w-fit rounded-full px-2.5 py-1 text-[11px] font-semibold"
-                style={{
-                  background: sts.bg,
-                  color: sts.text,
-                  border: `1px solid ${sts.border}`,
-                }}
-              >
-                {test.status}
-              </span>
               <Link
                 href={`/test/${test.id}/briefing`}
                 className="inline-flex items-center gap-1 rounded-lg px-3.5 py-2 text-xs font-semibold text-white shadow-md transition-all hover:shadow-lg active:scale-95"
@@ -694,9 +605,7 @@ function CompactView({ tests }: { tests: TestMeta[] }) {
                 <p className="font-heading text-sm font-semibold text-foreground">
                   {test.shortName}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {test.itemCount} items · {test.duration}
-                </p>
+                <p className="text-xs text-muted-foreground">{test.itemCount} items</p>
               </div>
               <Link
                 href={`/test/${test.id}/briefing`}
@@ -716,7 +625,15 @@ function CompactView({ tests }: { tests: TestMeta[] }) {
 /* ═══════════════════════════════════════════════════════
    Shared Helpers
    ═══════════════════════════════════════════════════════ */
-function StatRow({ icon: Icon, color, text }: { icon: typeof Clock; color: string; text: string }) {
+function StatRow({
+  icon: Icon,
+  color,
+  text,
+}: {
+  icon: typeof CheckCircle2;
+  color: string;
+  text: string;
+}) {
   return (
     <div className="flex items-center gap-2">
       <Icon size={14} color={color} />

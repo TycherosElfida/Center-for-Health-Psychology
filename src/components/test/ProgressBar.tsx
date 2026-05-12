@@ -7,14 +7,11 @@
  *   - Animated fill bar with brand gradient
  *   - "Question X of Y" label using Outfit font for numerals
  *   - Percentage badge
- *   - Encouragement text (Indonesian, phase-aware)
- *   - Time remaining estimate
  *
  * Touch target: N/A (non-interactive element).
  */
 
 import { useMemo } from "react";
-import { Sparkles, Clock } from "lucide-react";
 
 interface ProgressBarProps {
   /** Number of answered questions. */
@@ -23,19 +20,9 @@ interface ProgressBarProps {
   total: number;
   /** Optional accent color override (hex). Falls back to CSS --primary. */
   accentColor?: string;
-  /** Indonesian encouragement message for current progress phase. */
-  encouragement?: string;
-  /** Estimated time remaining string. */
-  timeRemaining?: string;
 }
 
-export function ProgressBar({
-  current,
-  total,
-  accentColor,
-  encouragement,
-  timeRemaining,
-}: ProgressBarProps) {
+export function ProgressBar({ current, total, accentColor }: ProgressBarProps) {
   const percentage = useMemo(
     () => (total > 0 ? Math.round((current / total) * 100) : 0),
     [current, total]
@@ -98,22 +85,6 @@ export function ProgressBar({
           />
         )}
       </div>
-
-      {/* Encouragement + time remaining */}
-      {encouragement && (
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 text-xs text-[var(--brand-primary,#9B8EC4)]">
-            <Sparkles size={13} />
-            <span>{encouragement}</span>
-          </div>
-          {timeRemaining && (
-            <div className="flex items-center gap-1 text-[11px] text-muted-foreground/70">
-              <Clock size={11} />
-              <span>{timeRemaining}</span>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }

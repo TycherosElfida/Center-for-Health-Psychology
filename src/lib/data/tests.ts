@@ -205,13 +205,11 @@ export const CATEGORY_ICONS: Record<string, ElementType> = {
    Sort Logic
    ═══════════════════════════════════════════════════════ */
 
-export type SortBy = "name" | "items" | "respondents" | "alpha";
+export type SortBy = "name" | "items";
 
 export const SORT_OPTIONS: { value: SortBy; label: string }[] = [
   { value: "name", label: "Name" },
   { value: "items", label: "Items" },
-  { value: "respondents", label: "Respondents" },
-  { value: "alpha", label: "Reliability (α)" },
 ];
 
 /** Pure function — safe for use on both server and client */
@@ -239,10 +237,6 @@ export function filterAndSortTests(
         return a.shortName.localeCompare(b.shortName);
       case "items":
         return b.itemCount - a.itemCount;
-      case "respondents":
-        return (b.respondentCount ?? 0) - (a.respondentCount ?? 0);
-      case "alpha":
-        return parseFloat(b.alpha ?? "0") - parseFloat(a.alpha ?? "0");
       default:
         return 0;
     }
