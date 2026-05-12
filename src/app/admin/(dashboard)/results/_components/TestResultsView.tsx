@@ -284,15 +284,6 @@ export function TestResultsView({ testConfig }: TestResultsViewProps) {
               {total !== 1 ? "s" : ""}
             </span>
           )}
-          <ExportDropdown
-            testSlug={slug}
-            totalCount={total}
-            filteredCount={rows.length}
-            hasAnyFilter={hasAnyFilter}
-            onExportFiltered={handleExportFiltered}
-            onExportAll={handleExportAll}
-            isExporting={isExporting}
-          />
         </div>
       </div>
 
@@ -305,6 +296,9 @@ export function TestResultsView({ testConfig }: TestResultsViewProps) {
         filteredCount={rows.length}
         hasAnyFilter={hasAnyFilter}
         scoreLabel={scoreLabel}
+        provinces={statsQuery.data?.distinctProvinces ?? []}
+        cities={statsQuery.data?.distinctCities ?? []}
+        categories={statsQuery.data?.categoryDistribution?.map((c) => c.category) ?? []}
       />
 
       {/* Analytics cards */}
@@ -329,6 +323,17 @@ export function TestResultsView({ testConfig }: TestResultsViewProps) {
         hasAnyFilter={hasAnyFilter}
         onClearFilters={handleResetFilters}
         testConfig={testConfig}
+        exportActions={
+          <ExportDropdown
+            testSlug={slug}
+            totalCount={total}
+            filteredCount={rows.length}
+            hasAnyFilter={hasAnyFilter}
+            onExportFiltered={handleExportFiltered}
+            onExportAll={handleExportAll}
+            isExporting={isExporting}
+          />
+        }
       />
     </div>
   );

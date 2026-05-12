@@ -41,6 +41,7 @@ interface ResultsTableProps {
   hasAnyFilter: boolean;
   onClearFilters: () => void;
   testConfig: TestTabConfig;
+  exportActions?: React.ReactNode;
 }
 
 export function ResultsTable({
@@ -56,6 +57,7 @@ export function ResultsTable({
   hasAnyFilter,
   onClearFilters,
   testConfig,
+  exportActions,
 }: ResultsTableProps) {
   const router = useRouter();
   const { color, slug, maxScore, shortName } = testConfig;
@@ -140,6 +142,9 @@ export function ResultsTable({
         >
           {shortName} Individual Results
         </h3>
+        {exportActions && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>{exportActions}</div>
+        )}
       </div>
 
       {/* Table */}
@@ -573,19 +578,49 @@ export function ResultsTable({
           borderTop: `1px solid ${DT.BORDER}`,
         }}
       >
-        <span style={{ fontSize: 12, color: DT.LIGHT_TEXT }}>
-          {hasAnyFilter ? (
-            <>
-              Showing <b style={{ color: DT.TEAL_DARK, fontWeight: 700 }}>{rows.length}</b> of{" "}
-              {total} {shortName} results{" "}
-              <span style={{ color: DT.TEAL_DARK, fontWeight: 500 }}>(filtered)</span>
-            </>
-          ) : (
-            <>
-              Page {page + 1} of {totalPages || 1} · {total} total results
-            </>
-          )}
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <span style={{ fontSize: 12, color: DT.LIGHT_TEXT }}>
+            {hasAnyFilter ? (
+              <>
+                Showing <b style={{ color: DT.TEAL_DARK, fontWeight: 700 }}>{rows.length}</b> of{" "}
+                {total} {shortName} results{" "}
+                <span style={{ color: DT.TEAL_DARK, fontWeight: 500 }}>(filtered)</span>
+              </>
+            ) : (
+              <>
+                Page {page + 1} of {totalPages || 1} · {total} total results
+              </>
+            )}
+          </span>
+          <span
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              fontSize: 11,
+              color: DT.LIGHT_TEXT,
+            }}
+          >
+            <svg
+              width="11"
+              height="11"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke={DT.SAGE}
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <path d="M8 13h2" />
+              <path d="M8 17h2" />
+              <path d="M14 13h2" />
+              <path d="M14 17h2" />
+            </svg>
+            Supports .xlsx & .csv export
+          </span>
+        </div>
 
         {totalPages > 1 && (
           <div

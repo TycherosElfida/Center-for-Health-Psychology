@@ -5,9 +5,9 @@
  * `resultId`. Queries across results → test_sessions → tests → questions →
  * answers → result_interpretations to build a typed `ReportData` object.
  */
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, inArray } from "drizzle-orm";
 import { db } from "@/server/db";
-import { tests, questions, resultInterpretations } from "@/server/schema/tests";
+import { tests, questions, resultInterpretations, options } from "@/server/schema/tests";
 import { testSessions, answers, results } from "@/server/schema/sessions";
 import { guestLeads } from "@/server/schema/consents";
 import { sessionDemographics } from "@/server/schema/session-demographics";
@@ -23,6 +23,8 @@ export interface ReportItem {
   dimension: string | null;
   isReversed: boolean;
   rawAnswer: number;
+  answerText: string;
+  maxPoints: number;
 }
 
 export interface DimensionScore {
@@ -206,6 +208,20 @@ export async function assembleReportData(resultId: string): Promise<ReportData> 
     .where(eq(questions.testId, result.testId))
     .orderBy(asc(questions.order));
 
+  // 4b. Fetch options for these questions
+  const questionIds = questionRows.map((q) => q.id);
+  const optionRows =
+    questionIds.length > 0
+      ? await db.select().from(options).where(inArray(options.questionId, questionIds))
+      : [];
+
+  // Build options lookup: questionId → array of options
+  const optionsMap = new Map<string, Array<{ label: string; value: number }>>();
+  for (const opt of optionRows) {
+    if (!optionsMap.has(opt.questionId)) optionsMap.set(opt.questionId, []);
+    optionsMap.get(opt.questionId)!.push({ label: opt.label, value: opt.value });
+  }
+
   // 5. Fetch all answers for this session
   const answerRows = await db.select().from(answers).where(eq(answers.sessionId, result.sessionId));
 
@@ -217,13 +233,26 @@ export async function assembleReportData(resultId: string): Promise<ReportData> 
   }
 
   // 6. Build item responses
-  const items: ReportItem[] = questionRows.map((q) => ({
-    order: q.order,
-    questionText: q.questionText,
-    dimension: q.dimension,
-    isReversed: q.isReversed,
-    rawAnswer: answerMap.get(q.id) ?? 0,
-  }));
+  const items: ReportItem[] = questionRows.map((q) => {
+    const rawAnswer = answerMap.get(q.id) ?? 0;
+    const opts = optionsMap.get(q.id) ?? [];
+
+    // Find the label for the chosen answer, fallback to stringified numeric value
+    const answerText = opts.find((o) => o.value === rawAnswer)?.label ?? String(rawAnswer);
+
+    // Calculate max points for this question based on its options
+    const maxPoints = opts.length > 0 ? Math.max(...opts.map((o) => o.value)) : rawAnswer;
+
+    return {
+      order: q.order,
+      questionText: q.questionText,
+      dimension: q.dimension,
+      isReversed: q.isReversed,
+      rawAnswer,
+      answerText,
+      maxPoints,
+    };
+  });
 
   // 7. Parse dimension scores from JSONB
   const rawDimScores =

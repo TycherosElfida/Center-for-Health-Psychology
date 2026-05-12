@@ -2,6 +2,7 @@
 
 import { Search, X, SlidersHorizontal, RotateCcw, Calendar } from "lucide-react";
 import { DT, type FilterState } from "./types";
+import { MiniSelect } from "./MiniSelect";
 
 /* ── Shared inline styles (design reference tokens) ── */
 const inputStyle: React.CSSProperties = {
@@ -27,43 +28,6 @@ const labelStyle: React.CSSProperties = {
   fontFamily: "'Inter', sans-serif",
 };
 
-/* ── Reusable mini select ── */
-function MiniSelect({
-  value,
-  onChange,
-  options,
-  placeholder,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  options: string[];
-  placeholder: string;
-}) {
-  return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      style={{
-        ...inputStyle,
-        appearance: "none",
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23718096' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "right 10px center",
-        paddingRight: 28,
-        cursor: "pointer",
-        color: value ? DT.DARK_TEXT : DT.LIGHT_TEXT,
-      }}
-    >
-      <option value="">{placeholder}</option>
-      {options.map((o) => (
-        <option key={o} value={o}>
-          {o}
-        </option>
-      ))}
-    </select>
-  );
-}
-
 interface FilterBarProps {
   filters: FilterState;
   onFilterChange: <K extends keyof FilterState>(key: K, value: FilterState[K]) => void;
@@ -72,6 +36,9 @@ interface FilterBarProps {
   filteredCount: number;
   hasAnyFilter: boolean;
   scoreLabel: string;
+  provinces: string[];
+  cities: string[];
+  categories: string[];
 }
 
 export function FilterBar({
@@ -82,6 +49,9 @@ export function FilterBar({
   filteredCount,
   hasAnyFilter,
   scoreLabel,
+  provinces,
+  cities,
+  categories,
 }: FilterBarProps) {
   return (
     <div
@@ -221,24 +191,22 @@ export function FilterBar({
           {/* Province */}
           <div>
             <div style={labelStyle}>Province</div>
-            <input
-              type="text"
-              placeholder="e.g. Jawa Timur"
+            <MiniSelect
               value={filters.province}
-              onChange={(e) => onFilterChange("province", e.target.value)}
-              style={inputStyle}
+              onChange={(v) => onFilterChange("province", v)}
+              options={provinces}
+              placeholder="All"
             />
           </div>
 
           {/* City */}
           <div>
             <div style={labelStyle}>City / Regency</div>
-            <input
-              type="text"
-              placeholder="e.g. Surabaya"
+            <MiniSelect
               value={filters.city}
-              onChange={(e) => onFilterChange("city", e.target.value)}
-              style={inputStyle}
+              onChange={(v) => onFilterChange("city", v)}
+              options={cities}
+              placeholder="All"
             />
           </div>
 
@@ -318,12 +286,11 @@ export function FilterBar({
           {/* Category */}
           <div>
             <div style={labelStyle}>Result Category</div>
-            <input
-              type="text"
-              placeholder="e.g. Normal, High Stress"
+            <MiniSelect
               value={filters.category}
-              onChange={(e) => onFilterChange("category", e.target.value)}
-              style={inputStyle}
+              onChange={(v) => onFilterChange("category", v)}
+              options={categories}
+              placeholder="All"
             />
           </div>
 

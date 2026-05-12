@@ -164,14 +164,13 @@ export default function DetailedReportPage() {
   const [sortCol, setSortCol] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [pdfState, setPdfState] = useState<"idle" | "loading">("idle");
-
   const items = data?.items;
   const processedItems = useMemo(() => {
     if (!items) return [];
     const list = [...items];
     if (sortCol === "no")
       list.sort((a, b) => (sortDir === "asc" ? a.order - b.order : b.order - a.order));
-    if (sortCol === "score")
+    if (sortCol === "points")
       list.sort((a, b) =>
         sortDir === "asc" ? a.rawAnswer - b.rawAnswer : b.rawAnswer - a.rawAnswer
       );
@@ -718,8 +717,7 @@ export default function DetailedReportPage() {
             <colgroup>
               <col style={{ width: 50 }} />
               <col />
-              <col style={{ width: 100 }} />
-              <col style={{ width: 80 }} />
+              <col style={{ width: 140 }} />
               <col style={{ width: 120 }} />
             </colgroup>
             <thead>
@@ -739,11 +737,11 @@ export default function DetailedReportPage() {
                   </span>
                 </th>
                 <th style={{ ...thStyle, cursor: "default" }}>Question Text</th>
-                <th style={thStyle}>Dimension</th>
-                <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleSort("score")}>
+                <th style={{ ...thStyle, textAlign: "center" }}>User&apos;s Answer</th>
+                <th style={{ ...thStyle, cursor: "pointer" }} onClick={() => handleSort("points")}>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                    Score
-                    {sortCol === "score" &&
+                    Points
+                    {sortCol === "points" &&
                       (sortDir === "asc" ? (
                         <ChevronUp size={10} color={DT.TEAL_DARK} />
                       ) : (
@@ -751,7 +749,6 @@ export default function DetailedReportPage() {
                       ))}
                   </span>
                 </th>
-                <th style={{ ...thStyle, textAlign: "center" }}>Reversed</th>
               </tr>
             </thead>
             <tbody>
@@ -793,40 +790,60 @@ export default function DetailedReportPage() {
                   <td
                     style={{
                       padding: "10px 14px",
-                      fontSize: 11,
-                      color: DT.MID_TEXT,
+                      textAlign: "center",
                       verticalAlign: "middle",
                     }}
                   >
-                    {item.dimension ?? "—"}
-                  </td>
-                  <td
-                    style={{ padding: "10px 14px", verticalAlign: "middle", textAlign: "center" }}
-                  >
                     <span
                       style={{
-                        padding: "2px 10px",
+                        padding: "4px 12px",
                         borderRadius: 999,
-                        background: DT.TEAL_LIGHT,
+                        background: `${DT.TEAL}15`,
                         color: DT.TEAL_DARK,
                         fontSize: 12,
-                        fontWeight: 700,
-                        fontVariantNumeric: "tabular-nums",
+                        fontWeight: 600,
                       }}
                     >
-                      {item.rawAnswer}
+                      {item.answerText}
                     </span>
                   </td>
                   <td
                     style={{
                       padding: "10px 14px",
                       verticalAlign: "middle",
-                      textAlign: "center",
-                      fontSize: 12,
-                      color: item.isReversed ? "#E65100" : DT.LIGHT_TEXT,
                     }}
                   >
-                    {item.isReversed ? "✓ Reversed" : "—"}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <div
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 700,
+                          color: DT.TEAL_DARK,
+                          textAlign: "right",
+                        }}
+                      >
+                        {item.rawAnswer}/{item.maxPoints}
+                      </div>
+                      <div
+                        style={{
+                          height: 4,
+                          borderRadius: 2,
+                          background: `${DT.TEAL}18`,
+                          overflow: "hidden",
+                          width: "100%",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: `${item.maxPoints > 0 ? (item.rawAnswer / item.maxPoints) * 100 : 0}%`,
+                            height: "100%",
+                            borderRadius: 2,
+                            background: DT.TEAL,
+                            transition: "width 0.6s ease",
+                          }}
+                        />
+                      </div>
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -223,6 +223,8 @@ export const adminResultsRouter = createTRPCRouter({
         lowestScore: 0,
         scoreDistribution: [],
         categoryDistribution: [],
+        distinctProvinces: [] as string[],
+        distinctCities: [] as string[],
       };
     }
 
@@ -281,6 +283,22 @@ export const adminResultsRouter = createTRPCRouter({
       ORDER BY bucket
     `);
 
+    // Distinct provinces
+    const provincesQuery = await ctx.db
+      .select({ value: sessionDemographics.province })
+      .from(results)
+      .leftJoin(sessionDemographics, eq(results.sessionId, sessionDemographics.sessionId))
+      .where(whereClause)
+      .groupBy(sessionDemographics.province);
+
+    // Distinct cities
+    const citiesQuery = await ctx.db
+      .select({ value: sessionDemographics.city })
+      .from(results)
+      .leftJoin(sessionDemographics, eq(results.sessionId, sessionDemographics.sessionId))
+      .where(whereClause)
+      .groupBy(sessionDemographics.city);
+
     return {
       totalRecords: agg?.totalRecords ?? 0,
       maleCount: agg?.maleCount ?? 0,
@@ -298,6 +316,14 @@ export const adminResultsRouter = createTRPCRouter({
         category: c.category ?? "Uncategorized",
         count: c.count,
       })),
+      distinctProvinces: provincesQuery
+        .map((p) => p.value)
+        .filter((v): v is string => !!v)
+        .sort(),
+      distinctCities: citiesQuery
+        .map((c) => c.value)
+        .filter((v): v is string => !!v)
+        .sort(),
     };
   }),
 
