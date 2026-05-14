@@ -11,10 +11,8 @@ import {
   X,
   SlidersHorizontal,
   ArrowRight,
-  BadgeCheck,
-  Brain,
-  CheckCircle2,
   Tag,
+  Loader2,
 } from "lucide-react";
 
 import {
@@ -28,33 +26,16 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 
+import { trpc } from "@/lib/trpc/client";
 import { AssessmentCard } from "@/components/tests/AssessmentCard";
 import {
-  TESTS,
-  ALL_CATEGORIES,
   CATEGORY_ICONS,
   SORT_OPTIONS,
-  ICON_MAP,
   filterAndSortTests,
   type SortBy,
   type TestMeta,
 } from "@/lib/data/tests";
-
-/** Resolve icon from the map; falls back to Brain if key is unknown */
-function TestIcon({
-  name,
-  size,
-  color,
-  className,
-}: {
-  name: string;
-  size?: number;
-  color?: string;
-  className?: string;
-}) {
-  const IconComponent = ICON_MAP[name] ?? Brain;
-  return <IconComponent size={size} color={color} className={className} />;
-}
+import Image from "next/image";
 
 /* ═══════════════════════════════════════════════════════
    View Mode Types
@@ -77,9 +58,18 @@ export function AssessmentCatalog() {
   const [sortBy, setSortBy] = useState<SortBy>("name");
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
 
+  // Fetch tests from database via tRPC
+  const { data: tests = [], isLoading } = trpc.publicTests.getPublishedTests.useQuery();
+
+  // Derive categories from fetched data
+  const allCategories = useMemo(() => {
+    const cats = Array.from(new Set(tests.map((t) => t.category)));
+    return ["All", ...cats];
+  }, [tests]);
+
   const filtered = useMemo(
-    () => filterAndSortTests(searchQuery, activeCategory, sortBy),
-    [searchQuery, activeCategory, sortBy]
+    () => filterAndSortTests(tests, searchQuery, activeCategory, sortBy),
+    [tests, searchQuery, activeCategory, sortBy]
   );
 
   const clearFilters = useCallback(() => {
@@ -88,6 +78,15 @@ export function AssessmentCatalog() {
   }, []);
 
   const hasActiveFilters = searchQuery !== "" || activeCategory !== "All";
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <Loader2 size={32} className="animate-spin text-primary" />
+        <p className="mt-4 text-sm text-muted-foreground">Loading instruments...</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -180,9 +179,10 @@ export function AssessmentCatalog() {
               ))}
             </div>
 
-            {/* Mobile filter trigger (< sm) */}
+            {/* Mobile filter trigger (<sm) */}
             <MobileFilterDrawer>
               <FilterControls
+                categories={allCategories}
                 activeCategory={activeCategory}
                 setActiveCategory={setActiveCategory}
                 sortBy={sortBy}
@@ -193,13 +193,11 @@ export function AssessmentCatalog() {
 
           {/* Category pills — Desktop only (hidden on mobile; shown in Drawer) */}
           <div className="hidden flex-wrap items-center gap-2 sm:flex">
-            {ALL_CATEGORIES.map((cat) => {
+            {allCategories.map((cat) => {
               const isActive = activeCategory === cat;
               const CatIcon = CATEGORY_ICONS[cat] || Tag;
               const count =
-                cat === "All"
-                  ? TESTS.length
-                  : TESTS.filter((t) => t.primaryCategory === cat).length;
+                cat === "All" ? tests.length : tests.filter((t) => t.category === cat).length;
               return (
                 <button
                   key={cat}
@@ -240,7 +238,7 @@ export function AssessmentCatalog() {
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
             Showing <span className="font-semibold text-foreground">{filtered.length}</span> of{" "}
-            {TESTS.length} instruments
+            {tests.length} instruments
             {activeCategory !== "All" && (
               <span>
                 {" "}
@@ -310,12 +308,14 @@ function MobileFilterDrawer({ children }: { children: ReactNode }) {
    Shared filter controls (used inside MobileFilterDrawer)
    ═══════════════════════════════════════════════════════ */
 function FilterControls({
+  categories,
   activeCategory,
   setActiveCategory,
   sortBy,
   setSortBy,
   onDone,
 }: {
+  categories: string[];
   activeCategory: string;
   setActiveCategory: (cat: string) => void;
   sortBy: SortBy;
@@ -330,11 +330,9 @@ function FilterControls({
           Category
         </p>
         <div className="flex flex-wrap items-center gap-2">
-          {ALL_CATEGORIES.map((cat) => {
+          {categories.map((cat) => {
             const isActive = activeCategory === cat;
             const CatIcon = CATEGORY_ICONS[cat] || Tag;
-            const count =
-              cat === "All" ? TESTS.length : TESTS.filter((t) => t.primaryCategory === cat).length;
             return (
               <button
                 key={cat}
@@ -355,17 +353,6 @@ function FilterControls({
                   className={isActive ? "text-primary" : "text-muted-foreground"}
                 />
                 {cat}
-                <span
-                  className="ml-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold leading-none"
-                  style={{
-                    background: isActive
-                      ? "color-mix(in srgb, var(--brand-primary, #9B8EC4) 20%, transparent)"
-                      : "var(--secondary)",
-                    color: isActive ? "var(--primary)" : "var(--muted-foreground)",
-                  }}
-                >
-                  {count}
-                </span>
               </button>
             );
           })}
@@ -411,7 +398,7 @@ function CardGrid({ tests }: { tests: TestMeta[] }) {
     <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
       {tests.map((test, i) => (
         <div
-          key={test.id}
+          key={test.slug}
           className="animate-in fade-in slide-in-from-bottom-4 fill-mode-both"
           style={{ animationDelay: `${i * 70}ms`, animationDuration: "500ms" }}
         >
@@ -431,7 +418,7 @@ function ListView({ tests }: { tests: TestMeta[] }) {
       {tests.map((test, i) => {
         return (
           <div
-            key={test.id}
+            key={test.slug}
             className="animate-in fade-in slide-in-from-bottom-3 fill-mode-both overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm transition-shadow hover:shadow-lg hover:shadow-primary/5"
             style={{
               animationDelay: `${i * 60}ms`,
@@ -439,74 +426,75 @@ function ListView({ tests }: { tests: TestMeta[] }) {
             }}
           >
             <div className="grid grid-cols-1 md:grid-cols-4">
-              {/* Left accent panel */}
-              <div
-                className="flex flex-col justify-between border-b p-6 md:border-b-0 md:border-r"
-                style={{
-                  background: `linear-gradient(145deg, ${test.color}12, ${test.color}06)`,
-                  borderColor: `${test.color}15`,
-                }}
-              >
-                <div>
-                  <div
-                    className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
-                    style={{ background: `${test.color}18` }}
-                  >
-                    <TestIcon name={test.iconName} size={28} color={test.color} />
-                  </div>
-                  <h2 className="font-heading text-[22px] font-bold text-foreground">
-                    {test.shortName}
-                  </h2>
-                  <p className="text-xs text-muted-foreground">
-                    {test.author}
-                    {test.year ? ` (${test.year})` : ""}
-                  </p>
-                </div>
-
-                <div className="mt-6 flex flex-col gap-2.5">
-                  <StatRow
-                    icon={CheckCircle2}
-                    color={test.color}
-                    text={`${test.itemCount} items`}
+              {/* Left: thumbnail panel */}
+              <div className="relative aspect-[16/10] overflow-hidden md:aspect-auto">
+                {test.thumbnailUrl ? (
+                  <Image
+                    src={test.thumbnailUrl}
+                    alt={test.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 25vw"
                   />
-                </div>
+                ) : (
+                  <div
+                    className="flex h-full min-h-[140px] w-full items-center justify-center"
+                    style={{
+                      background: `linear-gradient(145deg, ${test.color}20, ${test.color}08)`,
+                    }}
+                  >
+                    <span
+                      className="font-heading text-3xl font-black"
+                      style={{ color: `${test.color}50` }}
+                    >
+                      {test.abbreviation}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Right content */}
               <div className="col-span-1 flex flex-col justify-between p-6 md:col-span-3">
                 <div>
-                  <p className="mb-1 text-[13px] text-muted-foreground">{test.name}</p>
-                  <p className="mb-5 text-[15px] leading-relaxed text-foreground/80">
-                    {test.longDescription}
-                  </p>
-
-                  {/* Validation */}
-                  {test.validationNote && (
-                    <div
-                      className="mb-5 flex items-start gap-2 rounded-xl border bg-primary/[0.03] px-4 py-3"
+                  <div className="mb-1 flex items-center gap-2">
+                    <span
+                      className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
                       style={{
-                        borderColor:
-                          "color-mix(in srgb, var(--brand-primary, #9B8EC4) 18%, transparent)",
+                        background: `${test.color}15`,
+                        color: test.color,
                       }}
                     >
-                      <BadgeCheck size={15} className="mt-0.5 shrink-0 text-primary" />
-                      <p className="text-[13px] leading-snug text-foreground/70">
-                        {test.validationNote}
-                      </p>
-                    </div>
-                  )}
+                      {test.category}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {test.questionCount} items
+                    </span>
+                  </div>
+                  <h2 className="mb-1 font-heading text-lg font-bold text-foreground">
+                    {test.abbreviation}
+                  </h2>
+                  <p className="text-[13px] text-muted-foreground">{test.title}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-foreground/70 line-clamp-2">
+                    {test.description}
+                  </p>
                 </div>
 
-                <Link
-                  href={`/test/${test.id}/briefing`}
-                  className="inline-flex w-fit items-center gap-2 rounded-xl px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg transition-all hover:shadow-xl active:scale-95"
-                  style={{
-                    background: `linear-gradient(135deg, ${test.color}, ${test.color}CC)`,
-                    boxShadow: `0 6px 20px ${test.color}40`,
-                  }}
-                >
-                  Start Assessment <ArrowRight size={16} />
-                </Link>
+                <div className="mt-4 flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground">
+                    {test.author ?? "—"}
+                    {test.releaseYear ? ` (${test.releaseYear})` : ""}
+                  </p>
+                  <Link
+                    href={`/test/${test.slug}/briefing`}
+                    className="inline-flex items-center gap-2 rounded-xl px-6 py-2.5 text-[13px] font-semibold text-white shadow-md transition-all hover:shadow-lg active:scale-95"
+                    style={{
+                      background: `linear-gradient(135deg, ${test.color}, ${test.color}CC)`,
+                      boxShadow: `0 4px 14px ${test.color}35`,
+                    }}
+                  >
+                    Start <ArrowRight size={14} />
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -541,7 +529,7 @@ function CompactView({ tests }: { tests: TestMeta[] }) {
       {tests.map((test, i) => {
         return (
           <div
-            key={test.id}
+            key={test.slug}
             className="animate-in fade-in fill-mode-both"
             style={{ animationDelay: `${i * 40}ms`, animationDuration: "350ms" }}
           >
@@ -555,18 +543,18 @@ function CompactView({ tests }: { tests: TestMeta[] }) {
             >
               <div className="flex items-center gap-3">
                 <div
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
-                  style={{ background: `${test.color}12` }}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[11px] font-bold"
+                  style={{ background: `${test.color}12`, color: test.color }}
                 >
-                  <TestIcon name={test.iconName} size={18} color={test.color} />
+                  {test.abbreviation.slice(0, 3)}
                 </div>
                 <div className="min-w-0">
                   <p className="font-heading text-sm font-semibold text-foreground">
-                    {test.shortName}
+                    {test.abbreviation}
                   </p>
                   <p className="text-[11.5px] text-muted-foreground">
-                    {test.author}
-                    {test.year ? ` (${test.year})` : ""}
+                    {test.author ?? "—"}
+                    {test.releaseYear ? ` (${test.releaseYear})` : ""}
                   </p>
                 </div>
               </div>
@@ -578,11 +566,13 @@ function CompactView({ tests }: { tests: TestMeta[] }) {
                   border: `1px solid ${test.color}25`,
                 }}
               >
-                {test.primaryCategory}
+                {test.category}
               </span>
-              <span className="text-[13px] font-medium text-foreground/70">{test.itemCount}</span>
+              <span className="text-[13px] font-medium text-foreground/70">
+                {test.questionCount}
+              </span>
               <Link
-                href={`/test/${test.id}/briefing`}
+                href={`/test/${test.slug}/briefing`}
                 className="inline-flex items-center gap-1 rounded-lg px-3.5 py-2 text-xs font-semibold text-white shadow-md transition-all hover:shadow-lg active:scale-95"
                 style={{
                   background: `linear-gradient(135deg, ${test.color}, ${test.color}CC)`,
@@ -593,22 +583,22 @@ function CompactView({ tests }: { tests: TestMeta[] }) {
               </Link>
             </div>
 
-            {/* Mobile compact card (< md) */}
+            {/* Mobile compact card (<md) */}
             <div className="flex items-center gap-3 border-b border-border/40 px-4 py-3 md:hidden">
               <div
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
-                style={{ background: `${test.color}14` }}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[11px] font-bold"
+                style={{ background: `${test.color}14`, color: test.color }}
               >
-                <TestIcon name={test.iconName} size={20} color={test.color} />
+                {test.abbreviation.slice(0, 3)}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-heading text-sm font-semibold text-foreground">
-                  {test.shortName}
+                  {test.abbreviation}
                 </p>
-                <p className="text-xs text-muted-foreground">{test.itemCount} items</p>
+                <p className="text-xs text-muted-foreground">{test.questionCount} items</p>
               </div>
               <Link
-                href={`/test/${test.id}/briefing`}
+                href={`/test/${test.slug}/briefing`}
                 className="flex h-9 w-9 items-center justify-center rounded-lg text-white"
                 style={{ background: test.color }}
               >
@@ -625,22 +615,6 @@ function CompactView({ tests }: { tests: TestMeta[] }) {
 /* ═══════════════════════════════════════════════════════
    Shared Helpers
    ═══════════════════════════════════════════════════════ */
-function StatRow({
-  icon: Icon,
-  color,
-  text,
-}: {
-  icon: typeof CheckCircle2;
-  color: string;
-  text: string;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <Icon size={14} color={color} />
-      <span className="text-[13px] text-foreground/70">{text}</span>
-    </div>
-  );
-}
 
 function EmptyState({
   query,

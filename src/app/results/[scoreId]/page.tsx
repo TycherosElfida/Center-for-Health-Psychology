@@ -20,7 +20,7 @@ import type { Metadata } from "next";
 import { db } from "@/server/db";
 import { results } from "@/server/schema/sessions";
 import { tests } from "@/server/schema/tests";
-import { getTestMeta } from "@/lib/data/tests";
+import type { TestMeta } from "@/lib/data/tests";
 import { SEVERITY_COLORS } from "@/lib/types/assessment";
 import { getOptionalSession } from "@/lib/auth/dal";
 import { ResultsDashboard } from "@/components/results/ResultsDashboard";
@@ -81,6 +81,14 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
       scoringVersion: results.scoringVersion,
       createdAt: results.createdAt,
       testSlug: tests.slug,
+      testTitle: tests.title,
+      testAbbreviation: tests.abbreviation,
+      testDescription: tests.description,
+      testCategory: tests.category,
+      testAuthor: tests.author,
+      testReleaseYear: tests.releaseYear,
+      testThumbnailUrl: tests.thumbnailUrl,
+      testColor: tests.color,
     })
     .from(results)
     .innerJoin(tests, eq(results.testId, tests.id))
@@ -92,11 +100,19 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
     notFound();
   }
 
-  // ── Resolve static test metadata ────────────────────────
-  const testMeta = getTestMeta(row.testSlug);
-  if (!testMeta) {
-    notFound();
-  }
+  // ── Resolve test metadata from the joined tests data ────
+  const testMeta: TestMeta = {
+    slug: row.testSlug,
+    title: row.testTitle,
+    abbreviation: row.testAbbreviation,
+    description: row.testDescription,
+    category: row.testCategory,
+    author: row.testAuthor,
+    releaseYear: row.testReleaseYear,
+    thumbnailUrl: row.testThumbnailUrl,
+    color: row.testColor ?? "#9B8EC4",
+    questionCount: 0, // not needed on results page
+  };
 
   // ── Extract interpretation from computedScores (server-authoritative) ──
   const totalScore = Number(row.totalScore ?? 0);

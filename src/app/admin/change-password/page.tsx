@@ -150,7 +150,7 @@ export default function AdminChangePasswordPage() {
         }}
       >
         <div className="flex items-center gap-2.5">
-          <ChpLogo size={28} />
+          <ChpLogo size={28} variant="admin" />
           <div
             style={{
               fontFamily: "'DM Sans', sans-serif",

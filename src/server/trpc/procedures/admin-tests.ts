@@ -35,7 +35,12 @@ export const createTestSchema = z.object({
   author: z.string().min(1).max(200).nullable().optional(),
   scoringMethod: z.enum(["summative", "dimensional", "binary_cluster"]),
   instructions: z.string().max(5000).optional().default(""),
-  thumbnailUrl: z.string().url().max(500).or(z.literal("")).optional().default(""),
+  thumbnailUrl: z.string().max(500).or(z.literal("")).optional().default(""),
+  color: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, "Must be a valid hex color")
+    .optional()
+    .default("#9B8EC4"),
 });
 
 export const updateTestSchema = z.object({
@@ -54,7 +59,11 @@ export const updateTestSchema = z.object({
   author: z.string().min(1).max(200).nullable().optional(),
   scoringMethod: z.enum(["summative", "dimensional", "binary_cluster"]).optional(),
   instructions: z.string().max(5000).optional(),
-  thumbnailUrl: z.string().url().max(500).or(z.literal("")).optional(),
+  thumbnailUrl: z.string().max(500).or(z.literal("")).optional(),
+  color: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, "Must be a valid hex color")
+    .optional(),
 });
 
 export const getCategoriesSchema = z.object({});
@@ -81,6 +90,7 @@ export const adminTestsRouter = createTRPCRouter({
         scoringMethod: tests.scoringMethod,
         instructions: tests.instructions,
         thumbnailUrl: tests.thumbnailUrl,
+        color: tests.color,
         isActive: tests.isActive,
         version: tests.version,
         createdAt: tests.createdAt,
@@ -124,6 +134,7 @@ export const adminTestsRouter = createTRPCRouter({
           scoringMethod: tests.scoringMethod,
           instructions: tests.instructions,
           thumbnailUrl: tests.thumbnailUrl,
+          color: tests.color,
           isActive: tests.isActive,
           version: tests.version,
           createdAt: tests.createdAt,
@@ -194,6 +205,7 @@ export const adminTestsRouter = createTRPCRouter({
         scoringMethod: input.scoringMethod,
         instructions: input.instructions || null,
         thumbnailUrl: input.thumbnailUrl || null,
+        color: input.color || "#9B8EC4",
         status: "draft",
         isActive: true,
         version: 1,
@@ -282,6 +294,7 @@ export const adminTestsRouter = createTRPCRouter({
     if (input.scoringMethod !== undefined) updatePayload.scoringMethod = input.scoringMethod;
     if (input.instructions !== undefined) updatePayload.instructions = input.instructions || null;
     if (input.thumbnailUrl !== undefined) updatePayload.thumbnailUrl = input.thumbnailUrl || null;
+    if (input.color !== undefined) updatePayload.color = input.color;
 
     const [updated] = await ctx.db
       .update(tests)
@@ -440,14 +453,6 @@ export const adminTestsRouter = createTRPCRouter({
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
           message: "Only archived tests can be reverted to draft.",
-        });
-      }
-
-      const sessionCount = await getSessionCount(ctx.db, input.id);
-      if (sessionCount > 0) {
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: `Cannot revert to draft: test has ${sessionCount} recorded session(s).`,
         });
       }
 

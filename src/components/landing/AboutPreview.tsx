@@ -161,7 +161,7 @@ export function AboutPreview() {
               border: "2px solid rgba(155, 142, 196, 0.15)",
             }}
           >
-            <ChpLogo size={64} />
+            <ChpLogo size={100} />
           </div>
 
           {/* Satellite icons */}

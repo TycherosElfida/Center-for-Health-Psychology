@@ -26,8 +26,7 @@ const CONTACT_INFO = [
 
 const OFFICE_HOURS = [
   { day: "Senin – Jumat", hours: "08:00 – 16:00 WIB" },
-  { day: "Sabtu", hours: "08:00 – 12:00 WIB" },
-  { day: "Minggu", hours: "Tutup" },
+  { day: "Sabtu dan Minggu", hours: "Tutup" },
 ] as const;
 
 export default function ContactContent() {

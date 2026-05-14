@@ -41,7 +41,7 @@ export default function AdminLoginPage() {
     <div className="admin-login-bg flex items-center justify-center p-4">
       <Card className="w-full max-w-[420px] border-0 shadow-2xl admin-fade-in">
         <CardHeader className="flex flex-col items-center gap-3 pb-2 pt-8">
-          <ChpLogo size={56} />
+          <ChpLogo size={56} variant="admin" />
           <div className="text-center">
             <h1 className="text-xl font-bold" style={{ color: "var(--text-heading)" }}>
               CHP Platform

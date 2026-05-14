@@ -6,8 +6,8 @@
  *
  * Data flow:
  *   1. verifySession() → userId (DAL, cached per render)
- *   2. Direct DB query → user's claimed sessions + results
- *   3. Static test metadata lookup for display names/colors
+ *   2. Direct DB query → user info, claimed sessions + results
+ *   3. Client component renders interactive filter tabs + card grid
  *
  * Zero client JS shipped from this layer (except interactive children).
  */
@@ -19,24 +19,18 @@ import type { Metadata } from "next";
 import { db } from "@/server/db";
 import { testSessions, results } from "@/server/schema/sessions";
 import { tests } from "@/server/schema/tests";
+import { users } from "@/server/schema/users";
 import { verifySession } from "@/lib/auth/dal";
-import { getTestMeta } from "@/lib/data/tests";
-import {
-  LayoutDashboard,
-  FileText,
-  ArrowRight,
-  CheckCircle2,
-  Clock,
-  BarChart3,
-} from "lucide-react";
-import { SignOutButton } from "@/components/auth/SignOutButton";
+import { Navbar } from "@/components/layout/Navbar";
+import { FileText, BarChart3, Calendar, ClipboardList } from "lucide-react";
+import { AssessmentHistory, type AssessmentCardData } from "./_components/AssessmentHistory";
 
 /* ═══════════════════════════════════════════════════════
    Metadata
    ═══════════════════════════════════════════════════════ */
 
 export const metadata: Metadata = {
-  title: "Dashboard — CHP",
+  title: "Portal — Center for Health Psychology",
   description: "View your assessment history and saved results.",
   robots: { index: false, follow: false },
 };
@@ -48,8 +42,17 @@ export const metadata: Metadata = {
 export default async function DashboardPage() {
   const session = await verifySession();
 
+  // Fetch user info for personalized greeting
+  const [user] = await db
+    .select({ name: users.name, email: users.email })
+    .from(users)
+    .where(eq(users.id, session.userId))
+    .limit(1);
+
+  const displayName = user?.name || user?.email?.split("@")[0] || "user";
+
   // Fetch user's sessions with results + test info
-  const sessions = await db
+  const sessionRows = await db
     .select({
       sessionId: testSessions.id,
       status: testSessions.status,
@@ -57,9 +60,13 @@ export default async function DashboardPage() {
       completedAt: testSessions.completedAt,
       testSlug: tests.slug,
       testTitle: tests.title,
+      testAbbreviation: tests.abbreviation,
+      testColor: tests.color,
+      testThumbnailUrl: tests.thumbnailUrl,
       resultId: results.id,
       totalScore: results.totalScore,
       resultLabel: results.resultLabel,
+      computedScores: results.computedScores,
     })
     .from(testSessions)
     .innerJoin(tests, eq(testSessions.testId, tests.id))
@@ -68,170 +75,125 @@ export default async function DashboardPage() {
     .orderBy(desc(testSessions.startedAt))
     .limit(50);
 
-  const completedCount = sessions.filter((s) => s.status === "completed").length;
+  // Map to client-safe shape with maxPossibleScore extracted from JSONB
+  const assessments: AssessmentCardData[] = sessionRows.map((s) => {
+    const computed = (s.computedScores ?? {}) as Record<string, unknown>;
+    const maxPossibleScore =
+      typeof computed.maxPossibleScore === "number" ? computed.maxPossibleScore : null;
+
+    return {
+      sessionId: s.sessionId,
+      status: s.status,
+      startedAt: s.startedAt,
+      completedAt: s.completedAt,
+      testSlug: s.testSlug,
+      testTitle: s.testTitle,
+      testAbbreviation: s.testAbbreviation,
+      testColor: s.testColor,
+      thumbnailUrl: s.testThumbnailUrl,
+      resultId: s.resultId,
+      totalScore: s.totalScore,
+      resultLabel: s.resultLabel,
+      maxPossibleScore,
+    };
+  });
+
+  const completedCount = assessments.filter((s) => s.status === "completed").length;
+
+  // Last assessment date
+  const lastAssessmentDate =
+    completedCount > 0
+      ? new Date(
+          assessments.find((s) => s.status === "completed")!.completedAt ??
+            assessments.find((s) => s.status === "completed")!.startedAt
+        ).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : "—";
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* ── Dashboard Header ── */}
-      <header className="border-b border-border/50 bg-card">
-        <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-5">
-          <Link
-            href="/"
-            className="flex items-center gap-2 font-heading text-sm font-bold text-foreground no-underline"
-          >
-            Center for Health Psychology
-          </Link>
-          <SignOutButton />
-        </div>
-      </header>
+    <div className="min-h-screen" style={{ backgroundColor: "var(--surface-subtle, #F5F3FA)" }}>
+      {/* ── Navbar ── */}
+      <Navbar
+        isAuthenticated
+        variant="dashboard"
+        userName={user?.name ?? null}
+        userEmail={user?.email ?? null}
+      />
 
-      <main className="mx-auto max-w-4xl px-5 pb-16 pt-10">
+      <main className="mx-auto max-w-4xl px-5 pb-16 pt-8 sm:px-8">
         {/* ── Welcome Section ── */}
         <div className="mb-8">
-          <div className="mb-2 flex items-center gap-2">
-            <LayoutDashboard size={20} className="text-[var(--brand-primary,#9B8EC4)]" />
-            <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground">
-              Dashboard
-            </h1>
-          </div>
-          <p className="text-[15px] text-muted-foreground">
-            Riwayat asesmen dan hasil Anda tersimpan di sini.
+          <p
+            className="mb-1 text-xs font-bold uppercase tracking-[0.2em]"
+            style={{ color: "var(--brand-primary-dark, #6B5CA0)" }}
+          >
+            Dashboard
+          </p>
+          <h1
+            className="font-heading text-2xl font-extrabold tracking-tight sm:text-3xl"
+            style={{ color: "var(--text-heading, #1A202C)" }}
+          >
+            Welcome back, {displayName}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Track your psychological assessment journey
           </p>
         </div>
 
         {/* ── Stats Row ── */}
-        <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <StatCard
-            icon={<FileText size={18} />}
-            label="Total Asesmen"
-            value={String(sessions.length)}
-            color="var(--brand-primary, #9B8EC4)"
+            icon={<ClipboardList size={20} />}
+            label="Total Assessments"
+            value={String(assessments.length)}
           />
           <StatCard
-            icon={<CheckCircle2 size={18} />}
-            label="Selesai"
-            value={String(completedCount)}
-            color="#48BB78"
-          />
-          <StatCard
-            icon={<Clock size={18} />}
-            label="Berlangsung"
-            value={String(sessions.length - completedCount)}
-            color="#ED8936"
+            icon={<Calendar size={20} />}
+            label="Last Assessment"
+            value={lastAssessmentDate}
           />
         </div>
 
-        {/* ── Session History ── */}
-        {sessions.length === 0 ? (
-          <div className="rounded-2xl border border-border/50 bg-card p-10 text-center">
-            <BarChart3 size={40} className="mx-auto mb-4 text-muted-foreground/40" />
+        {/* ── Assessment History ── */}
+        {assessments.length === 0 ? (
+          <div
+            className="rounded-2xl border bg-card p-10 text-center"
+            style={{
+              borderColor: "var(--border-subtle, #E2DCF0)",
+              boxShadow: "var(--shadow-card)",
+            }}
+          >
+            <BarChart3
+              size={48}
+              className="mx-auto mb-4"
+              style={{ color: "var(--brand-primary-mid, #C5BADF)" }}
+            />
             <h2 className="mb-2 font-heading text-lg font-bold text-foreground">
-              Belum Ada Asesmen
+              No Assessments Yet
             </h2>
-            <p className="mb-5 text-sm text-muted-foreground">
-              Anda belum memiliki asesmen yang tersimpan. Mulai asesmen pertama Anda dan simpan
-              hasilnya ke dashboard ini.
+            <p className="mb-6 text-sm text-muted-foreground">
+              You haven&apos;t completed any assessments yet. Start your first assessment and your
+              results will appear here.
             </p>
             <Link
               href="/tests"
-              className="inline-flex items-center gap-2 rounded-xl bg-[var(--brand-primary,#9B8EC4)] px-5 py-2.5 text-sm font-semibold text-white no-underline transition-all hover:brightness-110"
+              className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-white no-underline transition-all hover:brightness-110"
+              style={{
+                background:
+                  "linear-gradient(135deg, var(--brand-primary, #9B8EC4), var(--brand-primary-dark, #6B5CA0))",
+                boxShadow: "var(--shadow-button)",
+              }}
             >
-              Jelajahi Asesmen
-              <ArrowRight size={14} />
+              <FileText size={16} />
+              Explore Assessments
             </Link>
           </div>
         ) : (
-          <div className="space-y-3">
-            <h2 className="font-heading text-lg font-bold text-foreground">Riwayat Asesmen</h2>
-            {sessions.map((s) => {
-              const testMeta = getTestMeta(s.testSlug);
-              const color = testMeta?.color ?? "var(--brand-primary, #9B8EC4)";
-              const isCompleted = s.status === "completed";
-              const date = new Date(s.startedAt).toLocaleDateString("id-ID", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              });
-
-              return (
-                <div
-                  key={s.sessionId}
-                  className="flex items-center justify-between rounded-2xl border bg-card p-4 transition-all hover:shadow-md"
-                  style={{
-                    borderColor: `color-mix(in oklch, ${color} 12%, transparent)`,
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    {/* Color dot */}
-                    <div
-                      className="h-3 w-3 shrink-0 rounded-full"
-                      style={{ backgroundColor: color }}
-                    />
-                    <div>
-                      <div className="font-heading text-sm font-semibold text-foreground">
-                        {testMeta?.shortName ?? s.testTitle}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>{date}</span>
-                        {isCompleted && s.totalScore !== null && (
-                          <>
-                            <span>·</span>
-                            <span className="font-medium" style={{ color }}>
-                              Score: {Number(s.totalScore)}
-                            </span>
-                          </>
-                        )}
-                        {isCompleted && s.resultLabel && (
-                          <>
-                            <span>·</span>
-                            <span>{s.resultLabel}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action button */}
-                  {isCompleted && s.resultId ? (
-                    <Link
-                      href={`/results/${s.resultId}`}
-                      className="flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-semibold no-underline transition-colors"
-                      style={{
-                        background: `color-mix(in oklch, ${color} 8%, transparent)`,
-                        color,
-                      }}
-                    >
-                      Lihat Hasil
-                      <ArrowRight size={12} />
-                    </Link>
-                  ) : (
-                    <span
-                      className="flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-medium"
-                      style={{
-                        background: "var(--secondary, #F7FAFC)",
-                        color: "var(--muted-foreground, #718096)",
-                      }}
-                    >
-                      <Clock size={12} />
-                      Berlangsung
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <AssessmentHistory sessions={assessments} />
         )}
-
-        {/* ── Quick Actions ── */}
-        <div className="mt-8">
-          <Link
-            href="/tests"
-            className="inline-flex items-center gap-2 rounded-xl border border-border bg-secondary/50 px-4 py-2.5 text-[13px] font-semibold text-muted-foreground no-underline transition-colors hover:bg-secondary"
-          >
-            <FileText size={14} />
-            Semua Asesmen
-          </Link>
-        </div>
       </main>
     </div>
   );
@@ -241,30 +203,34 @@ export default async function DashboardPage() {
    Sub-Components
    ═══════════════════════════════════════════════════════ */
 
-function StatCard({
-  icon,
-  label,
-  value,
-  color,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  color: string;
-}) {
+function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div
-      className="rounded-2xl border bg-card p-4"
+      className="flex items-center gap-4 rounded-2xl border bg-card p-5"
       style={{
-        borderColor: `color-mix(in oklch, ${color} 10%, transparent)`,
+        borderColor: "var(--border-subtle, #E2DCF0)",
+        boxShadow: "var(--shadow-card)",
       }}
     >
-      <div className="mb-2 flex items-center gap-2 text-muted-foreground">
+      <div
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+        style={{
+          backgroundColor: "var(--brand-primary-light, #EDE9F8)",
+          color: "var(--brand-primary-dark, #6B5CA0)",
+        }}
+      >
         {icon}
-        <span className="text-[11px] font-semibold uppercase tracking-wider">{label}</span>
       </div>
-      <div className="font-heading text-2xl font-extrabold" style={{ color }}>
-        {value}
+      <div>
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {label}
+        </p>
+        <p
+          className="font-heading text-xl font-extrabold sm:text-2xl"
+          style={{ color: "var(--text-heading, #1A202C)" }}
+        >
+          {value}
+        </p>
       </div>
     </div>
   );

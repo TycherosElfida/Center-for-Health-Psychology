@@ -326,7 +326,7 @@ export default function AssessmentEditPage() {
       >
         {[
           { key: "identity" as const, label: "Identity", icon: ClipboardList },
-          { key: "questions" as const, label: "Questions", icon: FileText },
+          { key: "questions" as const, label: "Questions", icon: ClipboardList },
           { key: "scales" as const, label: "Scales", icon: BarChart2 },
         ].map(({ key, label, icon: Icon }) => {
           const isActive = activeTab === key;

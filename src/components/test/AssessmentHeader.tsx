@@ -34,7 +34,7 @@ export function AssessmentHeader({ testMeta, isSaving }: AssessmentHeaderProps) 
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full" style={{ backgroundColor: testMeta.color }} />
             <span className="font-heading text-sm font-semibold text-foreground">
-              {testMeta.shortName}
+              {testMeta.abbreviation}
             </span>
           </div>
         </div>

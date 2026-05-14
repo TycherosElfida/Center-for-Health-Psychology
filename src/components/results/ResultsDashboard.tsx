@@ -4,7 +4,7 @@
  * ResultsDashboard — Client-side orchestrator for the results page.
  *
  * Composes:
- *   1. Completion badge + title (Outfit headings)
+ *   1. Completion badge + title
  *   2. ScoreVisualizer (radial gauge + subscale bars)
  *   3. AffirmationSection (warm message + crisis hotlines)
  *   4. Clinical disclaimer
@@ -13,16 +13,13 @@
  *
  * Privacy: NO item-level responses (answersSnapshot) are received or
  * rendered here. The RSC passes only totalScore + dimensionScores.
- *
- * Typography: Outfit (`font-heading`) for headings and score numbers.
- *             Inter (default body font) for descriptive text.
  */
 
 import Link from "next/link";
-import { CheckCircle2, AlertTriangle, ArrowRight, RefreshCw, Home } from "lucide-react";
+import { CheckCircle2, AlertTriangle, ArrowRight, Home } from "lucide-react";
 import type { TestMeta } from "@/lib/data/tests";
 import type { ScoreInterpretation } from "@/lib/types/assessment";
-import { TESTS } from "@/lib/data/tests";
+import { trpc } from "@/lib/trpc/client";
 
 import { ScoreVisualizer } from "./ScoreVisualizer";
 import { AffirmationSection } from "./AffirmationSection";
@@ -59,8 +56,9 @@ export function ResultsDashboard({
   completedAt,
   isAuthenticated,
 }: ResultsDashboardProps) {
-  const maxScore = testMeta.maxScore ?? 100;
-  const otherTests = TESTS.filter((t) => t.id !== testMeta.id).slice(0, 4);
+  // Fetch other tests for "Explore Other Assessments" section
+  const { data: allTests = [] } = trpc.publicTests.getPublishedTests.useQuery();
+  const otherTests = allTests.filter((t) => t.slug !== testMeta.slug).slice(0, 4);
 
   // Format the completion date in Indonesian locale
   const completedDate = new Date(completedAt);
@@ -81,13 +79,24 @@ export function ResultsDashboard({
           >
             Center for Health Psychology
           </Link>
-          <Link
-            href="/tests"
-            className="flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-3 py-1.5 text-[13px] text-muted-foreground no-underline transition-colors hover:bg-secondary"
-          >
-            <Home size={13} />
-            Tests
-          </Link>
+          <div className="flex items-center gap-2">
+            {isAuthenticated && (
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-3 py-1.5 text-[13px] text-muted-foreground no-underline transition-colors hover:bg-secondary"
+              >
+                <Home size={13} />
+                Dashboard
+              </Link>
+            )}
+            <Link
+              href="/tests"
+              className="flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-3 py-1.5 text-[13px] text-muted-foreground no-underline transition-colors hover:bg-secondary"
+            >
+              <ArrowRight size={13} />
+              Tests
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -107,10 +116,10 @@ export function ResultsDashboard({
           </div>
         </div>
 
-        {/* ── Page Title — Outfit ──────────────────────── */}
+        {/* ── Page Title ──────────────────────── */}
         <div className="mb-10 text-center">
           <h1 className="font-heading text-[clamp(26px,4vw,38px)] font-extrabold tracking-tight text-foreground">
-            Your {testMeta.shortName} Results
+            Your {testMeta.abbreviation} Results
           </h1>
           <p className="mx-auto mt-2 max-w-[520px] text-[15px] text-muted-foreground">
             Comprehensive analysis of your assessment responses with detailed subscale breakdown.
@@ -124,9 +133,9 @@ export function ResultsDashboard({
             totalScore={totalScore}
             dimensionScores={dimensionScores}
             resultLabel={interpretation.label}
-            testTitle={testMeta.name}
+            testTitle={testMeta.title}
             accentColor={testMeta.color}
-            maxScore={maxScore}
+            maxScore={100}
           />
         </div>
 
@@ -173,17 +182,9 @@ export function ResultsDashboard({
         <div className="mb-6 flex flex-col gap-3">
           <ReportRequestForm
             scoreId={scoreId}
-            testShortName={testMeta.shortName}
+            testShortName={testMeta.abbreviation}
             accentColor={testMeta.color}
           />
-
-          <Link
-            href={`/test/${testMeta.id}/briefing`}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-secondary/50 py-3.5 font-heading text-[15px] font-semibold text-muted-foreground no-underline transition-colors hover:bg-secondary"
-          >
-            <RefreshCw size={16} />
-            Retake Assessment
-          </Link>
         </div>
 
         {/* ═══ 5. Assessment Information ═══ */}
@@ -192,15 +193,10 @@ export function ResultsDashboard({
             Assessment Information
           </h4>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <MetaItem label="Scale" value={testMeta.shortName} />
-            <MetaItem label="Items" value={String(testMeta.itemCount)} />
+            <MetaItem label="Scale" value={testMeta.abbreviation} />
+            <MetaItem label="Items" value={String(testMeta.questionCount)} />
             <MetaItem label="Author" value={testMeta.author ?? "N/A"} />
           </div>
-          {testMeta.validationNote && (
-            <p className="mt-3 text-xs italic leading-relaxed text-muted-foreground">
-              {testMeta.validationNote}
-            </p>
-          )}
         </div>
 
         {/* ═══ 6. Explore Other Tests ═══ */}
@@ -212,8 +208,8 @@ export function ResultsDashboard({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {otherTests.map((t) => (
                 <Link
-                  key={t.id}
-                  href={`/test/${t.id}/briefing`}
+                  key={t.slug}
+                  href={`/test/${t.slug}/briefing`}
                   className="flex items-center justify-between rounded-2xl border bg-card p-4 no-underline transition-all hover:shadow-md"
                   style={{
                     borderColor: `color-mix(in oklch, ${t.color} 12%, transparent)`,
@@ -221,9 +217,9 @@ export function ResultsDashboard({
                 >
                   <div>
                     <div className="font-heading text-sm font-semibold text-foreground">
-                      {t.shortName}
+                      {t.abbreviation}
                     </div>
-                    <div className="text-xs text-muted-foreground">{t.itemCount} items</div>
+                    <div className="text-xs text-muted-foreground">{t.questionCount} items</div>
                   </div>
                   <div
                     className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold"

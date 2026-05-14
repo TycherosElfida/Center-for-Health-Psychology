@@ -18,7 +18,7 @@ export function CTABanner() {
           boxShadow: "var(--shadow-cta)",
         }}
       >
-        <ChpLogo size={40} className="mx-auto mb-4" />
+        <ChpLogo size={80} className="mx-auto mb-4" />
         <h2
           className="mb-3 font-heading font-extrabold text-white"
           style={{ fontSize: "clamp(22px, 3vw, 32px)" }}

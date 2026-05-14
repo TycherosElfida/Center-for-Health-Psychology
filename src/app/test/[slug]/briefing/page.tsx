@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Shield, CheckCircle2, Eye, AlertTriangle, Heart, Hand, Info } from "lucide-react";
 import type { ElementType, ReactNode } from "react";
-import { getTestMeta, ICON_MAP } from "@/lib/data/tests";
+import { eq, and, countDistinct } from "drizzle-orm";
+import { db } from "@/server/db";
+import { tests, questions } from "@/server/schema/tests";
 import { BriefingActions } from "@/components/test/BriefingActions";
 
 /* ═══════════════════════════════════════════════════════
@@ -13,13 +15,39 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+/** Fetch a published test by slug with question count */
+async function getTestBySlug(slug: string) {
+  const rows = await db
+    .select({
+      slug: tests.slug,
+      title: tests.title,
+      description: tests.description,
+      abbreviation: tests.abbreviation,
+      category: tests.category,
+      author: tests.author,
+      releaseYear: tests.releaseYear,
+      thumbnailUrl: tests.thumbnailUrl,
+      color: tests.color,
+      instructions: tests.instructions,
+      questionCount: countDistinct(questions.id),
+    })
+    .from(tests)
+    .leftJoin(questions, eq(questions.testId, tests.id))
+    .where(and(eq(tests.slug, slug), eq(tests.status, "published"), eq(tests.isActive, true)))
+    .groupBy(tests.id);
+
+  const row = rows[0];
+  if (!row) return null;
+  return { ...row, color: row.color ?? "#9B8EC4", questionCount: Number(row.questionCount) };
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const meta = getTestMeta(slug);
+  const meta = await getTestBySlug(slug);
   if (!meta) return { title: "Assessment Not Found" };
   return {
-    title: `${meta.shortName} — Before You Begin | CHP`,
-    description: `Read the briefing for the ${meta.name} assessment before you start.`,
+    title: `${meta.abbreviation} — Before You Begin | CHP`,
+    description: `Read the briefing for the ${meta.title} assessment before you start.`,
   };
 }
 
@@ -60,8 +88,8 @@ const TIMEFRAME_OVERRIDES: Record<string, ReactNode> = {
   ),
 };
 
-function getBriefingBullets(testId: string, itemCount: number, duration: string): Bullet[] {
-  const timeframeText = TIMEFRAME_OVERRIDES[testId] ?? (
+function getBriefingBullets(testSlug: string, itemCount: number): Bullet[] {
+  const timeframeText = TIMEFRAME_OVERRIDES[testSlug] ?? (
     <>
       Answer honestly based on how you&apos;ve been feeling over the <strong>past 2 weeks</strong>.
     </>
@@ -72,8 +100,7 @@ function getBriefingBullets(testId: string, itemCount: number, duration: string)
       icon: CheckCircle2,
       text: (
         <>
-          This assessment contains <strong>{itemCount} items</strong> and takes approximately{" "}
-          <strong>{duration}</strong>.
+          This assessment contains <strong>{itemCount} items</strong>.
         </>
       ),
     },
@@ -121,11 +148,10 @@ function darkenHex(hex: string, amount = 0.25): string {
 
 export default async function BriefingPage({ params }: PageProps) {
   const { slug } = await params;
-  const meta = getTestMeta(slug);
+  const meta = await getTestBySlug(slug);
   if (!meta) notFound();
 
-  const bullets = getBriefingBullets(meta.id, meta.itemCount, meta.duration);
-  const TestIcon = ICON_MAP[meta.iconName] ?? Shield;
+  const bullets = getBriefingBullets(meta.slug, meta.questionCount);
   const colorDark = darkenHex(meta.color);
 
   return (
@@ -141,15 +167,13 @@ export default async function BriefingPage({ params }: PageProps) {
                 background: `linear-gradient(135deg, ${meta.color}18, ${meta.color}10)`,
               }}
             >
-              <TestIcon size={24} style={{ color: colorDark }} />
+              <Shield size={24} style={{ color: colorDark }} />
             </div>
             <div className="min-w-0 flex-1">
               <h1 className="text-[22px] font-bold leading-tight text-foreground">
-                {meta.shortName}
+                {meta.abbreviation}
               </h1>
-              <p className="mt-1 text-sm leading-snug text-muted-foreground">
-                {meta.name !== meta.shortName ? meta.name : meta.description}
-              </p>
+              <p className="mt-1 text-sm leading-snug text-muted-foreground">{meta.title}</p>
             </div>
           </div>
 
@@ -214,7 +238,7 @@ export default async function BriefingPage({ params }: PageProps) {
           <div className="flex justify-center px-8 pt-6">
             {[
               { label: "Author", value: meta.author ?? "—" },
-              { label: "Year", value: meta.year ? String(meta.year) : "—" },
+              { label: "Year", value: meta.releaseYear ? String(meta.releaseYear) : "—" },
             ].map((item, i, arr) => (
               <div
                 key={item.label}
@@ -232,7 +256,7 @@ export default async function BriefingPage({ params }: PageProps) {
           </div>
 
           {/* Action buttons (client island) */}
-          <BriefingActions slug={meta.id} color={meta.color} colorDark={colorDark} />
+          <BriefingActions slug={meta.slug} color={meta.color} colorDark={colorDark} />
         </div>
 
         {/* Privacy note below card */}

@@ -13,6 +13,7 @@ import {
 import { tests, questions, options as optionsTable } from "@/server/schema/tests";
 import { testSessions, answers, results } from "@/server/schema/sessions";
 import { sessionDemographics } from "@/server/schema/session-demographics";
+import { userProfiles } from "@/server/schema/user-profiles";
 import { consents } from "@/server/schema/consents";
 import { CONSENT_VERSION } from "@/lib/constants/consent";
 import { computeScore } from "@/server/scoring/engine";
@@ -450,6 +451,37 @@ export const sessionsRouter = createTRPCRouter({
         .where(
           and(eq(testSessions.id, input.sessionId), eq(testSessions.claimToken, input.claimToken))
         );
+
+      // 7. Auto-promote demographics to user_profiles (first-write-wins).
+      //    If the user already has a profile, skip silently.
+      try {
+        const [existingProfile] = await ctx.db
+          .select({ userId: userProfiles.userId })
+          .from(userProfiles)
+          .where(eq(userProfiles.userId, userId))
+          .limit(1);
+
+        if (!existingProfile) {
+          const [demo] = await ctx.db
+            .select()
+            .from(sessionDemographics)
+            .where(eq(sessionDemographics.sessionId, input.sessionId))
+            .limit(1);
+
+          if (demo) {
+            await ctx.db.insert(userProfiles).values({
+              userId,
+              displayName: demo.name,
+              sex: demo.sex,
+              age: demo.age,
+              province: demo.province,
+              city: demo.city,
+            });
+          }
+        }
+      } catch {
+        // Non-critical — profile promotion is best-effort
+      }
 
       return { success: true as const, alreadyOwned: false };
     }),

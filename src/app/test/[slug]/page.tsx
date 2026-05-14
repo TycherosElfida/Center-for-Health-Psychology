@@ -15,12 +15,13 @@
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 
-import { getTestMeta } from "@/lib/data/tests";
 import { getQuestions } from "@/lib/data/questions";
 import { AssessmentForm } from "@/components/test/AssessmentForm";
 import { db } from "@/server/db";
+import { tests } from "@/server/schema/tests";
 import { answers } from "@/server/schema/sessions";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
+import type { TestMeta } from "@/lib/data/tests";
 
 /* ═══════════════════════════════════════════════════════
    Types
@@ -37,15 +38,23 @@ interface TestPageProps {
 
 export async function generateMetadata({ params }: TestPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const test = getTestMeta(slug);
+  const [row] = await db
+    .select({
+      title: tests.title,
+      abbreviation: tests.abbreviation,
+      description: tests.description,
+    })
+    .from(tests)
+    .where(and(eq(tests.slug, slug), eq(tests.status, "published")))
+    .limit(1);
 
-  if (!test) {
+  if (!row) {
     return { title: "Test Not Found — CHP" };
   }
 
   return {
-    title: `${test.shortName} Assessment — CHP`,
-    description: test.description,
+    title: `${row.abbreviation} Assessment — CHP`,
+    description: row.description ?? undefined,
     robots: { index: false, follow: false },
   };
 }
@@ -59,12 +68,33 @@ export default async function TestPage({ params, searchParams }: TestPageProps) 
   const { sessionId } = await searchParams;
 
   // ── Validate slug ───────────────────────────────────────
-  const testMeta = getTestMeta(slug);
-  const questions = getQuestions(slug);
+  const [testRow] = await db
+    .select({
+      slug: tests.slug,
+      title: tests.title,
+      abbreviation: tests.abbreviation,
+      description: tests.description,
+      category: tests.category,
+      author: tests.author,
+      releaseYear: tests.releaseYear,
+      thumbnailUrl: tests.thumbnailUrl,
+      color: tests.color,
+    })
+    .from(tests)
+    .where(and(eq(tests.slug, slug), eq(tests.status, "published"), eq(tests.isActive, true)))
+    .limit(1);
 
-  if (!testMeta || !questions || questions.length === 0) {
+  const testQuestions = getQuestions(slug);
+
+  if (!testRow || !testQuestions || testQuestions.length === 0) {
     notFound();
   }
+
+  const testMeta: TestMeta = {
+    ...testRow,
+    color: testRow.color ?? "#9B8EC4",
+    questionCount: testQuestions.length,
+  };
 
   // ── Session UUID Validation ─────────────────────────────
   const isValidUUID = (id: string) =>
@@ -91,7 +121,7 @@ export default async function TestPage({ params, searchParams }: TestPageProps) 
   return (
     <AssessmentForm
       testMeta={testMeta}
-      questions={questions}
+      questions={testQuestions}
       sessionId={sessionId}
       initialAnswers={initialAnswers}
     />

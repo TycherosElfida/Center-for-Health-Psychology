@@ -23,12 +23,66 @@ async function main() {
   // Dynamic imports — must be after dotenv loads DATABASE_URL
   const { db } = await import("./index");
   const { tests, questions, options, resultInterpretations } = await import("../schema/tests");
-  const { TESTS } = await import("@/lib/data/tests");
   const { QUESTIONS } = await import("@/lib/data/questions");
   const { INTERPRETATIONS } = await import("@/lib/data/interpretations");
   const { eq, and, isNull } = await import("drizzle-orm");
   const { adminUsers } = await import("../schema/admin");
   const bcrypt = await import("bcryptjs");
+
+  /**
+   * Inline seed data — previously imported from TESTS.
+   * Kept here as a self-contained reference for initial database population.
+   */
+  const TESTS = [
+    {
+      id: "srq29",
+      name: "Self-Reporting Questionnaire (SRQ-29)",
+      description:
+        "Widely used in public health research, primary healthcare services, and mental health monitoring programs.",
+      primaryCategory: "Mental Health",
+      abbreviation: "SRQ-29",
+      author: "WHO",
+      releaseYear: 1994,
+      color: "#9B8EC4",
+      status: "Active",
+    },
+    {
+      id: "pss10",
+      name: "Perceived Stress Scale (PSS-10)",
+      description:
+        "Commonly used in psychological research, health studies, and clinical settings.",
+      primaryCategory: "Stress",
+      abbreviation: "PSS-10",
+      author: "Cohen, Kamarck, & Mermelstein",
+      releaseYear: 1983,
+      color: "#6BA3BE",
+      status: "Active",
+    },
+    {
+      id: "gpius2",
+      name: "Generalized Problematic Internet Use Scale 2 (GPIUS-2)",
+      description:
+        "Commonly used in psychological research and studies on internet addiction and digital behavior.",
+      primaryCategory: "Internet & Technology",
+      abbreviation: "GPIUS-2",
+      author: "Caplan",
+      releaseYear: 2010,
+      color: "#D4A574",
+      status: "Active",
+    },
+    {
+      id: "srs",
+      name: "Simplified Resilience Scale (SRS)",
+      description:
+        "A brief instrument measuring psychological resilience across diverse populations.",
+      primaryCategory: "Resilience",
+      abbreviation: "SRS",
+      author: "Smith et al.",
+      releaseYear: 2008,
+      color: "#7DB4A0",
+      status: "Active",
+    },
+  ];
   console.log("🌱 Starting Database Seed...");
 
   // ── Bootstrap super_admin ─────────────────────────────────────────
@@ -93,7 +147,10 @@ async function main() {
             title: testMeta.name,
             description: testMeta.description,
             category: testMeta.primaryCategory,
-            estimatedMinutes: parseInt(testMeta.duration.split("–")[0] || "5", 10),
+            abbreviation: testMeta.abbreviation ?? "",
+            author: testMeta.author ?? null,
+            releaseYear: testMeta.releaseYear ?? null,
+            color: testMeta.color ?? "#9B8EC4",
             // 1D.7 lifecycle columns
             status: testMeta.status === "Active" ? "published" : "draft",
             scoringMethod: scoringMethodMap[testMeta.id] ?? "summative",

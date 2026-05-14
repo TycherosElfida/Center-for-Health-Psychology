@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,17 +21,42 @@ interface PersonalInfoFormProps {
   testSlug: string;
   testColor: string;
   testShortName: string;
+  /** Pre-filled data from user_profiles (authenticated users only) */
+  savedProfile?: {
+    displayName: string | null;
+    sex: string | null;
+    age: number | null;
+    province: string | null;
+    city: string | null;
+  } | null;
+  /** Whether the current user is authenticated */
+  isAuthenticated?: boolean;
 }
 
 /* ═══════════════════════════════════════════════════════
    Component
    ═══════════════════════════════════════════════════════ */
 
-export function PersonalInfoForm({ testSlug, testColor }: PersonalInfoFormProps) {
+export function PersonalInfoForm({
+  testSlug,
+  testColor,
+  savedProfile,
+  isAuthenticated,
+}: PersonalInfoFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const hasConsent = searchParams.get("consent") === "1";
   const provinces = getProvinces();
+
+  // Resolve province code from saved name (profile stores human-readable names)
+  const savedProvinceCode = savedProfile?.province
+    ? (provinces.find((p) => p.name === savedProfile.province)?.code ?? "")
+    : "";
+  const savedCityCode =
+    savedProvinceCode && savedProfile?.city
+      ? (getCitiesByProvince(savedProvinceCode).find((c) => c.name === savedProfile.city)?.code ??
+        "")
+      : "";
 
   // Guard: redirect back to briefing if consent param is missing
   useEffect(() => {
@@ -50,11 +75,11 @@ export function PersonalInfoForm({ testSlug, testColor }: PersonalInfoFormProps)
     resolver: zodResolver(personalInfoSchema),
     mode: "onTouched",
     defaultValues: {
-      name: "",
-      age: "",
-      sex: undefined,
-      province: "",
-      city: "",
+      name: savedProfile?.displayName ?? "",
+      age: savedProfile?.age != null ? String(savedProfile.age) : "",
+      sex: (savedProfile?.sex as "Male" | "Female") ?? undefined,
+      province: savedProvinceCode,
+      city: savedCityCode,
     },
   });
 
@@ -62,9 +87,15 @@ export function PersonalInfoForm({ testSlug, testColor }: PersonalInfoFormProps)
   const selectedProvince = useWatch({ control, name: "province" }) as string;
   const cities = selectedProvince ? getCitiesByProvince(selectedProvince) : [];
 
+  // Track previous province to only reset city on actual user-initiated change
+  const prevProvinceRef = useRef(savedProvinceCode);
+
   useEffect(() => {
-    if (selectedProvince) {
-      resetField("city", { defaultValue: "" });
+    if (selectedProvince !== prevProvinceRef.current) {
+      if (prevProvinceRef.current !== "") {
+        resetField("city", { defaultValue: "" });
+      }
+      prevProvinceRef.current = selectedProvince;
     }
   }, [selectedProvince, resetField]);
 
@@ -72,6 +103,7 @@ export function PersonalInfoForm({ testSlug, testColor }: PersonalInfoFormProps)
 
   const startSession = trpc.sessions.startSession.useMutation();
   const saveDemographics = trpc.sessions.saveDemographics.useMutation();
+  const upsertProfile = trpc.profile.upsert.useMutation();
 
   async function onSubmit(data: PersonalInfoFormData) {
     // 1. Cache locally just in case
@@ -132,6 +164,36 @@ export function PersonalInfoForm({ testSlug, testColor }: PersonalInfoFormProps)
           if (errorData?.zodError) {
             console.error("Zod Validation Error:", errorData.zodError);
           }
+        }
+      }
+
+      // 3b. Also save to user_profiles if authenticated
+      if (isAuthenticated) {
+        try {
+          const allProvinces2 = getProvinces();
+          const provinceName2 =
+            allProvinces2.find((p) => p.code === data.province)?.name || data.province;
+          const allCities2 = data.province ? getCitiesByProvince(data.province) : [];
+          const cityName2 = allCities2.find((c) => c.code === data.city)?.name || data.city;
+
+          const rawAge2 = data.age as unknown;
+          const parsedAge2 =
+            typeof rawAge2 === "string" && rawAge2.trim() !== ""
+              ? parseInt(rawAge2 as string, 10)
+              : typeof rawAge2 === "number"
+                ? rawAge2
+                : undefined;
+
+          await upsertProfile.mutateAsync({
+            displayName: data.name,
+            sex: data.sex as "Male" | "Female",
+            age: parsedAge2 ?? null,
+            province: provinceName2,
+            city: cityName2,
+          });
+        } catch (err) {
+          // Non-critical — profile save is best-effort
+          console.error("[PersonalInfoForm] Failed to save profile:", err);
         }
       }
 

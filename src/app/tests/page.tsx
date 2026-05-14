@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
-import { FlaskConical } from "lucide-react";
-
 import { NavbarWrapper } from "@/components/layout/NavbarWrapper";
 import { AssessmentCatalog } from "@/components/tests/AssessmentCatalog";
-import { TESTS } from "@/lib/data/tests";
 
 /* ═══════════════════════════════════════════════════════
    SEO Metadata — statically generated (server component)
@@ -38,14 +35,6 @@ export default function TestsPage() {
       {/* ── Hero Section ── */}
       <section className="bg-gradient-to-br from-secondary via-secondary/60 to-background px-4 pb-12 pt-14 text-center sm:px-6">
         <div className="mx-auto max-w-[680px]">
-          {/* Pill badge */}
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/[0.06] px-4 py-1.5">
-            <FlaskConical size={14} className="text-primary" />
-            <span className="text-[13px] font-semibold text-primary">
-              {TESTS.length} Evidence-Based Instruments
-            </span>
-          </div>
-
           <h1 className="font-heading text-[clamp(28px,4vw,42px)] font-extrabold leading-[1.15] tracking-tight text-foreground">
             Assessment Instruments
           </h1>

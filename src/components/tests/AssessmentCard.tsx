@@ -2,29 +2,13 @@
 
 import { useRef, type MouseEvent } from "react";
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, Brain } from "lucide-react";
+import Image from "next/image";
+import { ArrowRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import type { TestMeta } from "@/lib/data/tests";
-import { ICON_MAP } from "@/lib/data/tests";
-
-/** Resolve icon from the map; falls back to Brain if key is unknown */
-function TestIcon({
-  name,
-  size,
-  color,
-  className,
-}: {
-  name: string;
-  size?: number;
-  color?: string;
-  className?: string;
-}) {
-  const IconComponent = ICON_MAP[name] ?? Brain;
-  return <IconComponent size={size} color={color} className={className} />;
-}
 
 /* ═══════════════════════════════════════════════════════
-   Assessment Card — Premium 3D tilt on hover
+   Assessment Card — Figma-matched design with thumbnail hero
    ═══════════════════════════════════════════════════════ */
 
 interface AssessmentCardProps {
@@ -45,7 +29,6 @@ export function AssessmentCard({ test, index }: AssessmentCardProps) {
     const y = e.clientY - rect.top;
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
-    // Clamp rotation to ±4° for subtlety
     const rotateX = ((y - centerY) / centerY) * -4;
     const rotateY = ((x - centerX) / centerX) * 4;
     el.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
@@ -57,11 +40,13 @@ export function AssessmentCard({ test, index }: AssessmentCardProps) {
     el.style.transform = "perspective(800px) rotateX(0) rotateY(0) scale(1)";
   }
 
+  const hasThumb = !!test.thumbnailUrl;
+
   return (
     <Link
-      href={`/test/${test.id}/briefing`}
+      href={`/test/${test.slug}/briefing`}
       ref={cardRef}
-      className="group block h-full will-change-transform rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+      className="group block h-full will-change-transform rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{
@@ -70,74 +55,99 @@ export function AssessmentCard({ test, index }: AssessmentCardProps) {
       }}
     >
       <Card className="relative flex h-full flex-col overflow-hidden border-border/50 bg-card shadow-sm transition-shadow duration-300 group-hover:shadow-xl group-hover:shadow-primary/8">
-        {/* Top colour accent — Gap #5: brand-token gradient */}
-        <div className="h-1 w-full rounded-t-3xl bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-primary-dark)]" />
-
-        <div className="flex flex-1 flex-col p-5">
-          {/* Category badge */}
-          <div className="mb-4 flex flex-wrap items-center gap-2">
-            <span
-              className="rounded-full px-2.5 py-1 text-[11px] font-medium"
+        {/* ── Hero Image / Thumbnail Section ── */}
+        <div className="relative aspect-[16/10] w-full overflow-hidden">
+          {hasThumb ? (
+            <Image
+              src={test.thumbnailUrl!}
+              alt={test.title}
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            />
+          ) : (
+            /* Fallback: gradient with abbreviation */
+            <div
+              className="flex h-full w-full items-center justify-center"
               style={{
-                background: `${test.color}10`,
-                color: test.color,
-                border: `1px solid ${test.color}25`,
+                background: `linear-gradient(145deg, ${test.color}20, ${test.color}08)`,
               }}
             >
-              {test.primaryCategory}
+              <span
+                className="font-heading text-4xl font-black tracking-tight"
+                style={{ color: `${test.color}60` }}
+              >
+                {test.abbreviation}
+              </span>
+            </div>
+          )}
+
+          {/* Category badge — overlay top-left */}
+          <div className="absolute left-3 top-3">
+            <span
+              className="rounded-full px-2.5 py-1 text-[11px] font-semibold backdrop-blur-sm"
+              style={{
+                background: `${test.color}CC`,
+                color: "white",
+                boxShadow: `0 2px 8px ${test.color}40`,
+              }}
+            >
+              {test.category}
             </span>
           </div>
 
-          {/* Icon + Title */}
-          <div className="mb-3 flex items-start gap-3">
-            <div
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
-              style={{ background: `${test.color}14` }}
-            >
-              <TestIcon name={test.iconName} size={22} color={test.color} />
-            </div>
-            <div className="min-w-0">
-              <h3 className="font-heading text-lg font-bold leading-tight text-foreground">
-                {test.shortName}
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                {test.author}
-                {test.year ? ` (${test.year})` : ""}
-              </p>
-            </div>
+          {/* Abbreviation + Author overlay — bottom-left on image */}
+          <div
+            className="absolute inset-x-0 bottom-0 px-4 pb-3 pt-10"
+            style={{
+              background: "linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%)",
+            }}
+          >
+            <h3 className="font-heading text-2xl font-black leading-tight tracking-tight text-white drop-shadow-md">
+              {test.abbreviation}
+            </h3>
+            <p className="mt-0.5 text-[12px] font-medium text-white/80 drop-shadow-sm">
+              {test.author ?? "—"}
+              {test.releaseYear ? ` (${test.releaseYear})` : ""}
+            </p>
           </div>
+        </div>
 
-          {/* Full name */}
-          <p className="mb-2 text-[13px] leading-snug text-foreground/70">
-            {test.name !== test.shortName ? test.name : test.description}
-          </p>
+        {/* ── Content Section ── */}
+        <div className="flex flex-1 flex-col p-5">
+          {/* Full title */}
+          <h4 className="mb-2 font-heading text-[15px] font-bold leading-snug text-foreground">
+            {test.title}
+          </h4>
 
           {/* Description — clamped to 3 lines */}
-          <p className="mb-4 flex-1 text-xs leading-relaxed text-muted-foreground line-clamp-3">
-            {test.longDescription}
+          <p className="mb-4 flex-1 text-[13px] leading-relaxed text-muted-foreground line-clamp-3">
+            {test.description}
           </p>
 
-          {/* Stats row */}
-          <div className="mb-4 flex items-center gap-3 rounded-xl bg-[var(--surface-subtle,#F5F3FA)] px-3 py-2 text-xs text-muted-foreground">
-            <span>{test.itemCount} Items</span>
-          </div>
-
-          {/* Validation badge — Gap #7: always show with fallback */}
-          <div className="mb-4 flex items-center gap-1.5 text-xs text-[var(--brand-primary)]">
-            <BadgeCheck size={13} />
-            <span>{test.validationNote ?? "Instrumen tervalidasi klinis"}</span>
-          </div>
-
-          {/* Footer: CTA */}
-          <div className="mt-auto flex items-center justify-end border-t border-border/50 pt-4">
+          {/* Bottom row: item count + CTA button */}
+          <div className="flex items-end justify-between">
+            {/* Item count box */}
             <div
-              className="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-semibold text-white shadow-md transition-all hover:shadow-lg active:scale-95"
+              className="rounded-xl border px-4 py-2 text-center"
               style={{
-                background: `linear-gradient(135deg, ${test.color}, ${test.color}CC)`,
-                boxShadow: `0 3px 10px ${test.color}35`,
+                borderColor: `${test.color}20`,
+                background: `${test.color}06`,
               }}
             >
-              Mulai <ArrowRight size={13} />
+              <span className="block text-lg font-bold text-foreground">{test.questionCount}</span>
+              <span className="text-[11px] text-muted-foreground">Items</span>
+            </div>
+
+            {/* Start button */}
+            <div
+              className="inline-flex items-center gap-1.5 rounded-xl px-5 py-2.5 text-[13px] font-semibold text-white shadow-md transition-all hover:shadow-lg active:scale-95"
+              style={{
+                background: `linear-gradient(135deg, ${test.color}, ${test.color}CC)`,
+                boxShadow: `0 4px 12px ${test.color}35`,
+              }}
+            >
+              Start <ArrowRight size={14} />
             </div>
           </div>
         </div>

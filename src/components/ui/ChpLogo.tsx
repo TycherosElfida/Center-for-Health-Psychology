@@ -1,13 +1,34 @@
+import Image from "next/image";
+
 /**
  * CHP Logo — Center for Health Psychology / UKRIDA
  *
- * Renders a circular branded logo mark at any size.
- * Uses the Ψ (Psi) symbol — the universal psychology symbol.
- *
- * This is a pure presentational component with zero interactivity.
- * Safe to use inside Server Components.
+ * Renders the brand logo. By default ("user" variant), it renders the user-side image logo.
+ * If variant is "admin", it renders the legacy SVG logo.
  */
-export function ChpLogo({ size = 36, className = "" }: { size?: number; className?: string }) {
+export function ChpLogo({
+  size = 36,
+  className = "",
+  variant = "user",
+}: {
+  size?: number;
+  className?: string;
+  variant?: "user" | "admin";
+}) {
+  if (variant === "user") {
+    return (
+      <Image
+        src="/images/user-chp-logo.png"
+        alt="Center for Health Psychology Logo"
+        width={size}
+        height={size}
+        className={className}
+        style={{ flexShrink: 0, objectFit: "contain" }}
+        priority
+      />
+    );
+  }
+
   const r = size / 2;
   const borderW = Math.max(1.5, size * 0.04);
   const innerR = r - borderW * 2;

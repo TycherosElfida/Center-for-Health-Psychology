@@ -1,0 +1,1 @@
+ALTER TABLE "tests" ADD COLUMN "color" text DEFAULT '#9B8EC4';

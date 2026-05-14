@@ -10,7 +10,7 @@
  * Admin link intentionally omitted (out of scope until Phase 2).
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -23,9 +23,14 @@ import {
   LayoutDashboard,
   LogIn,
   UserPlus,
+  Settings,
+  LogOut,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { SignOutButton } from "@/components/auth/SignOutButton";
+import { logoutAction } from "@/app/actions/auth";
+import { LogoutConfirmModal } from "./LogoutConfirmModal";
 
 import { ChpLogo } from "@/components/ui/ChpLogo";
 
@@ -47,13 +52,20 @@ const NAV_LINKS = [
 export function Navbar({
   isAuthenticated = false,
   variant = "default",
+  userName,
+  userEmail,
 }: {
   isAuthenticated?: boolean;
   variant?: "default" | "dashboard";
+  userName?: string | null;
+  userEmail?: string | null;
 }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   /* ── Scroll detection — apply shadow after 20px ── */
   useEffect(() => {
@@ -75,7 +87,22 @@ export function Navbar({
     };
   }, [mobileOpen]);
 
+  /* ── Close dropdown on click outside ── */
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setUserDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const closeMobileMenu = useCallback(() => setMobileOpen(false), []);
+
+  // Compute display name for the dropdown
+  const displayLabel = userName || userEmail?.split("@")[0] || "user";
+  const displayEmail = userEmail || "";
 
   /** Check if a nav link is the current active route */
   const isActive = (href: string) => {
@@ -158,25 +185,6 @@ export function Navbar({
         <div className="hidden items-center gap-1 md:flex">
           {isAuthenticated ? (
             <>
-              {variant === "dashboard" && (
-                <Link
-                  href="/"
-                  aria-current={isActive("/") ? "page" : undefined}
-                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-200"
-                  style={{
-                    color: isActive("/")
-                      ? "var(--brand-primary-dark, #6B5CA0)"
-                      : "var(--text-body, #4A5568)",
-                    backgroundColor: isActive("/")
-                      ? "var(--brand-primary-light, #EDE9F8)"
-                      : "transparent",
-                    fontWeight: isActive("/") ? 600 : 500,
-                  }}
-                >
-                  <Home size={15} strokeWidth={isActive("/") ? 2.5 : 2} aria-hidden="true" />
-                  Beranda
-                </Link>
-              )}
               {variant === "default" && (
                 <Link
                   href="/dashboard"
@@ -200,7 +208,96 @@ export function Navbar({
                   Dashboard
                 </Link>
               )}
-              <SignOutButton />
+              {variant === "default" && (
+                /* Simple logout button for public pages */
+                <button
+                  type="button"
+                  onClick={() => setLogoutModalOpen(true)}
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border-none bg-transparent px-3 py-2 text-[13px] font-medium transition-all duration-200"
+                  style={{ color: "var(--text-body, #4A5568)" }}
+                >
+                  <LogOut size={15} strokeWidth={2} aria-hidden="true" />
+                  Keluar
+                </button>
+              )}
+              {variant === "dashboard" && (
+                /* User dropdown for dashboard pages */
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setUserDropdownOpen((prev) => !prev)}
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-lg border-none px-3 py-1.5 transition-all duration-200"
+                    style={{
+                      backgroundColor: userDropdownOpen
+                        ? "var(--brand-primary-light, #EDE9F8)"
+                        : "transparent",
+                    }}
+                    aria-expanded={userDropdownOpen}
+                    aria-haspopup="true"
+                  >
+                    {/* Name + email */}
+                    <div className="text-left">
+                      <p className="m-0 text-[13px] font-semibold leading-tight text-foreground">
+                        {displayLabel}
+                      </p>
+                      {displayEmail && (
+                        <p className="m-0 text-[11px] leading-tight text-muted-foreground">
+                          {displayEmail}
+                        </p>
+                      )}
+                    </div>
+                    {/* Chevron */}
+                    {userDropdownOpen ? (
+                      <ChevronUp size={14} className="text-muted-foreground" />
+                    ) : (
+                      <ChevronDown size={14} className="text-muted-foreground" />
+                    )}
+                  </button>
+
+                  {/* Dropdown menu */}
+                  <AnimatePresence>
+                    {userDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -4, scale: 0.97 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -4, scale: 0.97 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-xl border bg-card"
+                        style={{
+                          borderColor: "var(--border-subtle, #E2DCF0)",
+                          boxShadow:
+                            "0 8px 30px rgba(107, 92, 160, 0.12), 0 2px 8px rgba(0,0,0,0.06)",
+                        }}
+                      >
+                        <Link
+                          href="/dashboard/profile"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-foreground no-underline transition-colors hover:bg-secondary/50"
+                        >
+                          <Settings size={16} style={{ color: "var(--brand-primary, #9B8EC4)" }} />
+                          Update Profile
+                        </Link>
+                        <div
+                          className="mx-3 h-px"
+                          style={{ backgroundColor: "var(--border-subtle, #E2DCF0)" }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUserDropdownOpen(false);
+                            setLogoutModalOpen(true);
+                          }}
+                          className="flex w-full cursor-pointer items-center gap-3 border-none bg-transparent px-4 py-3 text-left text-sm font-medium transition-colors hover:bg-secondary/50"
+                          style={{ color: "#E53E3E" }}
+                        >
+                          <LogOut size={16} />
+                          Logout
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
             </>
           ) : (
             <>
@@ -296,26 +393,6 @@ export function Navbar({
             >
               {isAuthenticated ? (
                 <div className="flex flex-col gap-1">
-                  {variant === "dashboard" && (
-                    <Link
-                      href="/"
-                      onClick={closeMobileMenu}
-                      aria-current={isActive("/") ? "page" : undefined}
-                      className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all"
-                      style={{
-                        color: isActive("/")
-                          ? "var(--brand-primary-dark, #6B5CA0)"
-                          : "var(--text-body, #4A5568)",
-                        backgroundColor: isActive("/")
-                          ? "var(--brand-primary-light, #EDE9F8)"
-                          : "transparent",
-                        fontWeight: isActive("/") ? 600 : 500,
-                      }}
-                    >
-                      <Home size={18} strokeWidth={isActive("/") ? 2.5 : 2} aria-hidden="true" />
-                      Beranda
-                    </Link>
-                  )}
                   {variant === "default" && (
                     <Link
                       href="/dashboard"
@@ -339,7 +416,29 @@ export function Navbar({
                       Dashboard
                     </Link>
                   )}
-                  <SignOutButton className="justify-start" />
+                  {/* Update Profile — dashboard only */}
+                  {variant === "dashboard" && (
+                    <Link
+                      href="/dashboard/profile"
+                      onClick={closeMobileMenu}
+                      className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-foreground no-underline transition-all"
+                    >
+                      <Settings size={18} style={{ color: "var(--brand-primary, #9B8EC4)" }} />
+                      Update Profile
+                    </Link>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      closeMobileMenu();
+                      setLogoutModalOpen(true);
+                    }}
+                    className="flex w-full cursor-pointer items-center gap-3 rounded-lg border-none bg-transparent px-3 py-3 text-left text-sm font-medium transition-all"
+                    style={{ color: "#E53E3E" }}
+                  >
+                    <LogOut size={18} />
+                    Logout
+                  </button>
                 </div>
               ) : (
                 <div className="flex flex-col gap-1">
@@ -370,6 +469,14 @@ export function Navbar({
           </motion.div>
         )}
       </AnimatePresence>
+
+      <LogoutConfirmModal
+        isOpen={logoutModalOpen}
+        onClose={() => setLogoutModalOpen(false)}
+        onConfirm={async () => {
+          await logoutAction();
+        }}
+      />
     </header>
   );
 }

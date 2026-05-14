@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Users, Award } from "lucide-react";
 
 import { NavbarWrapper } from "@/components/layout/NavbarWrapper";
@@ -20,13 +21,23 @@ export const metadata: Metadata = {
    Static Data
    ═══════════════════════════════════════════════════════ */
 
-const TEAM = [
+type TeamMember = {
+  name: string;
+  role: string;
+  initials: string;
+  color: string;
+  bio: string;
+  image?: string;
+};
+
+const TEAM: TeamMember[] = [
   {
     name: "Dr. Yasinta Astin Sokang, S.Psi., M.Psi., Psikolog",
     role: "Kepala Riset",
     initials: "YAS",
     color: "#9B8EC4",
     bio: "Program Studi Sarjana Psikologi Universitas Kristen Krida Wacana",
+    image: "/images/team/yasinta.png",
   },
   {
     name: "dr. Djap Hadi Susanto, M.Kes.",
@@ -34,6 +45,7 @@ const TEAM = [
     initials: "DHS",
     color: "#B3A8D4",
     bio: "Program Studi Sarjana Kedokteran Universitas Kristen Krida Wacana",
+    image: "/images/team/djap.jpg",
   },
   {
     name: "Ns. Mey Lona Verawaty Zendrato, M.Kep.",
@@ -41,6 +53,7 @@ const TEAM = [
     initials: "MLVZ",
     color: "#8BA3D4",
     bio: "Program Studi Sarjana Keperawatan Universitas Kristen Krida Wacana",
+    image: "/images/team/mey.jpg",
   },
   {
     name: "Yosi Marin Mapaung, S.K.M., M.Sc.",
@@ -48,29 +61,9 @@ const TEAM = [
     initials: "YMM",
     color: "#8BA3D4",
     bio: "Program Studi Sarjana Keperawatan Universitas Kristen Krida Wacana",
+    image: "/images/team/yosi.png",
   },
-  {
-    name: "Michelle",
-    role: "Asisten Riset",
-    initials: "M",
-    color: "#9B8EC4",
-    bio: "Program Studi Sarjana Psikologi Universitas Kristen Krida Wacana",
-  },
-  {
-    name: "Sanders Keane Dylan",
-    role: "Asisten Riset",
-    initials: "SKD",
-    color: "#B3A8D4",
-    bio: "Program Studi Sarjana Informatika Universitas Kristen Krida Wacana",
-  },
-  {
-    name: "Veranica Febriane",
-    role: "Asisten Riset",
-    initials: "VF",
-    color: "#8BA3D4",
-    bio: "Program Studi Sarjana Informatika Universitas Kristen Krida Wacana",
-  },
-] as const;
+];
 
 const VALUES = [
   {
@@ -83,13 +76,6 @@ const VALUES = [
     title: "Misi",
     desc: "Menyediakan layanan psikologi kesehatan berbasis bukti ilmiah untuk meningkatkan kualitas hidup masyarakat melalui penelitian, edukasi, dan intervensi yang inovatif serta berkelanjutan.",
   },
-] as const;
-
-const STATS = [
-  { value: "12K+", label: "Penilaian" },
-  { value: "5", label: "Instrumen Tervalidasi" },
-  { value: "98%", label: "Kepuasan Pengguna" },
-  { value: "15+", label: "Tahun Pengalaman" },
 ] as const;
 
 /* ═══════════════════════════════════════════════════════
@@ -111,7 +97,7 @@ export default function AboutPage() {
           }}
         >
           <div className="mx-auto max-w-[640px]">
-            <ChpLogo size={64} className="mx-auto mb-5" />
+            <ChpLogo size={120} className="mx-auto mb-5" />
             <h1
               className="font-heading font-extrabold leading-tight"
               style={{
@@ -184,32 +170,15 @@ export default function AboutPage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                {STATS.map((s) => (
-                  <div
-                    key={s.label}
-                    className="rounded-2xl p-5 text-center"
-                    style={{
-                      background: "var(--surface-subtle, #F5F3FA)",
-                      border: "1px solid var(--brand-primary-light, #EDE9F8)",
-                    }}
-                  >
-                    <div
-                      className="font-heading text-[28px] font-extrabold"
-                      style={{
-                        color: "var(--brand-primary-dark, #6B5CA0)",
-                      }}
-                    >
-                      {s.value}
-                    </div>
-                    <div
-                      className="mt-1 text-[12px]"
-                      style={{ color: "var(--text-muted, #718096)" }}
-                    >
-                      {s.label}
-                    </div>
-                  </div>
-                ))}
+              <div className="flex items-center justify-center">
+                <Image
+                  src="/images/about-illustration.jpg"
+                  alt="CHP illustration — Nurturing Healthy Minds & Bodies"
+                  width={420}
+                  height={240}
+                  className="rounded-2xl"
+                  style={{ objectFit: "cover" }}
+                />
               </div>
             </div>
           </section>
@@ -298,20 +267,30 @@ export default function AboutPage() {
                     boxShadow: `0 4px 20px ${member.color}12`,
                   }}
                 >
-                  {/* Avatar initials */}
+                  {/* Avatar initials or Image */}
                   <div
-                    className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl"
+                    className="mx-auto mb-4 flex h-24 w-24 overflow-hidden items-center justify-center rounded-2xl"
                     style={{
                       background: `linear-gradient(135deg, ${member.color}30, ${member.color}15)`,
                       border: `2px solid ${member.color}30`,
                     }}
                   >
-                    <span
-                      className="font-heading text-[20px] font-extrabold"
-                      style={{ color: member.color }}
-                    >
-                      {member.initials}
-                    </span>
+                    {member.image ? (
+                      <Image
+                        src={member.image}
+                        alt={member.name}
+                        width={96}
+                        height={96}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span
+                        className="font-heading text-[28px] font-extrabold"
+                        style={{ color: member.color }}
+                      >
+                        {member.initials}
+                      </span>
+                    )}
                   </div>
                   <div
                     className="mb-1 font-heading text-[16px] font-bold"
@@ -334,7 +313,6 @@ export default function AboutPage() {
           </section>
         </MotionSection>
       </main>
-
       <Footer />
     </div>
   );

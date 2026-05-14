@@ -287,19 +287,34 @@ export function StatusActions({ test, onRefresh }: StatusActionsProps) {
           )}
 
           {test.status === "archived" && (
-            <button
-              onClick={handleRevert}
-              style={menuItemStyle(MID_TEXT)}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = `${BRAND}08`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "none";
-              }}
-            >
-              <RotateCcw size={14} />
-              Revert to Draft
-            </button>
+            <>
+              <button
+                onClick={handlePublish}
+                style={menuItemStyle(GREEN)}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "#E8F5E9";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "none";
+                }}
+              >
+                <Send size={14} />
+                Republish
+              </button>
+              <button
+                onClick={handleRevert}
+                style={menuItemStyle(MID_TEXT)}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = `${BRAND}08`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "none";
+                }}
+              >
+                <RotateCcw size={14} />
+                Revert to Draft
+              </button>
+            </>
           )}
 
           {/* Edit link — always available */}

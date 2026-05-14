@@ -48,6 +48,7 @@ export const tests = pgTable(
     scoringMethod: scoringMethodEnum("scoring_method"),
     instructions: text("instructions"),
     thumbnailUrl: text("thumbnail_url"),
+    color: text("color").default("#9B8EC4"),
     isActive: boolean("is_active").default(true).notNull(),
     version: integer("version").notNull().default(1),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),

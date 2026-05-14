@@ -1,14 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
-import { auth } from "@/lib/auth"; // Ensure this matches your auth import
+import { getAdminTokenFromHeaders, verifyAdminToken } from "@/lib/admin-auth";
 
+/**
+ * POST /api/upload — File upload endpoint for admin portal.
+ *
+ * Auth: Validates the admin JWT cookie (same mechanism as tRPC admin procedures
+ * and the report-pdf route). This is separate from NextAuth user sessions.
+ */
 export async function POST(req: NextRequest) {
   try {
-    // 1. Verify admin session (Optional but highly recommended)
-    const session = await auth();
-    if (!session?.user || session.user.role !== "admin") {
+    // 1. Verify admin session via JWT cookie
+    const token = getAdminTokenFromHeaders(req.headers);
+    if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const payload = await verifyAdminToken(token);
+    if (!payload) {
+      return NextResponse.json({ error: "Invalid or expired session" }, { status: 401 });
     }
 
     const formData = await req.formData();

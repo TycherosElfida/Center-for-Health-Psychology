@@ -1,10 +1,9 @@
 /**
- * Test Metadata — Single source of truth for all assessment instruments.
+ * Test Metadata — Shared types and utilities for assessment instruments.
  *
- * This module is intentionally a plain TS file (no "use client" / "use server")
- * so it can be imported by both server and client components without boundary
- * violations.  Heavy question data lives in a separate module (questions.ts)
- * and is lazy-loaded only by the assessment engine.
+ * MIGRATED: Data now comes from the database via tRPC `publicTests` procedures.
+ * This module only contains shared types, category mappings, and pure utility
+ * functions used by both server and client components.
  */
 
 import type { ElementType } from "react";
@@ -14,184 +13,36 @@ import { Brain, ClipboardList, BarChart2, Monitor, ShieldCheck } from "lucide-re
    Types
    ═══════════════════════════════════════════════════════ */
 
-export type TestStatus = "Active" | "Draft" | "Beta";
-
+/** Shape of test metadata as returned by publicTests tRPC procedures */
 export interface TestMeta {
-  /** Unique slug used in URLs: /test/[testId] */
-  id: string;
+  /** URL slug used in routes: /test/[slug] */
+  slug: string;
   /** Full instrument name, e.g. "Perceived Stress Scale (PSS-10)" */
-  name: string;
-  /** Abbreviated name shown on cards */
-  shortName: string;
-  /** One-liner for previews */
-  description: string;
-  /** Extended description shown in list view */
-  longDescription: string;
-  /** Number of items/questions */
-  itemCount: number;
-  /** Human-readable duration, e.g. "5–8 min" */
-  duration: string;
+  title: string;
+  /** Abbreviated name shown on cards, e.g. "PSS-10" */
+  abbreviation: string;
+  /** Description text */
+  description: string | null;
+  /** Primary category for filtering */
+  category: string;
+  /** Original author(s) */
+  author: string | null;
+  /** Publication year */
+  releaseYear: number | null;
+  /** Thumbnail/illustration URL */
+  thumbnailUrl: string | null;
   /** Brand color (hex) */
   color: string;
-  /** Key into ICON_MAP */
-  iconName: string;
-  /** Subscale / dimension labels */
-  categories: string[];
-  /** Maximum achievable raw score */
-  maxScore?: number;
-
-  /* ── Extended metadata for the catalog page ── */
-  primaryCategory: string;
-  tags: string[];
-  /** Cronbach's alpha reliability coefficient */
-  alpha?: string;
-  /** Original author(s) */
-  author?: string;
-  /** Publication year */
-  year?: number;
-  /** Short validation note */
-  validationNote?: string;
-  /** Approximate respondent count for social proof */
-  respondentCount?: number;
-  /** Publication status */
-  status: TestStatus;
+  /** Number of questions (derived from DB) */
+  questionCount: number;
+  /** Instructions text (only from getTestBySlug) */
+  instructions?: string | null;
 }
 
 /* ═══════════════════════════════════════════════════════
-   Icon Map
+   Category Icons — for filter chips in the catalog
    ═══════════════════════════════════════════════════════ */
 
-export const ICON_MAP: Record<string, ElementType> = {
-  Brain,
-  ClipboardList,
-  BarChart2,
-  Monitor,
-  ShieldCheck,
-};
-
-/* ═══════════════════════════════════════════════════════
-   Status Styles
-   ═══════════════════════════════════════════════════════ */
-
-export const STATUS_STYLES: Record<TestStatus, { bg: string; text: string; border: string }> = {
-  Active: { bg: "#ECFDF5", text: "#065F46", border: "#A7F3D0" },
-  Draft: { bg: "#FFF7ED", text: "#9A3412", border: "#FED7AA" },
-  Beta: { bg: "#EFF6FF", text: "#1E40AF", border: "#BFDBFE" },
-};
-
-/* ═══════════════════════════════════════════════════════
-   Test Catalogue
-   ═══════════════════════════════════════════════════════ */
-
-export const TESTS: TestMeta[] = [
-  {
-    id: "srq29",
-    name: "Self-Reporting Questionnaire (SRQ-29)",
-    shortName: "SRQ-29",
-    description:
-      "Widely used in public health research, primary healthcare services, and mental health monitoring programs.",
-    longDescription:
-      "The Self-Reporting Questionnaire (SRQ-29) is a World Health Organization screening instrument used to identify common mental disorders. It covers somatic symptoms, anxiety, depressive symptoms, and more.",
-    itemCount: 29,
-    duration: "5–8 min",
-    color: "#9B8EC4",
-    iconName: "ClipboardList",
-    categories: ["Somatic", "Anxiety", "Depression", "Psychosis"],
-    primaryCategory: "Mental Health",
-    tags: ["Mental Health", "Screening", "WHO"],
-    alpha: "0.85",
-    author: "WHO",
-    year: 1994,
-    validationNote: "WHO-endorsed screening instrument for primary care settings",
-    respondentCount: 892,
-    status: "Active",
-  },
-  {
-    id: "pss10",
-    name: "Perceived Stress Scale (PSS-10)",
-    shortName: "PSS-10",
-    description: "Commonly used in psychological research, health studies, and clinical settings.",
-    longDescription:
-      "The Perceived Stress Scale (PSS-10) is the most widely used psychological instrument for measuring the perception of stress. It assesses the degree to which situations in one's life are appraised as stressful.",
-    itemCount: 10,
-    duration: "5–7 min",
-    color: "#6BA3BE",
-    iconName: "BarChart2",
-    categories: ["Perceived Stress", "Coping"],
-    primaryCategory: "Stress",
-    tags: ["Stress", "Coping", "Wellbeing"],
-    alpha: "0.89",
-    author: "Cohen et al.",
-    year: 1983,
-    validationNote: "Gold-standard stress measurement instrument with 40+ years of validation",
-    respondentCount: 1563,
-    status: "Active",
-  },
-  {
-    id: "gpius2",
-    name: "Generalized Problematic Internet Use Scale 2 (GPIUS-2)",
-    shortName: "GPIUS-2",
-    description:
-      "Designed to measure PIU for clinical purposes, educational assessment, and digital wellness research.",
-    longDescription:
-      "The Generalized Problematic Internet Use Scale 2 (GPIUS-2) is a 15-item cognitive-behavioral assessment measuring maladaptive cognitions and behaviors associated with problematic internet use across five subscales.",
-    itemCount: 15,
-    duration: "8–12 min",
-    color: "#D4A574",
-    iconName: "Monitor",
-    categories: [
-      "POSI",
-      "Mood Regulation",
-      "Cognitive Preoccupation",
-      "Compulsive Use",
-      "Negative Outcomes",
-    ],
-    maxScore: 75,
-    primaryCategory: "Internet & Technology",
-    tags: ["Internet", "Digital Wellness", "Behavioral"],
-    alpha: "0.91",
-    author: "Caplan",
-    year: 2010,
-    validationNote: "Indonesian adaptation validated with 420+ university students",
-    respondentCount: 734,
-    status: "Active",
-  },
-  {
-    id: "srs",
-    name: "Self-Regulation Scale (SRS)",
-    shortName: "SRS",
-    description:
-      "Used in positive psychology, health behavior, academic motivation, and self-management programs.",
-    longDescription:
-      "The Self-Regulation Scale (SRS) measures an individual's capacity for self-regulation across three dimensions: self-efficacy, satisfaction, and perceived control. Higher scores indicate greater self-regulatory capacity.",
-    itemCount: 11,
-    duration: "5–8 min",
-    color: "#7DB4A0",
-    iconName: "ShieldCheck",
-    categories: ["Self-Efficacy", "Satisfaction", "Perceived Control"],
-    maxScore: 66,
-    primaryCategory: "Resilience",
-    tags: ["Resilience", "Self-Regulation", "Motivation"],
-    alpha: "0.87",
-    author: "Schwarzer et al.",
-    year: 1999,
-    validationNote: "Cross-culturally validated in 20+ countries for health research",
-    respondentCount: 621,
-    status: "Active",
-  },
-];
-
-/* ═══════════════════════════════════════════════════════
-   Derived Constants
-   ═══════════════════════════════════════════════════════ */
-
-/** Unique primary categories, prefixed with "All" for filter UI */
-export const ALL_CATEGORIES = [
-  "All",
-  ...Array.from(new Set(TESTS.map((t) => t.primaryCategory))),
-] as const;
-
-/** Category → Lucide icon mapping for filter chips */
 export const CATEGORY_ICONS: Record<string, ElementType> = {
   All: ClipboardList,
   Personality: Brain,
@@ -200,6 +51,23 @@ export const CATEGORY_ICONS: Record<string, ElementType> = {
   "Internet & Technology": Monitor,
   Resilience: ShieldCheck,
 };
+
+/* ═══════════════════════════════════════════════════════
+   Default Category Colors — used as auto-suggest when
+   creating new tests in admin portal
+   ═══════════════════════════════════════════════════════ */
+
+export const CATEGORY_COLOR_DEFAULTS: Record<string, string> = {
+  "Mental Health": "#9B8EC4",
+  Stress: "#6BA3BE",
+  "Internet & Technology": "#D4A574",
+  Resilience: "#7DB4A0",
+};
+
+/** Get suggested color for a category, falls back to brand purple */
+export function getCategoryColor(category: string): string {
+  return CATEGORY_COLOR_DEFAULTS[category] ?? "#9B8EC4";
+}
 
 /* ═══════════════════════════════════════════════════════
    Sort Logic
@@ -214,38 +82,34 @@ export const SORT_OPTIONS: { value: SortBy; label: string }[] = [
 
 /** Pure function — safe for use on both server and client */
 export function filterAndSortTests(
+  tests: TestMeta[],
   searchQuery: string,
   activeCategory: string,
   sortBy: SortBy
 ): TestMeta[] {
   const q = searchQuery.toLowerCase();
 
-  let items = TESTS.filter((t) => {
+  let items = tests.filter((t) => {
     const matchSearch =
       q === "" ||
-      t.name.toLowerCase().includes(q) ||
-      t.shortName.toLowerCase().includes(q) ||
-      t.description.toLowerCase().includes(q) ||
-      t.tags.some((tag) => tag.toLowerCase().includes(q));
-    const matchCategory = activeCategory === "All" || t.primaryCategory === activeCategory;
+      t.title.toLowerCase().includes(q) ||
+      t.abbreviation.toLowerCase().includes(q) ||
+      (t.description?.toLowerCase().includes(q) ?? false) ||
+      t.category.toLowerCase().includes(q);
+    const matchCategory = activeCategory === "All" || t.category === activeCategory;
     return matchSearch && matchCategory;
   });
 
   items = [...items].sort((a, b) => {
     switch (sortBy) {
       case "name":
-        return a.shortName.localeCompare(b.shortName);
+        return a.abbreviation.localeCompare(b.abbreviation);
       case "items":
-        return b.itemCount - a.itemCount;
+        return b.questionCount - a.questionCount;
       default:
         return 0;
     }
   });
 
   return items;
-}
-
-/** Utility: fetch a single test by ID */
-export function getTestMeta(testId: string): TestMeta | undefined {
-  return TESTS.find((t) => t.id === testId);
 }

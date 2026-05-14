@@ -6,15 +6,7 @@
  */
 
 import Link from "next/link";
-import { Sparkles, ArrowRight, Users, Star, Shield } from "lucide-react";
-import { motion } from "motion/react";
-import { fadeUp, staggerContainer } from "@/lib/motion";
-
-const STATS = [
-  { icon: Users, value: "12,000+", label: "Assessments Taken" },
-  { icon: Star, value: "98%", label: "Satisfaction Rate" },
-  { icon: Shield, value: "5", label: "Validated Tools" },
-] as const;
+import { ArrowRight } from "lucide-react";
 
 export function HeroSection() {
   return (
@@ -37,7 +29,6 @@ export function HeroSection() {
             fontWeight: 500,
           }}
         >
-          <Sparkles size={14} aria-hidden="true" />
           Evidence-Based Psychological Assessments
         </div>
 
@@ -65,7 +56,7 @@ export function HeroSection() {
           }}
         >
           Take validated psychological assessments designed to help you gain deeper insight into
-          your personality, stress levels, and mental health — in just a few minutes.
+          your personality, stress levels, and mental health in just a few minutes.
         </p>
 
         {/* CTA buttons */}
@@ -82,38 +73,6 @@ export function HeroSection() {
             Explore Assessments <ArrowRight size={16} aria-hidden="true" />
           </Link>
         </div>
-
-        {/* Stats bar */}
-        <motion.div
-          className="mt-14 flex flex-wrap items-center justify-center gap-10"
-          variants={staggerContainer}
-          initial="initial"
-          whileInView="animate"
-          viewport={{ once: true }}
-        >
-          {STATS.map((s) => {
-            const Icon = s.icon;
-            return (
-              <motion.div key={s.label} variants={fadeUp} className="text-center">
-                <div
-                  className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl"
-                  style={{ background: "rgba(155, 142, 196, 0.08)" }}
-                >
-                  <Icon size={22} color="var(--brand-primary, #9B8EC4)" aria-hidden="true" />
-                </div>
-                <div
-                  className="font-heading text-[26px] font-bold"
-                  style={{ color: "var(--brand-primary-dark, #6B5CA0)" }}
-                >
-                  {s.value}
-                </div>
-                <div className="text-[13px]" style={{ color: "var(--text-muted, #718096)" }}>
-                  {s.label}
-                </div>
-              </motion.div>
-            );
-          })}
-        </motion.div>
       </div>
     </section>
   );
