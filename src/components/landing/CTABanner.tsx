@@ -23,10 +23,10 @@ export function CTABanner() {
           className="mb-3 font-heading font-extrabold text-white"
           style={{ fontSize: "clamp(22px, 3vw, 32px)" }}
         >
-          Ready to begin your journey?
+          Siap memulai perjalanan Anda?
         </h2>
         <p className="mb-7 text-[15px]" style={{ color: "rgba(255, 255, 255, 0.85)" }}>
-          Your mental health matters. Take the first step toward understanding yourself better.
+          Kesehatan mental Anda penting. Ambil langkah pertama untuk memahami diri Anda lebih baik.
         </p>
         <Link
           href="/tests"
@@ -36,7 +36,7 @@ export function CTABanner() {
             boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
           }}
         >
-          Get Started <ArrowRight size={16} aria-hidden="true" />
+          Mulai Sekarang <ArrowRight size={16} aria-hidden="true" />
         </Link>
       </div>
     </section>

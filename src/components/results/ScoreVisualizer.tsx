@@ -222,7 +222,7 @@ export function ScoreVisualizer({
               >
                 {scorePct}%
               </p>
-              <p className="mt-1 text-sm text-muted-foreground">of maximum score</p>
+              <p className="mt-1 text-sm text-muted-foreground">dari skor maksimum</p>
             </div>
           </div>
         </div>
@@ -235,10 +235,10 @@ export function ScoreVisualizer({
             className="mb-1 text-lg font-bold text-foreground"
             style={{ fontFamily: "var(--font-heading), var(--font-sans), sans-serif" }}
           >
-            Subscale Breakdown
+            Rincian Subskala
           </h3>
           <p className="mb-6 text-[13px] text-muted-foreground">
-            Detailed analysis across {bars.length} dimensions
+            Analisis terperinci pada {bars.length} dimensi
           </p>
 
           <div className="w-full overflow-x-auto">

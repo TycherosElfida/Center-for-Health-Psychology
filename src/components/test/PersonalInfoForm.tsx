@@ -253,8 +253,8 @@ export function PersonalInfoForm({
         >
           <Shield size={16} className="mt-0.5 shrink-0" style={{ color: testColor }} />
           <p className="m-0 text-[13px] leading-relaxed text-muted-foreground">
-            Your information is used solely to personalise your results and is never shared with
-            third parties.
+            Informasi Anda digunakan hanya untuk mempersonalisasi hasil dan tidak akan pernah
+            dibagikan kepada pihak ketiga.
           </p>
         </div>
 
@@ -262,14 +262,14 @@ export function PersonalInfoForm({
           {/* ── Name ── */}
           <FieldWrapper
             icon={<User size={15} style={{ color: nameVal ? testColor : undefined }} />}
-            label="Name or Initials"
+            label="Nama atau Inisial"
             required
             error={touchedFields.name ? errors.name?.message : undefined}
             color={testColor}
           >
             <input
               type="text"
-              placeholder="e.g. Alex or A.S."
+              placeholder="cth. Alex atau A.S."
               {...register("name")}
               className="w-full rounded-[14px] px-4 py-3 text-sm text-foreground outline-none transition-colors"
               style={{
@@ -282,7 +282,7 @@ export function PersonalInfoForm({
           {/* ── Age (optional) ── */}
           <FieldWrapper
             icon={<Calendar size={15} style={{ color: ageVal ? testColor : undefined }} />}
-            label="Age"
+            label="Usia"
             optional
             error={touchedFields.age ? errors.age?.message : undefined}
             color={testColor}
@@ -291,7 +291,7 @@ export function PersonalInfoForm({
               type="number"
               min={5}
               max={120}
-              placeholder="e.g. 24"
+              placeholder="cth. 24"
               {...register("age")}
               className="w-full rounded-[14px] px-4 py-3 text-sm text-foreground outline-none transition-colors"
               style={{
@@ -304,7 +304,7 @@ export function PersonalInfoForm({
           {/* ── Sex (segmented toggle) ── */}
           <FieldWrapper
             icon={<Users size={15} style={{ color: sexVal ? testColor : undefined }} />}
-            label="Sex"
+            label="Jenis Kelamin"
             required
             error={touchedFields.sex ? errors.sex?.message : undefined}
             color={testColor}
@@ -326,7 +326,7 @@ export function PersonalInfoForm({
                     }}
                   >
                     <input type="radio" value={option} {...register("sex")} className="sr-only" />
-                    {option}
+                    {option === "Male" ? "Laki-laki" : "Perempuan"}
                   </label>
                 );
               })}
@@ -336,7 +336,7 @@ export function PersonalInfoForm({
           {/* ── Province ── */}
           <FieldWrapper
             icon={<MapPin size={15} style={{ color: selectedProvince ? testColor : undefined }} />}
-            label="Province"
+            label="Provinsi"
             required
             error={touchedFields.province ? errors.province?.message : undefined}
             color={testColor}
@@ -355,7 +355,7 @@ export function PersonalInfoForm({
                 backgroundPosition: "right 14px center",
               }}
             >
-              <option value="">Select province…</option>
+              <option value="">Pilih provinsi…</option>
               {provinces.map((p) => (
                 <option key={p.code} value={p.code}>
                   {p.name}
@@ -367,7 +367,7 @@ export function PersonalInfoForm({
           {/* ── City / Regency ── */}
           <FieldWrapper
             icon={<MapPin size={15} style={{ color: cityVal ? testColor : undefined }} />}
-            label="City / Regency"
+            label="Kota / Kabupaten"
             required
             error={touchedFields.city ? errors.city?.message : undefined}
             color={testColor}
@@ -385,7 +385,7 @@ export function PersonalInfoForm({
               }}
             >
               <option value="">
-                {selectedProvince ? "Select city / regency…" : "Select province first"}
+                {selectedProvince ? "Pilih kota / kabupaten…" : "Pilih provinsi terlebih dahulu"}
               </option>
               {cities.map((c) => (
                 <option key={c.code} value={c.code}>
@@ -408,12 +408,12 @@ export function PersonalInfoForm({
               boxShadow: isValid ? `0 8px 28px ${testColor}35` : "none",
             }}
           >
-            {isSubmitting ? "Starting Assessment..." : "Continue to Assessment"}
+            {isSubmitting ? "Memulai Asesmen..." : "Lanjutkan ke Asesmen"}
             {!isSubmitting && <ArrowRight size={18} />}
           </button>
 
           <p className="mt-1 text-center text-xs text-muted-foreground">
-            Required fields are marked with <span style={{ color: testColor }}>*</span>
+            Kolom wajib ditandai dengan <span style={{ color: testColor }}>*</span>
           </p>
         </form>
       </div>
@@ -449,7 +449,7 @@ function FieldWrapper({
         {label}
         {required && <span style={{ color, fontSize: 14, lineHeight: 1 }}>*</span>}
         {optional && (
-          <span className="text-xs font-normal text-muted-foreground/60">(Optional)</span>
+          <span className="text-xs font-normal text-muted-foreground/60">(Opsional)</span>
         )}
       </label>
       {children}

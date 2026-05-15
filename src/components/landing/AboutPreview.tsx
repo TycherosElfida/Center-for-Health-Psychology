@@ -12,26 +12,26 @@ import { ChpLogo } from "@/components/ui/ChpLogo";
 const PILLARS = [
   {
     icon: Microscope,
-    label: "Evidence-Based Research",
-    desc: "Grounded in peer-reviewed science",
+    label: "Penelitian Berbasis Bukti",
+    desc: "Berlandaskan ilmu pengetahuan yang telah dikaji sejawat",
   },
   {
     icon: BookOpen,
-    label: "Mental Health Education",
-    desc: "Promoting awareness and literacy",
+    label: "Edukasi Kesehatan Mental",
+    desc: "Meningkatkan kesadaran dan literasi kesehatan jiwa",
   },
   {
     icon: Leaf,
-    label: "Holistic Well-being",
-    desc: "Mind-body health in harmony",
+    label: "Kesejahteraan Holistik",
+    desc: "Keselarasan kesehatan jiwa dan raga",
   },
 ] as const;
 
 const SATELLITES = [
-  { icon: Brain, label: "Psychology", position: "top-[6%] left-1/2 -translate-x-1/2" },
-  { icon: Shield, label: "Safety", position: "top-[30%] right-[4%]" },
-  { icon: Users, label: "Community", position: "bottom-[6%] left-1/2 -translate-x-1/2" },
-  { icon: Microscope, label: "Research", position: "top-[30%] left-[4%]" },
+  { icon: Brain, label: "Psikologi", position: "top-[6%] left-1/2 -translate-x-1/2" },
+  { icon: Shield, label: "Keamanan", position: "top-[30%] right-[4%]" },
+  { icon: Users, label: "Komunitas", position: "bottom-[6%] left-1/2 -translate-x-1/2" },
+  { icon: Microscope, label: "Riset", position: "top-[30%] left-[4%]" },
 ] as const;
 
 export function AboutPreview() {
@@ -49,7 +49,7 @@ export function AboutPreview() {
             className="mb-3.5 block text-[12px] font-bold uppercase tracking-[0.12em]"
             style={{ color: "var(--brand-primary, #9B8EC4)" }}
           >
-            Who We Are
+            Siapa Kami
           </span>
 
           <h2
@@ -61,7 +61,7 @@ export function AboutPreview() {
               marginBottom: 20,
             }}
           >
-            About{" "}
+            Tentang{" "}
             <span style={{ color: "var(--brand-primary-dark, #6B5CA0)" }}>
               Center for Health Psychology
             </span>
@@ -131,7 +131,7 @@ export function AboutPreview() {
               border: "1.5px solid rgba(155, 142, 196, 0.19)",
             }}
           >
-            Learn More About Us <ArrowRight size={15} aria-hidden="true" />
+            Selengkapnya Tentang Kami <ArrowRight size={15} aria-hidden="true" />
           </Link>
         </div>
 
@@ -203,13 +203,13 @@ export function AboutPreview() {
               className="mb-0.5 text-[10px] font-bold uppercase tracking-[0.08em]"
               style={{ color: "var(--brand-primary, #9B8EC4)" }}
             >
-              Our Tagline
+              Tagline Kami
             </div>
             <div
               className="font-heading text-[12px] font-bold italic"
               style={{ color: "var(--text-heading, #1A202C)" }}
             >
-              &quot;Nurturing Healthy Minds &amp; Bodies&quot;
+              &quot;Nurturing Healthy Minds & &amp; Bodies&quot;
             </div>
           </div>
         </div>

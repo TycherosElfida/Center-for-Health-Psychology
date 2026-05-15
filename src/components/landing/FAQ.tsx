@@ -11,24 +11,24 @@ import { AnimatePresence, motion } from "motion/react";
 
 const FAQS = [
   {
-    q: "Are these assessments clinically validated?",
-    a: "Yes. All tests on our platform are based on established, peer-reviewed psychological instruments used by mental health professionals worldwide.",
+    q: "Apakah asesmen ini tervalidasi secara klinis?",
+    a: "Ya. Seluruh tes di platform kami didasarkan pada instrumen psikologi yang telah dikaji sejawat dan digunakan oleh tenaga kesehatan mental profesional di seluruh dunia.",
   },
   {
-    q: "How long does each assessment take?",
-    a: "Most assessments take 3–15 minutes. The PSS-10 can be completed in about 3–5 minutes, the SRQ-29 in 5–8 minutes, and the MBTI in 10–15 minutes.",
+    q: "Berapa lama waktu yang dibutuhkan untuk setiap asesmen?",
+    a: "Sebagian besar asesmen membutuhkan waktu 3–15 menit. PSS-10 dapat diselesaikan dalam sekitar 3–5 menit, SRQ-29 dalam 5–8 menit, dan MBTI dalam 10–15 menit.",
   },
   {
-    q: "Is my data kept private and confidential?",
-    a: "Absolutely. Your responses are anonymized and stored securely. We do not share individual results with third parties under any circumstances.",
+    q: "Apakah data saya dijaga kerahasiaannya?",
+    a: "Tentu saja. Jawaban Anda dianonimkan dan disimpan secara aman. Kami tidak membagikan hasil individu kepada pihak ketiga dalam keadaan apa pun.",
   },
   {
-    q: "Can I retake a test?",
-    a: "Yes, you can take any assessment as many times as you like. Results may vary depending on your current emotional state, which is completely normal.",
+    q: "Bisakah saya mengulang tes?",
+    a: "Ya, Anda dapat mengikuti asesmen apa pun sebanyak yang Anda inginkan. Hasil dapat bervariasi tergantung kondisi emosional Anda saat itu, dan hal tersebut sepenuhnya normal.",
   },
   {
-    q: "Should I use these results as a medical diagnosis?",
-    a: "No. These assessments are screening tools, not diagnostic instruments. Please consult a licensed mental health professional for a proper clinical evaluation.",
+    q: "Apakah hasil ini dapat dijadikan sebagai diagnosis medis?",
+    a: "Tidak. Asesmen ini merupakan alat skrining, bukan instrumen diagnostik. Silakan berkonsultasi dengan tenaga kesehatan mental profesional berlisensi untuk evaluasi klinis yang tepat.",
   },
 ] as const;
 
@@ -53,10 +53,10 @@ export function FAQSection() {
               marginBottom: 8,
             }}
           >
-            Frequently Asked Questions
+            Pertanyaan yang Sering Diajukan
           </h2>
           <p className="text-[14px]" style={{ color: "var(--text-muted, #718096)" }}>
-            Everything you need to know before getting started
+            Semua yang perlu Anda ketahui sebelum memulai
           </p>
         </div>
 

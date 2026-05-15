@@ -43,9 +43,9 @@ import Image from "next/image";
 type ViewMode = "card" | "list" | "compact";
 
 const VIEW_MODES: { mode: ViewMode; icon: typeof LayoutGrid; label: string }[] = [
-  { mode: "card", icon: LayoutGrid, label: "Cards" },
-  { mode: "list", icon: List, label: "List" },
-  { mode: "compact", icon: Rows3, label: "Compact" },
+  { mode: "card", icon: LayoutGrid, label: "Kartu" },
+  { mode: "list", icon: List, label: "Daftar" },
+  { mode: "compact", icon: Rows3, label: "Ringkas" },
 ];
 
 /* ═══════════════════════════════════════════════════════
@@ -83,7 +83,7 @@ export function AssessmentCatalog() {
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <Loader2 size={32} className="animate-spin text-primary" />
-        <p className="mt-4 text-sm text-muted-foreground">Loading instruments...</p>
+        <p className="mt-4 text-sm text-muted-foreground">Memuat instrumen...</p>
       </div>
     );
   }
@@ -100,7 +100,7 @@ export function AssessmentCatalog() {
               <Search size={16} className="shrink-0 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Search instruments by name, tag, or keyword..."
+                placeholder="Cari instrumen berdasarkan nama, tag, atau kata kunci..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1 border-none bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
@@ -109,7 +109,7 @@ export function AssessmentCatalog() {
                 <button
                   onClick={() => setSearchQuery("")}
                   className="flex p-0.5 text-muted-foreground hover:text-foreground"
-                  aria-label="Clear search"
+                  aria-label="Hapus pencarian"
                 >
                   <X size={14} />
                 </button>
@@ -122,7 +122,7 @@ export function AssessmentCatalog() {
                 onClick={() => setSortMenuOpen(!sortMenuOpen)}
                 className="flex min-h-11 items-center gap-2 rounded-xl border border-border bg-secondary/40 px-4 py-2.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-secondary"
               >
-                Sort: {SORT_OPTIONS.find((o) => o.value === sortBy)?.label}
+                Urutkan: {SORT_OPTIONS.find((o) => o.value === sortBy)?.label}
                 <ChevronDown size={14} />
               </button>
               {sortMenuOpen && (
@@ -237,12 +237,12 @@ export function AssessmentCatalog() {
       <div className="mx-auto max-w-[1120px] px-4 pt-5 sm:px-6">
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing <span className="font-semibold text-foreground">{filtered.length}</span> of{" "}
-            {tests.length} instruments
+            Menampilkan <span className="font-semibold text-foreground">{filtered.length}</span>{" "}
+            dari {tests.length} instrumen
             {activeCategory !== "All" && (
               <span>
                 {" "}
-                in <span className="font-semibold text-primary">{activeCategory}</span>
+                di <span className="font-semibold text-primary">{activeCategory}</span>
               </span>
             )}
           </p>
@@ -252,7 +252,7 @@ export function AssessmentCatalog() {
               className="flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary active:scale-95"
             >
               <X size={12} />
-              Clear filters
+              Hapus filter
             </button>
           )}
         </div>
@@ -283,19 +283,19 @@ function MobileFilterDrawer({ children }: { children: ReactNode }) {
       <DrawerTrigger asChild>
         <button className="flex min-h-11 items-center gap-2 rounded-xl border border-border bg-secondary/40 px-4 py-2.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-secondary sm:hidden">
           <SlidersHorizontal size={14} />
-          Filters
+          Filter
         </button>
       </DrawerTrigger>
       <DrawerContent className="pb-safe">
         <DrawerHeader>
-          <DrawerTitle className="font-heading">Filters & Sorting</DrawerTitle>
-          <DrawerDescription>Refine the instrument catalog</DrawerDescription>
+          <DrawerTitle className="font-heading">Filter & Urutan</DrawerTitle>
+          <DrawerDescription>Saring katalog instrumen</DrawerDescription>
         </DrawerHeader>
         <div className="max-h-[60vh] overflow-y-auto px-4 pb-4">{children}</div>
         <DrawerFooter>
           <DrawerClose asChild>
             <button className="w-full rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 active:scale-[0.98]">
-              Apply Filters
+              Terapkan Filter
             </button>
           </DrawerClose>
         </DrawerFooter>
@@ -327,7 +327,7 @@ function FilterControls({
       {/* Category pills */}
       <div>
         <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Category
+          Kategori
         </p>
         <div className="flex flex-wrap items-center gap-2">
           {categories.map((cat) => {
@@ -362,7 +362,7 @@ function FilterControls({
       {/* Sort */}
       <div>
         <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Sort by
+          Urutkan berdasarkan
         </p>
         <div className="flex flex-wrap gap-2">
           {SORT_OPTIONS.map((opt) => (
@@ -467,7 +467,7 @@ function ListView({ tests }: { tests: TestMeta[] }) {
                       {test.category}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {test.questionCount} items
+                      {test.questionCount} butir
                     </span>
                   </div>
                   <h2 className="mb-1 font-heading text-lg font-bold text-foreground">
@@ -492,7 +492,7 @@ function ListView({ tests }: { tests: TestMeta[] }) {
                       boxShadow: `0 4px 14px ${test.color}35`,
                     }}
                   >
-                    Start <ArrowRight size={14} />
+                    Mulai <ArrowRight size={14} />
                   </Link>
                 </div>
               </div>
@@ -515,7 +515,7 @@ function CompactView({ tests }: { tests: TestMeta[] }) {
         className="hidden items-center gap-3 border-b border-border/50 bg-secondary/30 px-5 py-3 md:grid"
         style={{ gridTemplateColumns: "2fr 1fr 80px 100px" }}
       >
-        {["Instrument", "Category", "Items", ""].map((h) => (
+        {["Instrumen", "Kategori", "Butir", ""].map((h) => (
           <span
             key={h}
             className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
@@ -595,7 +595,7 @@ function CompactView({ tests }: { tests: TestMeta[] }) {
                 <p className="font-heading text-sm font-semibold text-foreground">
                   {test.abbreviation}
                 </p>
-                <p className="text-xs text-muted-foreground">{test.questionCount} items</p>
+                <p className="text-xs text-muted-foreground">{test.questionCount} butir</p>
               </div>
               <Link
                 href={`/test/${test.slug}/briefing`}
@@ -628,17 +628,19 @@ function EmptyState({
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card py-20">
       <Search size={40} className="text-muted-foreground/30" strokeWidth={1.5} />
-      <h3 className="mt-4 font-heading text-xl font-bold text-foreground">No instruments found</h3>
+      <h3 className="mt-4 font-heading text-xl font-bold text-foreground">
+        Instrumen tidak ditemukan
+      </h3>
       <p className="mt-2 max-w-[400px] text-center text-sm text-muted-foreground">
         {query
-          ? `No results for "${query}"${category !== "All" ? ` in ${category}` : ""}`
-          : `No instruments in the ${category} category yet`}
+          ? `Tidak ada hasil untuk "${query}"${category !== "All" ? ` di ${category}` : ""}`
+          : `Belum ada instrumen di kategori ${category}`}
       </p>
       <button
         onClick={onClear}
         className="mt-5 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-md transition-colors hover:bg-primary/90 active:scale-95"
       >
-        Clear all filters
+        Hapus semua filter
       </button>
     </div>
   );

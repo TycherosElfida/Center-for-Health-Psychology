@@ -63,27 +63,29 @@ interface Bullet {
 const TIMEFRAME_OVERRIDES: Record<string, ReactNode> = {
   pss10: (
     <>
-      Answer honestly based on how you&apos;ve been feeling over the <strong>past month</strong>.
+      Jawablah dengan jujur berdasarkan perasaan Anda selama <strong>satu bulan terakhir</strong>.
     </>
   ),
   srq29: (
     <>
-      Answer honestly based on how you&apos;ve been feeling <strong>recently</strong>.
+      Jawablah dengan jujur berdasarkan perasaan Anda <strong>belakangan ini</strong>.
     </>
   ),
   mbti: (
     <>
-      Answer honestly based on your <strong>general preferences</strong> and typical behavior.
+      Jawablah dengan jujur berdasarkan <strong>preferensi umum</strong> dan perilaku khas Anda.
     </>
   ),
   gpius2: (
     <>
-      Answer honestly based on your <strong>internet usage habits</strong> in recent times.
+      Jawablah dengan jujur berdasarkan <strong>kebiasaan penggunaan internet</strong> Anda
+      belakangan ini.
     </>
   ),
   srs: (
     <>
-      Answer honestly based on how you <strong>generally cope</strong> with challenges and setbacks.
+      Jawablah dengan jujur berdasarkan cara Anda <strong>umumnya menghadapi</strong> tantangan dan
+      hambatan.
     </>
   ),
 };
@@ -91,7 +93,7 @@ const TIMEFRAME_OVERRIDES: Record<string, ReactNode> = {
 function getBriefingBullets(testSlug: string, itemCount: number): Bullet[] {
   const timeframeText = TIMEFRAME_OVERRIDES[testSlug] ?? (
     <>
-      Answer honestly based on how you&apos;ve been feeling over the <strong>past 2 weeks</strong>.
+      Jawablah dengan jujur berdasarkan perasaan Anda selama <strong>dua minggu terakhir</strong>.
     </>
   );
 
@@ -100,7 +102,7 @@ function getBriefingBullets(testSlug: string, itemCount: number): Bullet[] {
       icon: CheckCircle2,
       text: (
         <>
-          This assessment contains <strong>{itemCount} items</strong>.
+          Asesmen ini berisi <strong>{itemCount} butir</strong> pertanyaan.
         </>
       ),
     },
@@ -108,8 +110,8 @@ function getBriefingBullets(testSlug: string, itemCount: number): Bullet[] {
       icon: Eye,
       text: (
         <>
-          Your responses are <strong>anonymous</strong> and will be used only for screening/research
-          purposes.
+          Jawaban Anda bersifat <strong>anonim</strong> dan hanya digunakan untuk keperluan
+          skrining/penelitian.
         </>
       ),
     },
@@ -117,15 +119,14 @@ function getBriefingBullets(testSlug: string, itemCount: number): Bullet[] {
       icon: AlertTriangle,
       text: (
         <>
-          This is <strong>not a clinical diagnosis</strong>. Results are for informational purposes
-          only.
+          Ini <strong>bukan diagnosis klinis</strong>. Hasil hanya untuk tujuan informasi.
         </>
       ),
     },
     { icon: Heart, text: timeframeText },
     {
       icon: Hand,
-      text: <>You may stop at any time. There are no right or wrong answers.</>,
+      text: <>Anda dapat berhenti kapan saja. Tidak ada jawaban benar atau salah.</>,
     },
   ];
 }
@@ -188,7 +189,7 @@ export default async function BriefingPage({ params }: PageProps) {
             <div className="mb-5 flex items-center gap-2.5">
               <Info size={20} style={{ color: colorDark }} />
               <h2 className="text-[17px] font-semibold leading-tight text-foreground">
-                Before You Begin
+                Sebelum Memulai
               </h2>
             </div>
 
@@ -229,16 +230,16 @@ export default async function BriefingPage({ params }: PageProps) {
                 lineHeight: 1.55,
               }}
             >
-              <span style={{ fontWeight: 700 }}>Important:</span> Your progress will not be saved if
-              you are browsing as a guest.
+              <span style={{ fontWeight: 700 }}>Penting:</span> Progres Anda tidak akan tersimpan
+              jika Anda menjelajah sebagai tamu.
             </p>
           </div>
 
           {/* Metadata strip */}
           <div className="flex justify-center px-8 pt-6">
             {[
-              { label: "Author", value: meta.author ?? "—" },
-              { label: "Year", value: meta.releaseYear ? String(meta.releaseYear) : "—" },
+              { label: "Penulis", value: meta.author ?? "—" },
+              { label: "Tahun", value: meta.releaseYear ? String(meta.releaseYear) : "—" },
             ].map((item, i, arr) => (
               <div
                 key={item.label}
@@ -269,9 +270,9 @@ export default async function BriefingPage({ params }: PageProps) {
         >
           <Shield size={16} className="mt-0.5 shrink-0" style={{ color: meta.color }} />
           <p className="text-[13px] leading-relaxed text-muted-foreground">
-            Your data is processed locally in your browser and is not stored on any server. This
-            tool is intended for educational and research purposes only and does not replace
-            professional clinical assessment.
+            Data Anda diproses secara lokal di peramban Anda dan tidak disimpan di server mana pun.
+            Alat ini ditujukan hanya untuk keperluan edukasi dan penelitian serta tidak menggantikan
+            asesmen klinis profesional.
           </p>
         </div>
       </div>

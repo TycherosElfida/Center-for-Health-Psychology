@@ -29,9 +29,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 const STEPS: Step[] = [
-  { label: "1", text: "Briefing", status: "done" },
-  { label: "2", text: "Your Info", status: "active" },
-  { label: "3", text: "Assessment", status: "pending" },
+  { label: "1", text: "Pengarahan", status: "done" },
+  { label: "2", text: "Info Anda", status: "active" },
+  { label: "3", text: "Asesmen", status: "pending" },
 ];
 
 export default async function PersonalInfoPage({ params }: PageProps) {
@@ -102,7 +102,7 @@ export default async function PersonalInfoPage({ params }: PageProps) {
               }}
             >
               <CheckCircle2 size={16} />
-              {meta.abbreviation} — Personal Information
+              {meta.abbreviation} — Informasi Pribadi
             </div>
           </div>
 

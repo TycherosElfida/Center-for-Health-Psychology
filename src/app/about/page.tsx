@@ -107,7 +107,7 @@ export default function AboutPage() {
                 marginBottom: 14,
               }}
             >
-              About Us
+              Tentang Kami
             </h1>
             <p
               className="text-[16px] leading-[1.8]"
@@ -148,7 +148,7 @@ export default function AboutPage() {
                   className="mb-3 block text-[12px] font-bold uppercase tracking-[0.1em]"
                   style={{ color: "var(--brand-primary, #9B8EC4)" }}
                 >
-                  Our Commitment
+                  Komitmen Kami
                 </span>
                 <h2
                   className="mb-4 font-heading font-bold leading-[1.3]"
@@ -157,7 +157,7 @@ export default function AboutPage() {
                     color: "var(--text-heading, #1A202C)",
                   }}
                 >
-                  Stronger Minds, Healthier Lives.
+                  Pikiran Kuat, Hidup Lebih Sehat.
                 </h2>
                 <p
                   className="text-[15px] leading-[1.8]"
@@ -199,7 +199,7 @@ export default function AboutPage() {
                     color: "var(--text-heading, #1A202C)",
                   }}
                 >
-                  Our Purpose
+                  Tujuan Kami
                 </h2>
               </div>
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -254,7 +254,7 @@ export default function AboutPage() {
                   color: "var(--text-heading, #1A202C)",
                 }}
               >
-                Meet the Team
+                Tim Kami
               </h2>
             </div>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">

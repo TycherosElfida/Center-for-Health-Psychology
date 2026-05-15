@@ -174,14 +174,14 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
               className="font-heading text-[18px] font-bold"
               style={{ color: "var(--text-heading, #1A1240)" }}
             >
-              Change Password
+              Ubah Kata Sandi
             </h2>
           </div>
           <button
             type="button"
             onClick={handleClose}
             className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-[#F5F3FF]"
-            aria-label="Close"
+            aria-label="Tutup"
           >
             <X size={16} className="text-muted-foreground" />
           </button>
@@ -211,7 +211,7 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
           ) : (
             <>
               <p className="mb-6 text-[13px] leading-relaxed text-muted-foreground">
-                Update your account password. You&apos;ll stay signed in on this device.
+                Perbarui kata sandi akun Anda. Anda akan tetap masuk di perangkat ini.
               </p>
 
               <form
@@ -223,7 +223,7 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
                 {/* ── Current password ── */}
                 <PasswordField
                   id="currentPassword"
-                  label="Current password"
+                  label="Kata sandi saat ini"
                   show={showCurrent}
                   onToggleShow={() => setShowCurrent((v) => !v)}
                   registration={register("currentPassword")}
@@ -235,8 +235,8 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
                 <div>
                   <PasswordField
                     id="newPassword"
-                    label="New password"
-                    placeholder="At least 8 characters"
+                    label="Kata sandi baru"
+                    placeholder="Minimal 8 karakter"
                     show={showNew}
                     onToggleShow={() => setShowNew((v) => !v)}
                     registration={register("newPassword")}
@@ -273,8 +273,8 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
                 {/* ── Confirm new password ── */}
                 <PasswordField
                   id="confirmPassword"
-                  label="Confirm new password"
-                  placeholder="Re-enter new password"
+                  label="Konfirmasi kata sandi baru"
+                  placeholder="Masukkan ulang kata sandi baru"
                   show={showConfirm}
                   onToggleShow={() => setShowConfirm((v) => !v)}
                   registration={register("confirmPassword")}
@@ -301,7 +301,7 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
               className="rounded-xl border px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-white"
               style={{ borderColor: "#D6CEED" }}
             >
-              Cancel
+              Batal
             </button>
             <button
               type="submit"
@@ -317,7 +317,7 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
               }}
             >
               {isSubmitting ? <Loader2 size={14} className="animate-spin" /> : <Lock size={14} />}
-              Update Password
+              Perbarui Kata Sandi
             </button>
           </div>
         )}
@@ -378,7 +378,7 @@ function PasswordField({
           onClick={onToggleShow}
           tabIndex={-1}
           className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 transition-colors hover:text-muted-foreground"
-          aria-label={show ? "Hide password" : "Show password"}
+          aria-label={show ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
         >
           {show ? <EyeOff size={16} /> : <Eye size={16} />}
         </button>

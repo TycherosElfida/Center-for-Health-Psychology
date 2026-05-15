@@ -8,7 +8,7 @@
  * - Email
  * - Password (min 8 chars) with strength meter
  * - Confirm password (must match)
- * - Privacy consent checkbox
+
  *
  * Submits via server action (signupAction) that:
  * - Checks email uniqueness
@@ -34,9 +34,6 @@ const signupSchema = z
     email: z.string().email({ message: "Format email tidak valid" }),
     password: z.string().min(8, { message: "Password minimal 8 karakter" }),
     confirmPassword: z.string(),
-    consent: z.boolean().refine((v) => v === true, {
-      message: "Persetujuan diperlukan",
-    }),
   })
   .refine((d) => d.password === d.confirmPassword, {
     message: "Password tidak cocok",
@@ -69,7 +66,7 @@ export function SignupForm() {
     formState: { errors, isSubmitting },
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { name: "", email: "", password: "", confirmPassword: "", consent: false },
+    defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
   });
 
   const passwordValue = useWatch({ control, name: "password" }) ?? "";
@@ -289,37 +286,6 @@ export function SignupForm() {
             </p>
           )}
         </div>
-
-        {/* Consent checkbox */}
-        <div className="flex items-start gap-2.5 mt-2">
-          <input
-            type="checkbox"
-            id="signup-consent"
-            {...register("consent")}
-            className="mt-0.5 w-4 h-4 rounded cursor-pointer accent-[var(--brand-primary)]"
-            style={{ borderColor: "var(--border-input)" }}
-          />
-          <label
-            htmlFor="signup-consent"
-            className="text-xs leading-relaxed cursor-pointer"
-            style={{ color: "var(--text-muted)" }}
-          >
-            Dengan mendaftar, kamu menyetujui{" "}
-            <a
-              href="/privacy"
-              className="hover:underline"
-              style={{ color: "var(--brand-primary)" }}
-            >
-              Kebijakan Privasi
-            </a>{" "}
-            kami.
-          </label>
-        </div>
-        {errors.consent && (
-          <p role="alert" className="text-xs text-red-600 -mt-2">
-            {errors.consent.message}
-          </p>
-        )}
 
         {/* Submit button */}
         <button

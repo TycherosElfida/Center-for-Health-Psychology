@@ -75,12 +75,12 @@ export function LogoutConfirmModal({ isOpen, onClose, onConfirm }: LogoutConfirm
                 >
                   <LogOut size={24} style={{ color: "var(--brand-primary-dark, #6B5CA0)" }} />
                 </div>
-                <h3 className="m-0 text-xl font-bold text-foreground">Confirm Log Out</h3>
+                <h3 className="m-0 text-xl font-bold text-foreground">Konfirmasi Keluar</h3>
               </div>
 
               {/* Body text */}
               <p className="mb-8 text-[15px] leading-relaxed text-muted-foreground">
-                Are you sure you want to end your session and return to the login page?
+                Apakah Anda yakin ingin mengakhiri sesi dan kembali ke halaman masuk?
               </p>
 
               {/* Actions */}
@@ -95,7 +95,7 @@ export function LogoutConfirmModal({ isOpen, onClose, onConfirm }: LogoutConfirm
                     color: "var(--text-body, #4A5568)",
                   }}
                 >
-                  Cancel
+                  Batal
                 </button>
                 <button
                   type="button"
@@ -114,7 +114,7 @@ export function LogoutConfirmModal({ isOpen, onClose, onConfirm }: LogoutConfirm
                     backgroundColor: "var(--brand-primary, #9B8EC4)",
                   }}
                 >
-                  {isLoggingOut ? "Logging out..." : "Yes, Log Out"}
+                  {isLoggingOut ? "Sedang keluar..." : "Ya, Keluar"}
                 </button>
               </div>
             </div>

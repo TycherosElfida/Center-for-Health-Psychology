@@ -106,7 +106,7 @@ export default async function DashboardPage() {
       ? new Date(
           assessments.find((s) => s.status === "completed")!.completedAt ??
             assessments.find((s) => s.status === "completed")!.startedAt
-        ).toLocaleDateString("en-US", {
+        ).toLocaleDateString("id-ID", {
           month: "short",
           day: "numeric",
           year: "numeric",
@@ -130,16 +130,16 @@ export default async function DashboardPage() {
             className="mb-1 text-xs font-bold uppercase tracking-[0.2em]"
             style={{ color: "var(--brand-primary-dark, #6B5CA0)" }}
           >
-            Dashboard
+            Dasbor
           </p>
           <h1
             className="font-heading text-2xl font-extrabold tracking-tight sm:text-3xl"
             style={{ color: "var(--text-heading, #1A202C)" }}
           >
-            Welcome back, {displayName}
+            Selamat datang kembali, {displayName}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Track your psychological assessment journey
+            Pantau perjalanan asesmen psikologis Anda
           </p>
         </div>
 
@@ -147,12 +147,12 @@ export default async function DashboardPage() {
         <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <StatCard
             icon={<ClipboardList size={20} />}
-            label="Total Assessments"
+            label="Total Asesmen"
             value={String(assessments.length)}
           />
           <StatCard
             icon={<Calendar size={20} />}
-            label="Last Assessment"
+            label="Asesmen Terakhir"
             value={lastAssessmentDate}
           />
         </div>
@@ -172,11 +172,11 @@ export default async function DashboardPage() {
               style={{ color: "var(--brand-primary-mid, #C5BADF)" }}
             />
             <h2 className="mb-2 font-heading text-lg font-bold text-foreground">
-              No Assessments Yet
+              Belum Ada Asesmen
             </h2>
             <p className="mb-6 text-sm text-muted-foreground">
-              You haven&apos;t completed any assessments yet. Start your first assessment and your
-              results will appear here.
+              Anda belum menyelesaikan asesmen apa pun. Mulailah asesmen pertama Anda dan hasilnya
+              akan muncul di sini.
             </p>
             <Link
               href="/tests"
@@ -188,7 +188,7 @@ export default async function DashboardPage() {
               }}
             >
               <FileText size={16} />
-              Explore Assessments
+              Jelajahi Asesmen
             </Link>
           </div>
         ) : (

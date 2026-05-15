@@ -39,10 +39,10 @@ import { ChpLogo } from "@/components/ui/ChpLogo";
    ═══════════════════════════════════════════════════════ */
 
 const NAV_LINKS = [
-  { href: "/", label: "Home", icon: Home },
-  { href: "/tests", label: "Assessments", icon: FileText },
-  { href: "/about", label: "About CHP", icon: Info },
-  { href: "/contact", label: "Contact Us", icon: Mail },
+  { href: "/", label: "Beranda", icon: Home },
+  { href: "/tests", label: "Asesmen", icon: FileText },
+  { href: "/about", label: "Tentang CHP", icon: Info },
+  { href: "/contact", label: "Hubungi Kami", icon: Mail },
 ] as const;
 
 /* ═══════════════════════════════════════════════════════
@@ -205,7 +205,7 @@ export function Navbar({
                     strokeWidth={isActive("/dashboard") ? 2.5 : 2}
                     aria-hidden="true"
                   />
-                  Dashboard
+                  Dasbor
                 </Link>
               )}
               {variant === "default" && (
@@ -275,7 +275,7 @@ export function Navbar({
                           className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-foreground no-underline transition-colors hover:bg-secondary/50"
                         >
                           <Settings size={16} style={{ color: "var(--brand-primary, #9B8EC4)" }} />
-                          Update Profile
+                          Perbarui Profil
                         </Link>
                         <div
                           className="mx-3 h-px"
@@ -291,7 +291,7 @@ export function Navbar({
                           style={{ color: "#E53E3E" }}
                         >
                           <LogOut size={16} />
-                          Logout
+                          Keluar
                         </button>
                       </motion.div>
                     )}
@@ -336,7 +336,7 @@ export function Navbar({
             backgroundColor: mobileOpen ? "var(--brand-primary-light, #EDE9F8)" : "transparent",
           }}
           aria-expanded={mobileOpen}
-          aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          aria-label={mobileOpen ? "Tutup menu" : "Buka menu"}
         >
           {mobileOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
         </button>
@@ -413,7 +413,7 @@ export function Navbar({
                         strokeWidth={isActive("/dashboard") ? 2.5 : 2}
                         aria-hidden="true"
                       />
-                      Dashboard
+                      Dasbor
                     </Link>
                   )}
                   {/* Update Profile — dashboard only */}
@@ -424,7 +424,7 @@ export function Navbar({
                       className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-foreground no-underline transition-all"
                     >
                       <Settings size={18} style={{ color: "var(--brand-primary, #9B8EC4)" }} />
-                      Update Profile
+                      Perbarui Profil
                     </Link>
                   )}
                   <button
@@ -437,7 +437,7 @@ export function Navbar({
                     style={{ color: "#E53E3E" }}
                   >
                     <LogOut size={18} />
-                    Logout
+                    Keluar
                   </button>
                 </div>
               ) : (

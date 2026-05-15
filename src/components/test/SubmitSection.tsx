@@ -62,13 +62,13 @@ export function SubmitSection({
         {/* Message */}
         <h3 className="font-heading text-lg font-semibold text-foreground">
           {isComplete
-            ? "Thank you for completing this assessment"
-            : "Please answer all questions to continue"}
+            ? "Terima kasih telah menyelesaikan asesmen ini"
+            : "Silakan jawab semua pertanyaan untuk melanjutkan"}
         </h3>
         <p className="mt-2 text-sm text-muted-foreground">
           {isComplete
-            ? "Your responses are saved. When you are ready, submit to view your results."
-            : "You can scroll back to review and change any of your previous answers."}
+            ? "Jawaban Anda telah tersimpan. Jika sudah siap, kirim untuk melihat hasil Anda."
+            : "Anda dapat menggulir ke atas untuk meninjau dan mengubah jawaban sebelumnya."}
         </p>
 
         {/* CTA */}
@@ -93,12 +93,12 @@ export function SubmitSection({
           {isSubmitting ? (
             <>
               <Loader2 size={18} className="animate-spin" />
-              Submitting…
+              Mengirim…
             </>
           ) : (
             <>
               <Send size={16} />
-              Submit Assessment
+              Kirim Asesmen
             </>
           )}
         </button>

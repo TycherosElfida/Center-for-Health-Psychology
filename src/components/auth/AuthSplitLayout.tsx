@@ -30,7 +30,7 @@ export function AuthSplitLayout({ children }: AuthSplitLayoutProps) {
         }}
       >
         <ChpLogo size={36} />
-        <span className="text-white/70 text-xs font-medium">Platform Assessment Psikologi</span>
+        <span className="text-white/70 text-xs font-medium">Platform Asesmen Psikologi</span>
       </div>
 
       {/* Form panel */}
