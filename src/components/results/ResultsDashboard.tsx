@@ -36,6 +36,7 @@ interface ResultsDashboardProps {
   sessionId: string;
   testMeta: TestMeta;
   totalScore: number;
+  maxScore: number;
   dimensionScores: Record<string, number>;
   interpretation: ScoreInterpretation;
   completedAt: string;
@@ -53,6 +54,7 @@ export function ResultsDashboard({
   sessionId,
   testMeta,
   totalScore,
+  maxScore,
   dimensionScores,
   interpretation,
   completedAt,
@@ -138,7 +140,7 @@ export function ResultsDashboard({
             resultLabel={interpretation.label}
             testTitle={testMeta.title}
             accentColor={testMeta.color}
-            maxScore={100}
+            maxScore={maxScore}
           />
         </div>
 
