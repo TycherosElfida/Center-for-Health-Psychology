@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * HeroSection — Landing page hero dengan background gradient,
- * headline, tombol CTA, dan bar statistik.
+ * HeroSection — Landing page hero with gradient background,
+ * headline, CTA buttons, and stats bar.
  */
 
 import Link from "next/link";
@@ -42,8 +42,8 @@ export function HeroSection() {
             marginBottom: 20,
           }}
         >
-          Merawat Kesehatan{" "}
-          <span style={{ color: "var(--brand-primary-dark, #6B5CA0)" }}>Jiwa dan Raga</span>
+          Nurturing Healthy{" "}
+          <span style={{ color: "var(--brand-primary-dark, #6B5CA0)" }}>Minds and Bodies</span>
         </h1>
 
         {/* Sub-copy */}

@@ -69,7 +69,7 @@ export default function ContactContent() {
             marginBottom: 12,
           }}
         >
-          Contact Us
+          Hubungi Kami
         </h1>
         <p
           className="mx-auto max-w-[480px] text-[16px]"
