@@ -14,12 +14,12 @@
  */
 
 import { notFound } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { eq, countDistinct } from "drizzle-orm";
 import type { Metadata } from "next";
 
 import { db } from "@/server/db";
 import { results } from "@/server/schema/sessions";
-import { tests } from "@/server/schema/tests";
+import { tests, questions } from "@/server/schema/tests";
 import type { TestMeta } from "@/lib/data/tests";
 import { SEVERITY_COLORS } from "@/lib/types/assessment";
 import { getOptionalSession } from "@/lib/auth/dal";
@@ -74,6 +74,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
     .select({
       id: results.id,
       sessionId: results.sessionId,
+      testId: results.testId,
       totalScore: results.totalScore,
       dimensionScores: results.dimensionScores,
       computedScores: results.computedScores,
@@ -100,6 +101,13 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
     notFound();
   }
 
+  // ── Question count for the "Items" stat on the results card ────
+  const [qCountRow] = await db
+    .select({ n: countDistinct(questions.id) })
+    .from(questions)
+    .where(eq(questions.testId, row.testId));
+  const questionCount = Number(qCountRow?.n ?? 0);
+
   // ── Resolve test metadata from the joined tests data ────
   const testMeta: TestMeta = {
     slug: row.testSlug,
@@ -111,7 +119,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
     releaseYear: row.testReleaseYear,
     thumbnailUrl: row.testThumbnailUrl,
     color: row.testColor ?? "#9B8EC4",
-    questionCount: 0, // not needed on results page
+    questionCount,
   };
 
   // ── Extract interpretation from computedScores (server-authoritative) ──
@@ -136,6 +144,11 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
   };
   const dimensionScores = (row.dimensionScores ?? {}) as Record<string, number>;
 
+  // Engine writes maxPossibleScore into computedScores at submit time.
+  // Falls back to 100 only if the value is missing or zero.
+  const rawMax = Number(computed.maxPossibleScore);
+  const maxScore = Number.isFinite(rawMax) && rawMax > 0 ? rawMax : 100;
+
   // ── Auth state — determines whether ClaimCTA is shown ────
   const session = await getOptionalSession();
   const isAuthenticated = !!session;
@@ -146,6 +159,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
       sessionId={row.sessionId}
       testMeta={testMeta}
       totalScore={totalScore}
+      maxScore={maxScore}
       dimensionScores={dimensionScores}
       interpretation={interpretation}
       completedAt={row.createdAt.toISOString()}
