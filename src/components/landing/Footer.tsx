@@ -17,7 +17,7 @@ export function Footer() {
       }}
     >
       <p className="text-[13px]" style={{ color: "var(--text-muted, #718096)" }}>
-        © {currentYear} Center for Health Psychology · For educational & screening purposes only
+        © {currentYear} Center for Health Psychology · Hanya untuk keperluan edukasi &amp; skrining
       </p>
     </footer>
   );

@@ -33,7 +33,7 @@ export function ProgressBar({ current, total, accentColor }: ProgressBarProps) {
       {/* Label row */}
       <div className="flex items-center justify-between">
         <p className="m-0 text-[13px] font-medium text-muted-foreground">
-          Question{" "}
+          Pertanyaan{" "}
           <span
             className="font-heading text-[15px] font-bold text-foreground"
             style={accentColor ? { color: accentColor } : undefined}

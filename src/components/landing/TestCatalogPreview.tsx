@@ -29,13 +29,13 @@ export function TestCardGrid() {
             marginBottom: 12,
           }}
         >
-          Available Assessments
+          Asesmen Tersedia
         </h2>
         <p
           className="mx-auto max-w-[480px] text-[15px]"
           style={{ color: "var(--text-muted, #718096)" }}
         >
-          Each tool is carefully selected based on scientific validity and clinical utility.
+          Setiap instrumen dipilih secara cermat berdasarkan validitas ilmiah dan kegunaan klinis.
         </p>
       </div>
 
@@ -100,7 +100,7 @@ export function TestCardGrid() {
                     color: test.color,
                   }}
                 >
-                  {test.questionCount} items
+                  {test.questionCount} butir
                 </span>
 
                 {/* Title */}
@@ -128,7 +128,7 @@ export function TestCardGrid() {
                     boxShadow: `0 4px 14px ${test.color}45`,
                   }}
                 >
-                  Start Test →
+                  Mulai Tes →
                 </Link>
               </div>
             </motion.div>

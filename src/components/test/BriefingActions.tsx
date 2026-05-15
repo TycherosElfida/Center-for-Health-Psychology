@@ -91,7 +91,7 @@ export function BriefingActions({ slug, color, colorDark }: BriefingActionsProps
           className="w-full flex items-center justify-center gap-2 rounded-full border-[1.5px] border-border bg-white px-6 py-4 text-base font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-foreground cursor-pointer sm:w-auto sm:px-8 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ArrowLeft size={16} />
-          Go Back
+          Kembali
         </button>
 
         <button
@@ -108,9 +108,9 @@ export function BriefingActions({ slug, color, colorDark }: BriefingActionsProps
           {isLoading || isNavigating ? (
             <Loader2 size={18} className="animate-spin" />
           ) : isResuming ? (
-            "Resume Assessment"
+            "Lanjutkan Asesmen"
           ) : (
-            "I Understand, Begin Assessment"
+            "Saya Memahami, Mulai Asesmen"
           )}
           <ArrowRight size={18} />
         </button>

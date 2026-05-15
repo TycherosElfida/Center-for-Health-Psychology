@@ -51,10 +51,10 @@ export function AssessmentHistory({ sessions }: { sessions: AssessmentCardData[]
     return Array.from(abbrs);
   }, [sessions]);
 
-  const [activeFilter, setActiveFilter] = useState("All");
+  const [activeFilter, setActiveFilter] = useState("Semua");
 
   const filteredSessions = useMemo(() => {
-    if (activeFilter === "All") return sessions;
+    if (activeFilter === "Semua") return sessions;
     return sessions.filter((s) => s.testAbbreviation === activeFilter);
   }, [sessions, activeFilter]);
 
@@ -76,16 +76,14 @@ export function AssessmentHistory({ sessions }: { sessions: AssessmentCardData[]
             <TrendingUp size={20} style={{ color: "var(--brand-primary-dark, #6B5CA0)" }} />
           </div>
           <div>
-            <h2 className="font-heading text-lg font-bold text-foreground">Assessment History</h2>
-            <p className="text-xs text-muted-foreground">
-              {sessions.length} result{sessions.length !== 1 ? "s" : ""}
-            </p>
+            <h2 className="font-heading text-lg font-bold text-foreground">Riwayat Asesmen</h2>
+            <p className="text-xs text-muted-foreground">{sessions.length} hasil</p>
           </div>
         </div>
 
         {/* Filter Tabs */}
         <div className="flex flex-wrap items-center gap-2">
-          {["All", ...abbreviations].map((tab) => (
+          {["Semua", ...abbreviations].map((tab) => (
             <button
               key={tab}
               type="button"
@@ -113,7 +111,9 @@ export function AssessmentHistory({ sessions }: { sessions: AssessmentCardData[]
           className="rounded-xl border border-dashed p-8 text-center"
           style={{ borderColor: "var(--border-subtle)" }}
         >
-          <p className="text-sm text-muted-foreground">No assessments found for this filter.</p>
+          <p className="text-sm text-muted-foreground">
+            Tidak ada asesmen ditemukan untuk filter ini.
+          </p>
         </div>
       ) : (
         <div
@@ -130,7 +130,7 @@ export function AssessmentHistory({ sessions }: { sessions: AssessmentCardData[]
                 ? Math.round((score / maxScore) * 100)
                 : null;
 
-            const date = new Date(s.completedAt ?? s.startedAt).toLocaleDateString("en-US", {
+            const date = new Date(s.completedAt ?? s.startedAt).toLocaleDateString("id-ID", {
               month: "short",
               day: "numeric",
               year: "numeric",
@@ -223,7 +223,9 @@ export function AssessmentHistory({ sessions }: { sessions: AssessmentCardData[]
                   </div>
                 ) : (
                   <div className="mb-3">
-                    <span className="text-sm font-medium text-muted-foreground">In progress…</span>
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Sedang berlangsung…
+                    </span>
                   </div>
                 )}
 
@@ -243,7 +245,7 @@ export function AssessmentHistory({ sessions }: { sessions: AssessmentCardData[]
                       boxShadow: `0 4px 16px color-mix(in oklch, ${color} 30%, transparent)`,
                     }}
                   >
-                    View Full Analysis
+                    Lihat Analisis Lengkap
                   </Link>
                 ) : (
                   <div
@@ -253,7 +255,7 @@ export function AssessmentHistory({ sessions }: { sessions: AssessmentCardData[]
                       color: "var(--text-muted, #718096)",
                     }}
                   >
-                    Assessment in progress
+                    Asesmen sedang berlangsung
                   </div>
                 )}
               </div>
@@ -274,7 +276,7 @@ export function AssessmentHistory({ sessions }: { sessions: AssessmentCardData[]
           }}
         >
           <ArrowLeft size={14} />
-          Back to Assessment
+          Kembali ke Asesmen
         </Link>
       </div>
     </section>

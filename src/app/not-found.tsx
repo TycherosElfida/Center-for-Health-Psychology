@@ -37,7 +37,7 @@ export default function NotFound() {
           className="mb-3 font-heading text-2xl font-extrabold tracking-tight"
           style={{ color: "var(--text-heading, #1A202C)" }}
         >
-          Page Not Found
+          Halaman Tidak Ditemukan
         </h1>
 
         {/* Subtitle */}
@@ -45,8 +45,8 @@ export default function NotFound() {
           className="mb-8 text-[15px] leading-relaxed"
           style={{ color: "var(--text-muted, #718096)" }}
         >
-          The page you&apos;re looking for doesn&apos;t exist or has been moved. Let&apos;s get you
-          back on track.
+          Halaman yang Anda cari tidak tersedia atau telah dipindahkan. Mari kembali ke jalur yang
+          benar.
         </p>
 
         {/* Actions */}
@@ -61,7 +61,7 @@ export default function NotFound() {
             }}
           >
             <Home size={15} />
-            Back to Home
+            Kembali ke Beranda
           </Link>
 
           <Link
@@ -74,7 +74,7 @@ export default function NotFound() {
             }}
           >
             <BookOpen size={15} />
-            Browse Assessments
+            Jelajahi Asesmen
           </Link>
         </div>
       </div>

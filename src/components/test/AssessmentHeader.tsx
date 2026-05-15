@@ -44,12 +44,12 @@ export function AssessmentHeader({ testMeta, isSaving }: AssessmentHeaderProps) 
           {isSaving ? (
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <Loader2 size={14} className="animate-spin" />
-              <span className="text-xs font-medium">Saving…</span>
+              <span className="text-xs font-medium">Menyimpan…</span>
             </div>
           ) : (
             <div className="flex items-center gap-1.5 text-muted-foreground/70">
               <Check size={14} />
-              <span className="text-xs font-medium">Saved</span>
+              <span className="text-xs font-medium">Tersimpan</span>
             </div>
           )}
 
@@ -59,7 +59,7 @@ export function AssessmentHeader({ testMeta, isSaving }: AssessmentHeaderProps) 
             className="flex items-center gap-1.5 rounded-full border border-[var(--border-subtle,#E2E8F0)] px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           >
             <LogOut size={14} />
-            Exit Test
+            Keluar Tes
           </button>
         </div>
       </div>

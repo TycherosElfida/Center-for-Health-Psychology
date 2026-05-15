@@ -36,12 +36,12 @@ export default function TestsPage() {
       <section className="bg-gradient-to-br from-secondary via-secondary/60 to-background px-4 pb-12 pt-14 text-center sm:px-6">
         <div className="mx-auto max-w-[680px]">
           <h1 className="font-heading text-[clamp(28px,4vw,42px)] font-extrabold leading-[1.15] tracking-tight text-foreground">
-            Assessment Instruments
+            Instrumen Asesmen
           </h1>
 
           <p className="mx-auto mt-3 max-w-[520px] text-base leading-relaxed text-muted-foreground">
-            Browse our curated collection of validated psychological instruments. Each assessment is
-            backed by peer-reviewed research and standardized scoring.
+            Jelajahi koleksi instrumen psikologi tervalidasi kami. Setiap asesmen didukung oleh
+            penelitian yang telah dikaji sejawat dan penilaian terstandarisasi.
           </p>
         </div>
       </section>
@@ -51,7 +51,7 @@ export default function TestsPage() {
 
       {/* ── Footer ── */}
       <footer className="border-t border-border bg-card py-6 text-center text-[13px] text-muted-foreground">
-        © 2026 Center for Health Psychology · For educational &amp; screening purposes only
+        © 2026 Center for Health Psychology · Hanya untuk keperluan edukasi &amp; skrining
       </footer>
     </div>
   );

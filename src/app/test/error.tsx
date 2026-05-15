@@ -51,7 +51,7 @@ export default function TestError({ error, reset }: ErrorProps) {
           className="mb-3 font-heading text-2xl font-extrabold tracking-tight"
           style={{ color: "var(--text-heading, #1A202C)" }}
         >
-          Assessment Error
+          Kesalahan Asesmen
         </h1>
 
         {/* Subtitle */}
@@ -59,8 +59,8 @@ export default function TestError({ error, reset }: ErrorProps) {
           className="mb-8 text-[15px] leading-relaxed"
           style={{ color: "var(--text-muted, #718096)" }}
         >
-          An error occurred during the assessment. Your progress may not have been saved. You can
-          try again or return to the assessment catalog.
+          Terjadi kesalahan saat mengerjakan asesmen. Progres Anda mungkin belum tersimpan. Anda
+          dapat mencoba lagi atau kembali ke katalog asesmen.
         </p>
 
         {/* Actions */}
@@ -75,7 +75,7 @@ export default function TestError({ error, reset }: ErrorProps) {
             }}
           >
             <RotateCcw size={15} />
-            Try Again
+            Coba Lagi
           </button>
 
           <Link
@@ -88,7 +88,7 @@ export default function TestError({ error, reset }: ErrorProps) {
             }}
           >
             <BookOpen size={15} />
-            Browse Assessments
+            Jelajahi Asesmen
           </Link>
         </div>
 

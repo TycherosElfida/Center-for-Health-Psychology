@@ -50,7 +50,7 @@ export default function GlobalError({ error, reset }: ErrorProps) {
           className="mb-3 font-heading text-3xl font-extrabold tracking-tight"
           style={{ color: "var(--text-heading, #1A202C)" }}
         >
-          Something went wrong
+          Terjadi Kesalahan
         </h1>
 
         {/* Subtitle */}
@@ -58,8 +58,8 @@ export default function GlobalError({ error, reset }: ErrorProps) {
           className="mb-8 text-[15px] leading-relaxed"
           style={{ color: "var(--text-muted, #718096)" }}
         >
-          An unexpected error occurred. This has been noted. You can try again, or head back to
-          explore our assessments.
+          Terjadi kesalahan yang tidak terduga. Anda dapat mencoba lagi, atau kembali menjelajahi
+          asesmen kami.
         </p>
 
         {/* Actions */}
@@ -74,7 +74,7 @@ export default function GlobalError({ error, reset }: ErrorProps) {
             }}
           >
             <RotateCcw size={15} />
-            Try Again
+            Coba Lagi
           </button>
 
           <Link
@@ -87,7 +87,7 @@ export default function GlobalError({ error, reset }: ErrorProps) {
             }}
           >
             <BookOpen size={15} />
-            Browse Assessments
+            Jelajahi Asesmen
           </Link>
         </div>
 

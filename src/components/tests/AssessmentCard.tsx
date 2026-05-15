@@ -136,7 +136,7 @@ export function AssessmentCard({ test, index }: AssessmentCardProps) {
               }}
             >
               <span className="block text-lg font-bold text-foreground">{test.questionCount}</span>
-              <span className="text-[11px] text-muted-foreground">Items</span>
+              <span className="text-[11px] text-muted-foreground">Butir</span>
             </div>
 
             {/* Start button */}
@@ -147,7 +147,7 @@ export function AssessmentCard({ test, index }: AssessmentCardProps) {
                 boxShadow: `0 4px 12px ${test.color}35`,
               }}
             >
-              Start <ArrowRight size={14} />
+              Mulai <ArrowRight size={14} />
             </div>
           </div>
         </div>

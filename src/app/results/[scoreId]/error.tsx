@@ -50,7 +50,7 @@ export default function ResultsError({ error, reset }: ErrorProps) {
           className="mb-3 font-heading text-2xl font-extrabold tracking-tight"
           style={{ color: "var(--text-heading, #1A202C)" }}
         >
-          Couldn&apos;t Load Results
+          Hasil Tidak Dapat Dimuat
         </h1>
 
         {/* Subtitle */}
@@ -58,8 +58,8 @@ export default function ResultsError({ error, reset }: ErrorProps) {
           className="mb-8 text-[15px] leading-relaxed"
           style={{ color: "var(--text-muted, #718096)" }}
         >
-          We couldn&apos;t load your results. Please try again or contact support if the problem
-          persists. You can also explore other assessments.
+          Kami tidak dapat memuat hasil Anda. Silakan coba lagi atau hubungi tim dukungan jika
+          masalah tetap berlanjut. Anda juga dapat menjelajahi asesmen lainnya.
         </p>
 
         {/* Actions */}
@@ -74,7 +74,7 @@ export default function ResultsError({ error, reset }: ErrorProps) {
             }}
           >
             <RotateCcw size={15} />
-            Try Again
+            Coba Lagi
           </button>
 
           <Link
@@ -87,7 +87,7 @@ export default function ResultsError({ error, reset }: ErrorProps) {
             }}
           >
             <BookOpen size={15} />
-            Browse Assessments
+            Jelajahi Asesmen
           </Link>
         </div>
 

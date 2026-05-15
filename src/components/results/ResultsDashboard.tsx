@@ -91,7 +91,7 @@ export function ResultsDashboard({
                 className="flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-3 py-1.5 text-[13px] text-muted-foreground no-underline transition-colors hover:bg-secondary"
               >
                 <Home size={13} />
-                Dashboard
+                Dasbor
               </Link>
             )}
             <Link
@@ -99,7 +99,7 @@ export function ResultsDashboard({
               className="flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-3 py-1.5 text-[13px] text-muted-foreground no-underline transition-colors hover:bg-secondary"
             >
               <ArrowRight size={13} />
-              Tests
+              Asesmen
             </Link>
           </div>
         </div>
@@ -117,18 +117,18 @@ export function ResultsDashboard({
             }}
           >
             <CheckCircle2 size={16} />
-            Assessment Complete
+            Asesmen Selesai
           </div>
         </div>
 
         {/* ── Page Title ──────────────────────── */}
         <div className="mb-10 text-center">
           <h1 className="font-heading text-[clamp(26px,4vw,38px)] font-extrabold tracking-tight text-foreground">
-            Your {testMeta.abbreviation} Results
+            Hasil {testMeta.abbreviation} Anda
           </h1>
           <p className="mx-auto mt-2 max-w-[520px] text-[15px] text-muted-foreground">
-            Comprehensive analysis of your assessment responses with detailed subscale breakdown.
-            Completed {dateStr}.
+            Analisis komprehensif dari jawaban asesmen Anda beserta rincian subskala. Diselesaikan
+            pada {dateStr}.
           </p>
         </div>
 
@@ -171,13 +171,14 @@ export function ResultsDashboard({
             <AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-500" />
             <div>
               <p className="mb-1.5 font-heading text-sm font-bold text-foreground">
-                Clinical Disclaimer
+                Pernyataan Klinis
               </p>
               <p className="text-[13px] leading-relaxed text-muted-foreground">
-                This assessment is a screening tool intended for educational and research purposes
-                only. It does not constitute a clinical diagnosis. Results should be interpreted by
-                a qualified mental health professional. If you are experiencing distress, please
-                contact a licensed practitioner or crisis helpline immediately.
+                Asesmen ini merupakan alat skrining yang ditujukan hanya untuk keperluan edukasi dan
+                penelitian. Hasil ini bukan merupakan diagnosis klinis. Interpretasi hasil sebaiknya
+                dilakukan oleh tenaga profesional kesehatan mental yang berkualifikasi. Jika Anda
+                mengalami tekanan psikologis, segera hubungi praktisi berlisensi atau layanan
+                bantuan krisis.
               </p>
             </div>
           </div>
@@ -197,12 +198,12 @@ export function ResultsDashboard({
         {/* ═══ 5. Assessment Information ═══ */}
         <div className="mb-8 rounded-2xl border border-border/50 bg-card p-5">
           <h4 className="mb-3 font-heading text-[13px] font-semibold text-muted-foreground">
-            Assessment Information
+            Informasi Asesmen
           </h4>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <MetaItem label="Scale" value={testMeta.abbreviation} />
-            <MetaItem label="Items" value={String(testMeta.questionCount)} />
-            <MetaItem label="Author" value={testMeta.author ?? "N/A"} />
+            <MetaItem label="Skala" value={testMeta.abbreviation} />
+            <MetaItem label="Butir" value={String(testMeta.questionCount)} />
+            <MetaItem label="Penulis" value={testMeta.author ?? "N/A"} />
           </div>
         </div>
 
@@ -210,7 +211,7 @@ export function ResultsDashboard({
         {otherTests.length > 0 && (
           <div>
             <h3 className="mb-4 font-heading text-lg font-bold text-foreground">
-              Explore Other Assessments
+              Jelajahi Asesmen Lainnya
             </h3>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {otherTests.map((t) => (
@@ -226,7 +227,7 @@ export function ResultsDashboard({
                     <div className="font-heading text-sm font-semibold text-foreground">
                       {t.abbreviation}
                     </div>
-                    <div className="text-xs text-muted-foreground">{t.questionCount} items</div>
+                    <div className="text-xs text-muted-foreground">{t.questionCount} butir</div>
                   </div>
                   <div
                     className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold"
@@ -235,7 +236,7 @@ export function ResultsDashboard({
                       color: t.color,
                     }}
                   >
-                    Start <ArrowRight size={12} />
+                    Mulai <ArrowRight size={12} />
                   </div>
                 </Link>
               ))}
