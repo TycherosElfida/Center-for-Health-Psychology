@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * HeroSection — Landing page hero with gradient background,
- * headline, CTA buttons, and stats bar.
+ * HeroSection — Landing page hero dengan background gradient,
+ * headline, tombol CTA, dan bar statistik.
  */
 
 import Link from "next/link";
@@ -29,7 +29,7 @@ export function HeroSection() {
             fontWeight: 500,
           }}
         >
-          Evidence-Based Psychological Assessments
+          Asesmen Psikologi Berbasis Bukti Ilmiah
         </div>
 
         {/* Headline */}
@@ -42,8 +42,8 @@ export function HeroSection() {
             marginBottom: 20,
           }}
         >
-          Nurturing Healthy{" "}
-          <span style={{ color: "var(--brand-primary-dark, #6B5CA0)" }}>Mind and Body</span>
+          Merawat Kesehatan{" "}
+          <span style={{ color: "var(--brand-primary-dark, #6B5CA0)" }}>Jiwa dan Raga</span>
         </h1>
 
         {/* Sub-copy */}
@@ -55,8 +55,8 @@ export function HeroSection() {
             lineHeight: 1.75,
           }}
         >
-          Take validated psychological assessments designed to help you gain deeper insight into
-          your personality, stress levels, and mental health in just a few minutes.
+          Ikuti asesmen psikologi yang tervalidasi untuk membantu Anda memahami lebih dalam tentang
+          kepribadian, tingkat stres, dan kesehatan mental Anda hanya dalam beberapa menit.
         </p>
 
         {/* CTA buttons */}
@@ -70,7 +70,7 @@ export function HeroSection() {
               boxShadow: "var(--shadow-button)",
             }}
           >
-            Explore Assessments <ArrowRight size={16} aria-hidden="true" />
+            Jelajahi Asesmen <ArrowRight size={16} aria-hidden="true" />
           </Link>
         </div>
       </div>
