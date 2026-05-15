@@ -17,9 +17,20 @@ import { useState, useRef, useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { User, Calendar, Users, MapPin, Save, Lock, Loader2, CheckCircle2 } from "lucide-react";
+import {
+  User,
+  Calendar,
+  Users,
+  MapPin,
+  Save,
+  Lock,
+  Loader2,
+  CheckCircle2,
+  KeyRound,
+} from "lucide-react";
 import { getProvinces, getCitiesByProvince } from "@/lib/data/indonesia-regions";
 import { trpc } from "@/lib/trpc/client";
+import { ChangePasswordModal } from "@/components/profile/ChangePasswordModal";
 
 /* ═══════════════════════════════════════════════════════
    Schema
@@ -56,6 +67,7 @@ interface ProfileFormProps {
 
 export function ProfileForm({ profile, userName }: ProfileFormProps) {
   const [saved, setSaved] = useState(false);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const provinces = getProvinces();
 
   // Resolve province/city codes from saved names
@@ -337,6 +349,49 @@ export function ProfileForm({ profile, userName }: ProfileFormProps) {
           </form>
         </div>
       </div>
+
+      {/* ═══ Password Section Card ═══ */}
+      <div
+        className="flex items-center gap-4 rounded-2xl border bg-card p-5"
+        style={{
+          borderColor: "var(--border-subtle, #E2DCF0)",
+          boxShadow: "var(--shadow-card)",
+        }}
+      >
+        {/* Icon */}
+        <div
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+          style={{ background: "var(--brand-primary-light, #EDE9F8)" }}
+        >
+          <KeyRound size={18} style={{ color: "var(--brand-primary, #9B8EC4)" }} />
+        </div>
+
+        {/* Text */}
+        <div className="min-w-0 flex-1">
+          <p className="font-heading text-[14px] font-bold text-foreground">Password</p>
+          <p className="mt-0.5 text-[12px] text-muted-foreground">
+            Last changed recently &middot; keep it strong and unique.
+          </p>
+        </div>
+
+        {/* CTA */}
+        <button
+          type="button"
+          onClick={() => setPasswordModalOpen(true)}
+          className="flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5 text-[13px] font-semibold transition-all hover:shadow-sm"
+          style={{
+            borderColor: "var(--brand-primary-mid, #C5BADF)",
+            color: "var(--brand-primary-dark, #6B5CA0)",
+            background: "white",
+          }}
+        >
+          <Lock size={13} />
+          Change Password
+        </button>
+      </div>
+
+      {/* ═══ Change Password Modal ═══ */}
+      <ChangePasswordModal isOpen={passwordModalOpen} onClose={() => setPasswordModalOpen(false)} />
     </div>
   );
 }

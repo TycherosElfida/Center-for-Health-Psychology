@@ -44,6 +44,8 @@ interface ReportRequestFormProps {
   accentColor: string;
   /** Whether the current user is authenticated. */
   isAuthenticated?: boolean;
+  /** Email of the logged-in user — shown so they don't need to retype it. */
+  userEmail?: string;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -55,6 +57,7 @@ export function ReportRequestForm({
   testShortName,
   accentColor,
   isAuthenticated = false,
+  userEmail,
 }: ReportRequestFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSent, setIsSent] = useState(false);
@@ -185,10 +188,15 @@ export function ReportRequestForm({
                 </div>
 
                 {isAuthenticated ? (
-                  /* Authenticated user: no email input needed */
+                  /* Authenticated user: show their email so they know where it will be sent */
                   <p className="mb-4 text-[13px] leading-relaxed text-muted-foreground">
-                    Laporan akan dikirim ke email terdaftar Anda. Tim kami akan memproses permintaan
-                    ini sebelum mengirimkannya.
+                    Laporan akan dikirim ke{" "}
+                    {userEmail ? (
+                      <strong style={{ color: accentColor }}>{userEmail}</strong>
+                    ) : (
+                      "email terdaftar Anda"
+                    )}
+                    . Tim kami akan memproses permintaan ini sebelum mengirimkannya.
                   </p>
                 ) : (
                   /* Guest: show email input */
@@ -262,7 +270,15 @@ export function ReportRequestForm({
                   </p>
                   <p className="text-[13px] text-muted-foreground">
                     {isAuthenticated ? (
-                      <>Tim kami akan memproses dan mengirimkan laporan ke email terdaftar Anda.</>
+                      <>
+                        Tim kami akan memproses dan mengirimkan laporan ke{" "}
+                        {userEmail ? (
+                          <strong style={{ color: accentColor }}>{userEmail}</strong>
+                        ) : (
+                          "email terdaftar Anda"
+                        )}
+                        .
+                      </>
                     ) : (
                       <>
                         Tim kami akan memproses dan mengirimkan laporan {testShortName} ke{" "}

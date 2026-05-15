@@ -40,6 +40,8 @@ interface ResultsDashboardProps {
   interpretation: ScoreInterpretation;
   completedAt: string;
   isAuthenticated: boolean;
+  /** Email address of the logged-in user (undefined for guests). */
+  userEmail?: string;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -55,6 +57,7 @@ export function ResultsDashboard({
   interpretation,
   completedAt,
   isAuthenticated,
+  userEmail,
 }: ResultsDashboardProps) {
   // Fetch other tests for "Explore Other Assessments" section
   const { data: allTests = [] } = trpc.publicTests.getPublishedTests.useQuery();
@@ -184,6 +187,8 @@ export function ResultsDashboard({
             scoreId={scoreId}
             testShortName={testMeta.abbreviation}
             accentColor={testMeta.color}
+            isAuthenticated={isAuthenticated}
+            userEmail={userEmail}
           />
         </div>
 

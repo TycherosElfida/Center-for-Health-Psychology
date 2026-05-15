@@ -20,6 +20,7 @@ import type { Metadata } from "next";
 import { db } from "@/server/db";
 import { results } from "@/server/schema/sessions";
 import { tests } from "@/server/schema/tests";
+import { users } from "@/server/schema/users";
 import type { TestMeta } from "@/lib/data/tests";
 import { SEVERITY_COLORS } from "@/lib/types/assessment";
 import { getOptionalSession } from "@/lib/auth/dal";
@@ -140,6 +141,18 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
   const session = await getOptionalSession();
   const isAuthenticated = !!session;
 
+  // ── Resolve logged-in user's email (for pre-filled report request) ────
+  let userEmail: string | undefined;
+  if (session?.userId) {
+    const userRow = await db
+      .select({ email: users.email })
+      .from(users)
+      .where(eq(users.id, session.userId))
+      .limit(1)
+      .then((r) => r[0]);
+    userEmail = userRow?.email ?? undefined;
+  }
+
   return (
     <ResultsDashboard
       scoreId={row.id}
@@ -150,6 +163,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
       interpretation={interpretation}
       completedAt={row.createdAt.toISOString()}
       isAuthenticated={isAuthenticated}
+      userEmail={userEmail}
     />
   );
 }

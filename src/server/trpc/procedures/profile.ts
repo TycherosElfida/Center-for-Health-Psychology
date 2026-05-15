@@ -1,16 +1,20 @@
 /**
  * Profile Router — User profile CRUD
  *
- * Two procedures:
+ * Procedures:
  *   - profile.get: Returns the current user's profile (or null)
  *   - profile.upsert: Creates or updates the user's profile
+ *   - profile.changePassword: Verifies current password, updates to new hash
  *
- * Both require authentication (protectedProcedure).
+ * All require authentication (protectedProcedure).
  */
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
+import bcrypt from "bcryptjs";
 import { createTRPCRouter, protectedProcedure } from "../index";
 import { userProfiles } from "@/server/schema/user-profiles";
+import { users } from "@/server/schema/users";
 import { sql } from "drizzle-orm";
 
 export const profileRouter = createTRPCRouter({
@@ -67,6 +71,55 @@ export const profileRouter = createTRPCRouter({
             updatedAt: sql`now()`,
           },
         });
+
+      return { success: true as const };
+    }),
+
+  /**
+   * Change the authenticated user's password.
+   * 1. Fetch current passwordHash — reject if no password (OAuth-only account)
+   * 2. Verify currentPassword against stored hash
+   * 3. Hash newPassword (bcrypt, cost 12) and persist
+   */
+  changePassword: protectedProcedure
+    .input(
+      z.object({
+        currentPassword: z.string().min(1),
+        newPassword: z.string().min(8, "Password must be at least 8 characters"),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.userId;
+
+      // 1. Fetch current hash
+      const [user] = await ctx.db
+        .select({ passwordHash: users.passwordHash })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+      if (!user?.passwordHash) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No password set for this account.",
+        });
+      }
+
+      // 2. Verify current password
+      const valid = await bcrypt.compare(input.currentPassword, user.passwordHash);
+      if (!valid) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Current password is incorrect.",
+        });
+      }
+
+      // 3. Hash + persist new password
+      const newHash = await bcrypt.hash(input.newPassword, 12);
+      await ctx.db
+        .update(users)
+        .set({ passwordHash: newHash, updatedAt: new Date() })
+        .where(eq(users.id, userId));
 
       return { success: true as const };
     }),
