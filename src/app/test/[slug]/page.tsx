@@ -3,9 +3,9 @@
  *
  * Responsibilities:
  *   1. Validate slug → notFound() on miss
- *   2. Load test metadata + questions from static data layers
+ *   2. Load test metadata + questions from the DATABASE (Drizzle relational query)
  *   3. Generate dynamic SEO metadata
- *   4. Create a server-side session via tRPC caller
+ *   4. Map DB rows to the AssessmentForm Question[] contract
  *   5. Render the <AssessmentForm> client island with serialisable props
  *
  * Zero client JS is shipped from this layer — all interactivity is
@@ -15,13 +15,13 @@
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 
-import { getQuestions } from "@/lib/data/questions";
 import { AssessmentForm } from "@/components/test/AssessmentForm";
 import { db } from "@/server/db";
 import { tests } from "@/server/schema/tests";
 import { answers } from "@/server/schema/sessions";
 import { eq, and } from "drizzle-orm";
 import type { TestMeta } from "@/lib/data/tests";
+import type { Question, AnswerOption } from "@/lib/data/questions";
 
 /* ═══════════════════════════════════════════════════════
    Types
@@ -67,32 +67,74 @@ export default async function TestPage({ params, searchParams }: TestPageProps) 
   const { slug } = await params;
   const { sessionId } = await searchParams;
 
-  // ── Validate slug ───────────────────────────────────────
-  const [testRow] = await db
-    .select({
-      slug: tests.slug,
-      title: tests.title,
-      abbreviation: tests.abbreviation,
-      description: tests.description,
-      category: tests.category,
-      author: tests.author,
-      releaseYear: tests.releaseYear,
-      thumbnailUrl: tests.thumbnailUrl,
-      color: tests.color,
-    })
-    .from(tests)
-    .where(and(eq(tests.slug, slug), eq(tests.status, "published"), eq(tests.isActive, true)))
-    .limit(1);
+  // ── Fetch test + questions + options in a single relational query ──
+  const testWithQuestions = await db.query.tests.findFirst({
+    where: {
+      slug,
+      status: "published",
+      isActive: true,
+    },
+    columns: {
+      slug: true,
+      title: true,
+      abbreviation: true,
+      description: true,
+      category: true,
+      author: true,
+      releaseYear: true,
+      thumbnailUrl: true,
+      color: true,
+    },
+    with: {
+      questions: {
+        columns: {
+          id: true,
+          questionText: true,
+          isReversed: true,
+          order: true,
+        },
+        orderBy: (q, { asc }) => [asc(q.order)],
+        with: {
+          options: {
+            columns: {
+              label: true,
+              value: true,
+              order: true,
+            },
+            orderBy: (o, { asc }) => [asc(o.order)],
+          },
+        },
+      },
+    },
+  });
 
-  const testQuestions = getQuestions(slug);
-
-  if (!testRow || !testQuestions || testQuestions.length === 0) {
+  if (!testWithQuestions || testWithQuestions.questions.length === 0) {
     notFound();
   }
 
+  // ── Map DB rows → AssessmentForm Question[] contract ──────────
+  const testQuestions: Question[] = testWithQuestions.questions.map((q) => ({
+    id: q.id,
+    text: q.questionText,
+    reversed: q.isReversed || undefined,
+    options: q.options.map(
+      (o): AnswerOption => ({
+        label: o.label,
+        value: o.value,
+      })
+    ),
+  }));
+
   const testMeta: TestMeta = {
-    ...testRow,
-    color: testRow.color ?? "#9B8EC4",
+    slug: testWithQuestions.slug,
+    title: testWithQuestions.title,
+    abbreviation: testWithQuestions.abbreviation,
+    description: testWithQuestions.description,
+    category: testWithQuestions.category,
+    author: testWithQuestions.author,
+    releaseYear: testWithQuestions.releaseYear,
+    thumbnailUrl: testWithQuestions.thumbnailUrl,
+    color: testWithQuestions.color ?? "#9B8EC4",
     questionCount: testQuestions.length,
   };
 
