@@ -21,6 +21,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useState, useMemo, useRef, useEffect } from "react";
+import * as XLSX from "xlsx";
 import { DT, CATEGORY_COLORS } from "../_components/types";
 import { RadarChart } from "./_components/RadarChart";
 import { SaveChartButton } from "./_components/SaveChartButton";
@@ -274,6 +275,49 @@ export default function DetailedReportPage() {
     }
   }
 
+  /** Export detail report items as CSV or XLSX */
+  function handleDetailExport(format: "csv" | "xlsx") {
+    if (!data) return;
+    const slug = data.testSlug?.toUpperCase() ?? "ASSESSMENT";
+    const rows = (data.items ?? []).map((item) => ({
+      "#": item.order,
+      Question: item.questionText,
+      "User's Answer": item.answerText,
+      "Raw Score": item.rawAnswer,
+      "Max Points": item.maxPoints,
+    }));
+
+    // Add summary row
+    rows.push({
+      "#": "" as unknown as number,
+      Question: "TOTAL",
+      "User's Answer": data.resultLabel ?? "",
+      "Raw Score": data.totalScore,
+      "Max Points": data.maxPossibleScore,
+    });
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    // Auto-size columns
+    const colWidths = Object.keys(rows[0] ?? {}).map((key) => {
+      const maxLen = Math.max(
+        key.length,
+        ...rows.map((r) => String((r as Record<string, unknown>)[key] ?? "").length)
+      );
+      return { wch: Math.min(maxLen + 2, 60) };
+    });
+    ws["!cols"] = colWidths;
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, slug);
+
+    const fileName = `${data.profile.name ?? "report"}-${slug}-${scoreId.slice(0, 8)}`;
+    if (format === "xlsx") {
+      XLSX.writeFile(wb, `${fileName}.xlsx`);
+    } else {
+      XLSX.writeFile(wb, `${fileName}.csv`, { bookType: "csv" });
+    }
+  }
+
   /* ── Loading / Error states ── */
   if (isLoading) {
     return (
@@ -436,7 +480,8 @@ export default function DetailedReportPage() {
               >
                 <button
                   onClick={() => {
-                    setDlOpen(false); /* xlsx not applicable on detail page */
+                    setDlOpen(false);
+                    handleDetailExport("xlsx");
                   }}
                   style={{
                     display: "flex",
@@ -461,7 +506,8 @@ export default function DetailedReportPage() {
                 <div style={{ height: 1, background: DT.BORDER }} />
                 <button
                   onClick={() => {
-                    setDlOpen(false); /* csv not applicable on detail page */
+                    setDlOpen(false);
+                    handleDetailExport("csv");
                   }}
                   style={{
                     display: "flex",
@@ -1064,12 +1110,12 @@ export default function DetailedReportPage() {
           </div>
         </div>
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <colgroup>
               <col style={{ width: 50 }} />
               <col />
+              <col style={{ width: 200 }} />
               <col style={{ width: 140 }} />
-              <col style={{ width: 120 }} />
             </colgroup>
             <thead>
               <tr style={{ background: DT.BG_HEADER }}>
