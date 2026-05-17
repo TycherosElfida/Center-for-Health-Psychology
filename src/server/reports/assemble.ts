@@ -227,10 +227,18 @@ export async function assembleReportData(resultId: string): Promise<ReportData> 
   const answerRows = await db.select().from(answers).where(eq(answers.sessionId, result.sessionId));
 
   // Build answer lookup: questionId → value
+  // Answers are JSONB — may be stored as { selected: N }, { value: N }, or a bare number.
+  // Apply the same coercion the scoring engine uses (engine.ts:39-42).
   const answerMap = new Map<string, number>();
   for (const a of answerRows) {
-    const val = a.value as { selected?: number; value?: number };
-    answerMap.set(a.questionId, val.selected ?? val.value ?? 0);
+    const raw = a.value;
+    const extracted =
+      typeof raw === "object" && raw !== null && "selected" in raw
+        ? (raw as Record<string, unknown>).selected
+        : typeof raw === "object" && raw !== null && "value" in raw
+          ? (raw as Record<string, unknown>).value
+          : raw;
+    answerMap.set(a.questionId, Number(extracted) || 0);
   }
 
   // 6. Build item responses
