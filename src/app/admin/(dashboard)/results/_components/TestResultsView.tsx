@@ -26,20 +26,32 @@ const PAGE_SIZE = 20;
  */
 function downloadData(
   rows: Array<Record<string, unknown>>,
+  questionHeaders: Array<{ order: number; label: string }>,
   filename: string,
   format: "csv" | "xlsx"
 ) {
   if (rows.length === 0) return;
 
-  const exportData = rows.map((r) => ({
-    Name: r.name ?? "",
-    Sex: r.sex ?? "",
-    "Province/City": `${r.province ?? ""} ${r.city ?? ""}`.trim(),
-    Age: r.age ?? "",
-    Score: r.totalScore ?? 0,
-    Category: r.resultLabel ?? "",
-    Date: r.createdAt ? new Date(r.createdAt as string).toLocaleDateString("en-GB") : "",
-  }));
+  const exportData = rows.map((r) => {
+    const itemAnswers = (r.itemAnswers ?? {}) as Record<number, number | string>;
+    const row: Record<string, unknown> = {
+      Name: r.name ?? "",
+      Sex: r.sex ?? "",
+      "Province/City": `${r.province ?? ""} ${r.city ?? ""}`.trim(),
+      Age: r.age ?? "",
+    };
+
+    // Per-question columns ordered by question index
+    for (const qh of questionHeaders) {
+      row[qh.label] = itemAnswers[qh.order] ?? "";
+    }
+
+    row["Total (Computed)"] = r.totalScore ?? 0;
+    row["Category"] = r.resultLabel ?? "";
+    row["Date"] = r.createdAt ? new Date(r.createdAt as string).toLocaleDateString("en-GB") : "";
+
+    return row;
+  });
 
   const worksheet = XLSX.utils.json_to_sheet(exportData);
   const workbook = XLSX.utils.book_new();
@@ -206,6 +218,7 @@ export function TestResultsView({ testConfig }: TestResultsViewProps) {
         });
         downloadData(
           data.rows as unknown as Array<Record<string, unknown>>,
+          data.questionHeaders ?? [],
           `${shortName}-filtered-results`,
           format
         );
@@ -227,6 +240,7 @@ export function TestResultsView({ testConfig }: TestResultsViewProps) {
         });
         downloadData(
           data.rows as unknown as Array<Record<string, unknown>>,
+          data.questionHeaders ?? [],
           `${shortName}-all-results`,
           format
         );

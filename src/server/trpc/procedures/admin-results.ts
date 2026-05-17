@@ -13,13 +13,13 @@
  * and session_demographics.session_id is also a 1:1 FK to test_sessions.id.
  * No intermediate hop through test_sessions is needed.
  */
-import { eq, and, sql, desc, asc, ilike, gte, lte, type SQL } from "drizzle-orm";
+import { eq, and, sql, desc, asc, ilike, gte, lte, inArray, type SQL } from "drizzle-orm";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
 import { createTRPCRouter, adminProcedure, adminMutationProcedure } from "../index";
-import { results, testSessions } from "@/server/schema/sessions";
-import { tests } from "@/server/schema/tests";
+import { results, testSessions, answers } from "@/server/schema/sessions";
+import { tests, questions } from "@/server/schema/tests";
 import { sessionDemographics } from "@/server/schema/session-demographics";
 import { auditLogs } from "@/server/schema/admin";
 
@@ -364,6 +364,7 @@ export const adminResultsRouter = createTRPCRouter({
       const sortCol = getSortColumn(input.sortBy);
       const orderBy = input.sortDir === "asc" ? asc(sortCol) : desc(sortCol);
 
+      // ── Fetch result rows ──────────────────────────────────────
       const rows = await ctx.db
         .select({
           id: results.id,
@@ -383,6 +384,59 @@ export const adminResultsRouter = createTRPCRouter({
         .orderBy(orderBy)
         .limit(MAX_EXPORT_ROWS);
 
+      // ── Fetch question metadata for column headers ─────────────
+      const questionMeta = await ctx.db
+        .select({
+          id: questions.id,
+          order: questions.order,
+          questionText: questions.questionText,
+        })
+        .from(questions)
+        .where(eq(questions.testId, test.id))
+        .orderBy(asc(questions.order));
+
+      const questionHeaders = questionMeta.map((q) => ({
+        order: q.order,
+        label:
+          q.questionText.length > 30
+            ? `Q${q.order} - ${q.questionText.slice(0, 30)}...`
+            : `Q${q.order} - ${q.questionText}`,
+      }));
+
+      // ── Batch-fetch answers for all exported sessions ──────────
+      const questionOrderMap = new Map(questionMeta.map((q) => [q.id, q.order]));
+      const sessionAnswerMap = new Map<string, Record<number, number | string>>();
+
+      const sessionIds = rows.map((r) => r.sessionId);
+      if (sessionIds.length > 0) {
+        const allAnswers = await ctx.db
+          .select({
+            sessionId: answers.sessionId,
+            questionId: answers.questionId,
+            value: answers.value,
+          })
+          .from(answers)
+          .where(inArray(answers.sessionId, sessionIds));
+
+        for (const a of allAnswers) {
+          const order = questionOrderMap.get(a.questionId);
+          if (order === undefined) continue;
+
+          // Coerce JSONB: { selected: N } → N, else bare number
+          const rawVal = a.value;
+          const coerced =
+            typeof rawVal === "object" && rawVal !== null && "selected" in rawVal
+              ? (rawVal as Record<string, unknown>).selected
+              : rawVal;
+          const numVal = Number(coerced);
+
+          if (!sessionAnswerMap.has(a.sessionId)) {
+            sessionAnswerMap.set(a.sessionId, {});
+          }
+          sessionAnswerMap.get(a.sessionId)![order] = isNaN(numVal) ? "" : numVal;
+        }
+      }
+
       return {
         rows: rows.map((r) => ({
           id: r.id,
@@ -395,7 +449,9 @@ export const adminResultsRouter = createTRPCRouter({
           totalScore: r.totalScore ? Number(r.totalScore) : 0,
           resultLabel: r.resultLabel ?? null,
           createdAt: r.createdAt.toISOString(),
+          itemAnswers: sessionAnswerMap.get(r.sessionId) ?? {},
         })),
+        questionHeaders,
         testTitle: test.title,
       };
     }),
