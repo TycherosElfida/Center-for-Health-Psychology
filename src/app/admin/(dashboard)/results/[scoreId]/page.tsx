@@ -275,42 +275,103 @@ export default function DetailedReportPage() {
     }
   }
 
-  /** Export detail report items as CSV or XLSX */
+  /** Export comprehensive raw data for researchers (CSV / XLSX) */
   function handleDetailExport(format: "csv" | "xlsx") {
     if (!data) return;
     const slug = data.testSlug?.toUpperCase() ?? "ASSESSMENT";
-    const rows = (data.items ?? []).map((item) => ({
-      "#": item.order,
-      Question: item.questionText,
-      "User's Answer": item.answerText,
-      "Raw Score": item.rawAnswer,
-      "Max Points": item.maxPoints,
-    }));
+    const { profile: p } = data;
 
-    // Add summary row
-    rows.push({
-      "#": "" as unknown as number,
-      Question: "TOTAL",
-      "User's Answer": data.resultLabel ?? "",
-      "Raw Score": data.totalScore,
-      "Max Points": data.maxPossibleScore,
+    // Build a dimension lookup: dimension name → { score, maxScore, label }
+    const dimMap = new Map(
+      (data.dimensionScores ?? []).map((d) => [
+        d.dimension,
+        { score: d.score, max: d.maxScore, label: d.label ?? "" },
+      ])
+    );
+
+    // Each row = one question, enriched with full respondent metadata
+    const rows = (data.items ?? []).map((item) => {
+      const dim = item.dimension ? dimMap.get(item.dimension) : undefined;
+      return {
+        // ── Respondent ──
+        respondent_name: p.name,
+        respondent_email: p.email,
+        respondent_sex: p.sex,
+        respondent_age: p.age ?? "",
+        respondent_province: p.province,
+        respondent_regency: p.regency,
+        respondent_education: p.education,
+        respondent_job_title: p.jobTitle,
+        // ── Test metadata ──
+        test_name: data.testName,
+        test_slug: data.testSlug,
+        test_date: p.testDate,
+        total_score: data.totalScore,
+        max_possible_score: data.maxPossibleScore,
+        result_category: data.resultLabel ?? "",
+        // ── Item ──
+        item_order: item.order,
+        question_text: item.questionText,
+        dimension: item.dimension ?? "",
+        is_reversed: item.isReversed ? "Yes" : "No",
+        answer_text: item.answerText,
+        raw_answer: item.rawAnswer,
+        max_points: item.maxPoints,
+        // ── Dimension aggregate (for convenience) ──
+        dimension_score: dim?.score ?? "",
+        dimension_max_score: dim?.max ?? "",
+        dimension_label: dim?.label ?? "",
+      };
     });
 
-    const ws = XLSX.utils.json_to_sheet(rows);
-    // Auto-size columns
-    const colWidths = Object.keys(rows[0] ?? {}).map((key) => {
+    // ── Sheet: Items ──
+    const wsItems = XLSX.utils.json_to_sheet(rows);
+    const itemColWidths = Object.keys(rows[0] ?? {}).map((key) => {
       const maxLen = Math.max(
         key.length,
         ...rows.map((r) => String((r as Record<string, unknown>)[key] ?? "").length)
       );
       return { wch: Math.min(maxLen + 2, 60) };
     });
-    ws["!cols"] = colWidths;
+    wsItems["!cols"] = itemColWidths;
 
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, slug);
+    XLSX.utils.book_append_sheet(wb, wsItems, "Items");
 
-    const fileName = `${data.profile.name ?? "report"}-${slug}-${scoreId.slice(0, 8)}`;
+    // ── Sheet: Summary (XLSX only) ──
+    if (format === "xlsx") {
+      const summaryRows = [
+        { field: "Respondent", value: p.name },
+        { field: "Email", value: p.email },
+        { field: "Sex", value: p.sex },
+        { field: "Age", value: String(p.age ?? "") },
+        { field: "Province", value: p.province },
+        { field: "Regency", value: p.regency },
+        { field: "Education", value: p.education },
+        { field: "Job Title", value: p.jobTitle },
+        { field: "Test", value: data.testName },
+        { field: "Test Slug", value: data.testSlug },
+        { field: "Date Taken", value: p.testDate },
+        { field: "Total Score", value: String(data.totalScore) },
+        { field: "Max Possible Score", value: String(data.maxPossibleScore) },
+        { field: "Result Category", value: data.resultLabel ?? "" },
+        { field: "Interpretation", value: data.interpretation?.label ?? "" },
+        { field: "Description", value: data.interpretation?.description ?? "" },
+        { field: "Recommendation", value: data.interpretation?.recommendation ?? "" },
+      ];
+      // Add dimension rows
+      for (const d of data.dimensionScores ?? []) {
+        summaryRows.push({
+          field: `Dimension: ${d.dimension}`,
+          value: `${d.score}/${d.maxScore}${d.label ? " — " + d.label : ""}`,
+        });
+      }
+      const wsSummary = XLSX.utils.json_to_sheet(summaryRows);
+      wsSummary["!cols"] = [{ wch: 30 }, { wch: 80 }];
+      XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
+    }
+
+    const fileName = `${p.name ?? "report"}-${slug}-${scoreId.slice(0, 8)}`;
     if (format === "xlsx") {
       XLSX.writeFile(wb, `${fileName}.xlsx`);
     } else {
@@ -1227,7 +1288,8 @@ export default function DetailedReportPage() {
                           borderRadius: 2,
                           background: `${DT.TEAL}18`,
                           overflow: "hidden",
-                          width: "100%",
+                          maxWidth: 60,
+                          marginLeft: "auto",
                         }}
                       >
                         <div
