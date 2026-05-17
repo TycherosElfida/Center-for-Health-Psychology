@@ -1176,7 +1176,7 @@ export default function DetailedReportPage() {
               <col style={{ width: 50 }} />
               <col />
               <col style={{ width: 200 }} />
-              <col style={{ width: 140 }} />
+              <col style={{ width: 100 }} />
             </colgroup>
             <thead>
               <tr style={{ background: DT.BG_HEADER }}>
@@ -1271,25 +1271,23 @@ export default function DetailedReportPage() {
                       verticalAlign: "middle",
                     }}
                   >
-                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "flex-end",
+                        gap: 8,
+                      }}
+                    >
+                      {/* Mini progress bar */}
                       <div
                         style={{
-                          fontSize: 12,
-                          fontWeight: 700,
-                          color: DT.TEAL_DARK,
-                          textAlign: "right",
-                        }}
-                      >
-                        {item.rawAnswer}/{item.maxPoints}
-                      </div>
-                      <div
-                        style={{
+                          width: 40,
                           height: 4,
                           borderRadius: 2,
-                          background: `${DT.TEAL}18`,
+                          background: `${DT.TEAL}20`,
                           overflow: "hidden",
-                          maxWidth: 60,
-                          marginLeft: "auto",
+                          flexShrink: 0,
                         }}
                       >
                         <div
@@ -1302,6 +1300,18 @@ export default function DetailedReportPage() {
                           }}
                         />
                       </div>
+                      {/* Score fraction */}
+                      <span
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 700,
+                          color: DT.TEAL_DARK,
+                          fontVariantNumeric: "tabular-nums",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {item.rawAnswer}/{item.maxPoints}
+                      </span>
                     </div>
                   </td>
                 </tr>
