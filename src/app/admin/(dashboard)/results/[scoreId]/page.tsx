@@ -11,6 +11,7 @@ import {
   Calendar,
   Send,
   FileText,
+  FileSpreadsheet,
   CheckCircle2,
   AlertTriangle,
   ChevronDown,
@@ -19,9 +20,10 @@ import {
   Shield,
   Trash2,
 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { DT, CATEGORY_COLORS } from "../_components/types";
 import { RadarChart } from "./_components/RadarChart";
+import { SaveChartButton } from "./_components/SaveChartButton";
 
 /* ── Helpers ── */
 function getCatStyle(slug: string, label: string | null) {
@@ -196,6 +198,12 @@ export default function DetailedReportPage() {
   const scoreId = params.scoreId;
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [dlOpen, setDlOpen] = useState(false);
+  const dlRef = useRef<HTMLDivElement>(null);
+  const gaugeRef = useRef<HTMLDivElement>(null);
+  const dimRef = useRef<HTMLDivElement>(null);
+  const radarRef = useRef<HTMLDivElement>(null);
+
   const deleteMutation = trpc.adminResults.deleteResult.useMutation({
     onSuccess: () => {
       router.push("/admin/results");
@@ -205,6 +213,15 @@ export default function DetailedReportPage() {
       setIsDeleteDialogOpen(false);
     },
   });
+
+  // Close download dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (dlRef.current && !dlRef.current.contains(e.target as Node)) setDlOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   const { data, isLoading, error } = trpc.results.getDetailedReport.useQuery(
     { scoreId },
@@ -372,43 +389,157 @@ export default function DetailedReportPage() {
             <span style={{ color: DT.TEAL_DARK, fontWeight: 600 }}>{profile.name}</span>
           </span>
         </div>
-        <button
-          onClick={handleDownloadPdf}
-          disabled={pdfState === "loading"}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "6px 14px",
-            borderRadius: 12,
-            background: pdfState === "loading" ? `${DT.TEAL}60` : DT.TEAL_LIGHT,
-            color: DT.TEAL_DARK,
-            fontWeight: 600,
-            fontSize: 12,
-            border: `1.5px solid ${DT.TEAL}50`,
-            cursor: pdfState === "loading" ? "wait" : "pointer",
-          }}
-        >
-          <Download size={13} /> {pdfState === "loading" ? "Generating…" : "Download PDF"}
-        </button>
-        <button
-          onClick={() => setIsDeleteDialogOpen(true)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "6px 14px",
-            borderRadius: 12,
-            background: "#ffebee",
-            color: "#c62828",
-            fontWeight: 600,
-            fontSize: 12,
-            border: `1.5px solid #ffcdd2`,
-            cursor: "pointer",
-          }}
-        >
-          <Trash2 size={13} /> Delete
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Unified download dropdown */}
+          <div ref={dlRef} style={{ position: "relative" }}>
+            <button
+              onClick={() => setDlOpen((p) => !p)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "6px 14px",
+                borderRadius: 12,
+                background: dlOpen ? DT.TEAL_LIGHT : "transparent",
+                color: DT.TEAL_DARK,
+                fontWeight: 600,
+                fontSize: 12,
+                border: `1.5px solid ${DT.TEAL}50`,
+                cursor: "pointer",
+                transition: "background 0.15s",
+              }}
+            >
+              <Download size={13} />
+              Download
+              <ChevronDown
+                size={11}
+                style={{
+                  transition: "transform 0.2s",
+                  transform: dlOpen ? "rotate(180deg)" : "rotate(0deg)",
+                }}
+              />
+            </button>
+            {dlOpen && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "calc(100% + 6px)",
+                  right: 0,
+                  background: DT.WHITE,
+                  border: `1.5px solid ${DT.BORDER}`,
+                  borderRadius: 12,
+                  boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
+                  zIndex: 50,
+                  minWidth: 200,
+                  overflow: "hidden",
+                }}
+              >
+                <button
+                  onClick={() => {
+                    setDlOpen(false); /* xlsx not applicable on detail page */
+                  }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    width: "100%",
+                    padding: "10px 16px",
+                    background: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: DT.DARK_TEXT,
+                    transition: "background 0.1s",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = DT.BG_HEADER)}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                >
+                  <FileSpreadsheet size={14} color="#2E7D32" />
+                  Export as .xlsx
+                </button>
+                <div style={{ height: 1, background: DT.BORDER }} />
+                <button
+                  onClick={() => {
+                    setDlOpen(false); /* csv not applicable on detail page */
+                  }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    width: "100%",
+                    padding: "10px 16px",
+                    background: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: DT.DARK_TEXT,
+                    transition: "background 0.1s",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = DT.BG_HEADER)}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                >
+                  <FileText size={14} color="#1565C0" />
+                  Export as .csv
+                </button>
+                <div style={{ height: 1, background: DT.BORDER }} />
+                <button
+                  onClick={() => {
+                    setDlOpen(false);
+                    handleDownloadPdf();
+                  }}
+                  disabled={pdfState === "loading"}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    width: "100%",
+                    padding: "10px 16px",
+                    background: "transparent",
+                    border: "none",
+                    cursor: pdfState === "loading" ? "wait" : "pointer",
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: DT.DARK_TEXT,
+                    transition: "background 0.1s",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = DT.BG_HEADER)}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                >
+                  <Download size={14} color="#E65100" />
+                  {pdfState === "loading" ? "Generating PDF…" : "Download PDF"}
+                </button>
+              </div>
+            )}
+          </div>
+          {/* Delete button */}
+          <button
+            onClick={() => setIsDeleteDialogOpen(true)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "6px 14px",
+              borderRadius: 12,
+              background: "transparent",
+              color: DT.RED,
+              fontWeight: 600,
+              fontSize: 12,
+              border: "1.5px solid #FED7D7",
+              cursor: "pointer",
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "#FFF5F5";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+            }}
+          >
+            <Trash2 size={13} /> Delete
+          </button>
+        </div>
       </div>
 
       {/* ═══ 1. PROFILE HEADER ═══ */}
@@ -624,16 +755,17 @@ export default function DetailedReportPage() {
         </div>
       </div>
 
-      {/* ═══ 2. SCORE + DIMENSION BREAKDOWN ═══ */}
+      {/* ═══ 2. PSYCHOLOGICAL DEEP-DIVE (3-column per Figma) ═══ */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: dimensionScores.length > 0 ? "1fr 2fr" : "1fr",
+          gridTemplateColumns: dimensionScores.length > 0 ? "1fr 1fr 1fr" : "1fr",
           gap: 20,
         }}
       >
-        {/* Global Score Gauge */}
+        {/* Gauge Chart — Global Score */}
         <div
+          ref={gaugeRef}
           style={{
             borderRadius: 16,
             border: `1px solid ${DT.BORDER}`,
@@ -696,55 +828,137 @@ export default function DetailedReportPage() {
           >
             {data.resultLabel ?? "—"}
           </div>
+          {/* Save chart footer */}
+          <div
+            style={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "flex-end",
+              marginTop: 12,
+              paddingTop: 8,
+              borderTop: `1px solid ${DT.BORDER}`,
+            }}
+          >
+            <SaveChartButton targetRef={gaugeRef} fileName={`${data.testSlug}-global-score`} />
+          </div>
         </div>
 
-        {/* Dimension Scores */}
-        {dimensionScores.length > 0 && (
+        {/* Radar Chart — Subscale Breakdown */}
+        {dimensionScores.length >= 2 && (
           <div
+            ref={radarRef}
             style={{
               borderRadius: 16,
               border: `1px solid ${DT.BORDER}`,
               padding: 20,
+              paddingBottom: 12,
               background: DT.WHITE,
               display: "flex",
-              gap: 20,
+              flexDirection: "column",
             }}
           >
-            <div style={{ flex: 1 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                <div
-                  style={{
-                    width: 24,
-                    height: 24,
-                    borderRadius: 8,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: "#E3F2FD",
-                  }}
-                >
-                  <FileText size={12} color="#1565C0" />
-                </div>
-                <span
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 700,
-                    color: DT.DARK_TEXT,
-                    fontFamily: "'DM Sans', sans-serif",
-                  }}
-                >
-                  Dimension Scores
-                </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <div
+                style={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: DT.TEAL_LIGHT,
+                }}
+              >
+                <Shield size={12} color={DT.TEAL_DARK} />
               </div>
+              <span
+                style={{
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: DT.DARK_TEXT,
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                Subscale Breakdown
+              </span>
+            </div>
+            <div
+              style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              <RadarChart dimensions={dimensionScores} catStyle={catStyle} />
+            </div>
+            <div
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "flex-end",
+                marginTop: 12,
+                paddingTop: 8,
+                borderTop: `1px solid ${DT.BORDER}`,
+              }}
+            >
+              <SaveChartButton
+                targetRef={radarRef}
+                fileName={`${data.testSlug}-subscale-breakdown`}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Dimension Scores — Bar chart */}
+        {dimensionScores.length > 0 && (
+          <div
+            ref={dimRef}
+            style={{
+              borderRadius: 16,
+              border: `1px solid ${DT.BORDER}`,
+              padding: 20,
+              paddingBottom: 12,
+              background: DT.WHITE,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+              <div
+                style={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "#E3F2FD",
+                }}
+              >
+                <FileText size={12} color="#1565C0" />
+              </div>
+              <span
+                style={{
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: DT.DARK_TEXT,
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                Dimension Scores
+              </span>
+            </div>
+            <div style={{ flex: 1 }}>
               <DimensionBars dimensions={dimensionScores} />
             </div>
-            {dimensionScores.length >= 2 && (
-              <div
-                style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}
-              >
-                <RadarChart dimensions={dimensionScores} catStyle={catStyle} />
-              </div>
-            )}
+            <div
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "flex-end",
+                marginTop: 12,
+                paddingTop: 8,
+                borderTop: `1px solid ${DT.BORDER}`,
+              }}
+            >
+              <SaveChartButton targetRef={dimRef} fileName={`${data.testSlug}-dimension-scores`} />
+            </div>
           </div>
         )}
       </div>
