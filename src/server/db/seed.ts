@@ -451,6 +451,15 @@ async function main() {
         year: 2024,
         url: null,
       },
+      {
+        slug: "pss10",
+        type: "psychometric_review",
+        citation:
+          "Roberti, J. W., Harrington, L. N., & Storch, E. A. (2006). Further psychometric support for the 10-item version of the Perceived Stress Scale. Journal of College Counseling, 9(2), 135–147.",
+        doi: "10.1002/j.2161-1882.2006.tb00100.x",
+        year: 2006,
+        url: null,
+      },
       // ── GPIUS-2 Citations ──
       {
         slug: "gpius2",
