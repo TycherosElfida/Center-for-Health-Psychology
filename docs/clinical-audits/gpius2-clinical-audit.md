@@ -80,6 +80,7 @@ These ranges should be interpreted as **screening indicators**, not clinical dia
 1. **No per-dimension interpretation rows.** The platform currently provides total-score interpretation only. Per-dimension interpretations (e.g., "high POSI with normal NO") are not seeded.
 2. **No published clinical cutoffs.** The thresholds used are consensus-derived, not empirically validated against Indonesian clinical populations.
 3. **No percentile normative data.** Future enhancement could include percentile tables based on Indonesian university samples.
+4. **Pre-fix UI limitation.** Results submitted before commit `e60742c` display DSR with an incorrect denominator (18/18 instead of 18/30) in the visual charts. New submissions are correct.
 
 ---
 
