@@ -70,6 +70,14 @@ export function computeScore(input: ScoringInput): ScoringResult {
     }
   }
 
+  // ── Second-order rollup: Deficient Self-Regulation (DSR) ──────
+  // Caplan (2010): DSR = Cognitive Preoccupation (CP) + Compulsive Use (CU).
+  // Gate: only fires when BOTH CP and CU keys are present in dimensionScores,
+  // which is exclusive to GPIUS-2. No instrument-specific slug check needed.
+  if ("CP" in dimensionScores && "CU" in dimensionScores) {
+    dimensionScores["DSR"] = (dimensionScores["CP"] ?? 0) + (dimensionScores["CU"] ?? 0);
+  }
+
   return {
     totalScore,
     maxPossibleScore,
