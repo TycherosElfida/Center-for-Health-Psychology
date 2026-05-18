@@ -348,6 +348,7 @@ export const sessionsRouter = createTRPCRouter({
       const enrichedComputedScores = {
         ...scoreResult.computedScores,
         maxPossibleScore: scoreResult.maxPossibleScore,
+        dimensionMaxScores: scoreResult.dimensionMaxScores,
         interpretation: interpretation
           ? {
               label: interpretation.label,

@@ -145,6 +145,12 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
   };
   const dimensionScores = (row.dimensionScores ?? {}) as Record<string, number>;
 
+  // Per-dimension max scores — stored in computedScores by the engine since the
+  // DSR denominator fix (gpius2-interpretation-scheme branch). Absent for results
+  // submitted before this fix; ScoreVisualizer will fall back to inferredMax.
+  const dimensionMaxScores =
+    (computed.dimensionMaxScores as Record<string, number> | undefined) ?? undefined;
+
   // Engine writes maxPossibleScore into computedScores at submit time.
   // Falls back to 100 only if the value is missing or zero.
   const rawMax = Number(computed.maxPossibleScore);
@@ -174,6 +180,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
       totalScore={totalScore}
       maxScore={maxScore}
       dimensionScores={dimensionScores}
+      dimensionMaxScores={dimensionMaxScores}
       interpretation={interpretation}
       completedAt={row.createdAt.toISOString()}
       isAuthenticated={isAuthenticated}

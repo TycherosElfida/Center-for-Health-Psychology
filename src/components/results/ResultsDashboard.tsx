@@ -38,6 +38,8 @@ interface ResultsDashboardProps {
   totalScore: number;
   maxScore: number;
   dimensionScores: Record<string, number>;
+  /** Per-dimension max scores from the engine. Absent for pre-fix results. */
+  dimensionMaxScores?: Record<string, number>;
   interpretation: ScoreInterpretation;
   completedAt: string;
   isAuthenticated: boolean;
@@ -56,6 +58,7 @@ export function ResultsDashboard({
   totalScore,
   maxScore,
   dimensionScores,
+  dimensionMaxScores,
   interpretation,
   completedAt,
   isAuthenticated,
@@ -137,6 +140,7 @@ export function ResultsDashboard({
           <ScoreVisualizer
             totalScore={totalScore}
             dimensionScores={dimensionScores}
+            dimensionMaxScores={dimensionMaxScores}
             resultLabel={interpretation.label}
             testTitle={testMeta.title}
             accentColor={testMeta.color}
