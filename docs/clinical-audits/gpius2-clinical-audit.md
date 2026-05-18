@@ -62,15 +62,15 @@ The heuristic 3-tier cutoffs (15–34 / 35–52 / 53–75) that previously exist
 
 | Dimension | Reference Mean | Below | At | Above |
 |---|---|---|---|---|
-| POSI | 8.97 | 3–8 | 9–12 | 13–15 |
-| MR | 9.03 | 3–9 | 10–12 | 13–15 |
-| CP | 8.87 | 3–8 | 9–12 | 13–15 |
-| CU | 8.96 | 3–8 | 9–12 | 13–15 |
-| NO | 7.58 | 3–7 | 8–11 | 12–15 |
+| POSI | 7.26 | 3–7 | 8–11 | 12–15 |
+| MR | 10.59 | 3–10 | 11–13 | 14–15 |
+| CP | 8.76 | 3–8 | 9–12 | 13–15 |
+| CU | 9.07 | 3–9 | 10–12 | 13–15 |
+| NO | 7.74 | 3–7 | 8–11 | 12–15 |
 | DSR | 17.83 (CP+CU) | 6–17 | 18–24 | 25–30 |
 
 > [!NOTE]
-> All reference means sourced from Reynaldo & Sokang (2016), Table 3. DSR reference = CP_mean + CU_mean = 8.87 + 8.96 = 17.83.
+> All reference means sourced from Reynaldo & Sokang (2016), Table 3. DSR reference = CP_mean + CU_mean = 8.76 + 9.07 = 17.83.
 
 ## 4. Citation Inventory
 
