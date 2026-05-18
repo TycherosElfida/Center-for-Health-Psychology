@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
   Eye,
   ChevronDown,
-  ChevronLeft,
+  ChevronRight,
   Download,
   FileSpreadsheet,
   FileText,
@@ -26,11 +27,9 @@ import {
 } from "./DesignTokens";
 import { downloadData } from "./exportUtils";
 
-/* File-format brand colors (semantic to format, not theme tokens) */
 const XLSX_ICON = "#107C41";
 const CSV_ICON = "#1565C0";
 
-/* Darken a 6-char hex for hover state */
 function darken(hex: string, factor: number) {
   const h = hex.replace("#", "");
   if (h.length < 6) return hex;
@@ -54,11 +53,20 @@ export function ResultActionButton({
   color,
 }: ResultActionButtonProps) {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
+  }, []);
+
   const [open, setOpen] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; right: number } | null>(null);
   const [subOpen, setSubOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const chevronRef = useRef<HTMLButtonElement>(null);
   const subTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const utils = trpc.useUtils();
 
@@ -76,11 +84,12 @@ export function ResultActionButton({
     },
   });
 
-  /* Close on outside click */
+  /* Close on outside click — checks both the trigger and the fixed dropdown */
   useEffect(() => {
     if (!open) return;
     function handler(e: MouseEvent) {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (!rootRef.current?.contains(target) && !dropdownRef.current?.contains(target)) {
         setOpen(false);
         setSubOpen(false);
       }
@@ -88,6 +97,35 @@ export function ResultActionButton({
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
+
+  /* Close when any scroll ancestor scrolls (capture phase catches table scroll) */
+  useEffect(() => {
+    if (!open) return;
+    function handleScroll(e: Event) {
+      if (dropdownRef.current?.contains(e.target as Node)) return;
+      setOpen(false);
+      setSubOpen(false);
+    }
+    window.addEventListener("scroll", handleScroll, true);
+    return () => window.removeEventListener("scroll", handleScroll, true);
+  }, [open]);
+
+  function close() {
+    setOpen(false);
+    setSubOpen(false);
+  }
+
+  const handleChevronClick = () => {
+    if (!open && chevronRef.current) {
+      const rect = chevronRef.current.getBoundingClientRect();
+      setDropdownPos({
+        top: rect.bottom + 4,
+        right: window.innerWidth - rect.right,
+      });
+    }
+    setOpen((p) => !p);
+    setSubOpen(false);
+  };
 
   /* Safe-triangle-style delay for sub-menu */
   const enterDownload = useCallback(() => {
@@ -103,11 +141,6 @@ export function ResultActionButton({
   const leaveSub = useCallback(() => {
     subTimer.current = setTimeout(() => setSubOpen(false), 120);
   }, []);
-
-  function close() {
-    setOpen(false);
-    setSubOpen(false);
-  }
 
   const handleView = () => {
     window.location.href = `/admin/results/${resultId}`;
@@ -186,7 +219,6 @@ export function ResultActionButton({
       style={{
         position: "relative",
         display: "inline-flex",
-        zIndex: open ? 55 : 1,
         opacity: busy ? 0.55 : 1,
         pointerEvents: busy ? "none" : "auto",
         transition: "opacity 0.2s ease",
@@ -227,11 +259,9 @@ export function ResultActionButton({
 
       {/* ── Chevron trigger ── */}
       <button
+        ref={chevronRef}
         type="button"
-        onClick={() => {
-          setOpen((p) => !p);
-          setSubOpen(false);
-        }}
+        onClick={handleChevronClick}
         aria-haspopup="menu"
         aria-expanded={open}
         title="More actions"
@@ -267,140 +297,147 @@ export function ResultActionButton({
         />
       </button>
 
-      {/* ── Dropdown ── */}
-      {open && (
-        <div
-          role="menu"
-          style={{
-            position: "absolute",
-            top: "calc(100% + 4px)",
-            right: 0,
-            zIndex: 60,
-            minWidth: 200,
-            background: WHITE,
-            border: `1px solid ${BORDER}`,
-            borderRadius: 12,
-            boxShadow: "0 12px 36px rgba(107, 92, 160, 0.18), 0 4px 12px rgba(0, 0, 0, 0.08)",
-            padding: "4px 0",
-            animation: "adminFadeIn 0.12s ease-out",
-          }}
-        >
-          {/* Download Result row — hover opens sub-menu */}
+      {/* ── Dropdown (portaled to escape table stacking context and transforms) ── */}
+      {open &&
+        dropdownPos &&
+        mounted &&
+        createPortal(
           <div
-            style={{ position: "relative" }}
-            onMouseEnter={enterDownload}
-            onMouseLeave={leaveDownload}
+            ref={dropdownRef}
+            role="menu"
+            style={{
+              position: "fixed",
+              top: dropdownPos.top,
+              right: dropdownPos.right,
+              zIndex: 9999,
+              minWidth: 200,
+              background: WHITE,
+              border: `1px solid ${BORDER}`,
+              borderRadius: 12,
+              boxShadow: "0 12px 36px rgba(107, 92, 160, 0.18), 0 4px 12px rgba(0, 0, 0, 0.08)",
+              padding: "4px 0",
+              animation: "adminFadeIn 0.12s ease-out",
+            }}
           >
+            {/* Download Result — hover to expand sub-menu */}
+            <div
+              style={{ position: "relative" }}
+              onMouseEnter={enterDownload}
+              onMouseLeave={leaveDownload}
+            >
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  if (subTimer.current) clearTimeout(subTimer.current);
+                  setSubOpen((p) => !p);
+                }}
+                style={{
+                  ...menuItemBase,
+                  background: subOpen ? BRAND_BG : "transparent",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = BRAND_BG;
+                }}
+                onMouseLeave={(e) => {
+                  if (!subOpen) e.currentTarget.style.background = "transparent";
+                }}
+              >
+                <Download size={14} color={BRAND_DEEP} strokeWidth={2} />
+                <span style={{ flex: 1 }}>Download Result</span>
+                <ChevronRight size={12} color={LIGHT_TEXT} />
+              </button>
+
+              {/* ── Nested sub-menu (flyout left) ── */}
+              {subOpen && (
+                <div
+                  onMouseEnter={enterSub}
+                  onMouseLeave={leaveSub}
+                  style={{
+                    position: "absolute",
+                    top: -4,
+                    right: "calc(100% + 6px)",
+                    minWidth: 170,
+                    background: WHITE,
+                    border: `1px solid ${BORDER}`,
+                    borderRadius: 12,
+                    boxShadow: "0 8px 30px rgba(107,92,160,0.14), 0 2px 8px rgba(0,0,0,0.06)",
+                    padding: "4px 0",
+                    zIndex: 10000,
+                    animation: "adminFadeIn 0.12s ease-out",
+                  }}
+                >
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => handleExport("xlsx")}
+                    style={menuItemBase}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = BRAND_BG;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                    }}
+                  >
+                    <FileSpreadsheet size={13} color={XLSX_ICON} strokeWidth={2} />
+                    <span>Export as .xlsx</span>
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => handleExport("csv")}
+                    style={menuItemBase}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = BRAND_BG;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                    }}
+                  >
+                    <FileText size={13} color={CSV_ICON} strokeWidth={2} />
+                    <span>Export as .csv</span>
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={handleDownloadPdf}
+                    style={menuItemBase}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = BRAND_BG;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                    }}
+                  >
+                    <Download size={13} color={GREEN} strokeWidth={2} />
+                    <span>Download PDF</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div style={{ height: 1, background: BRAND_LIGHT, margin: "4px 10px" }} />
+
+            {/* Delete */}
             <button
               type="button"
               role="menuitem"
-              style={{
-                ...menuItemBase,
-                background: subOpen ? BRAND_BG : "transparent",
-              }}
+              onClick={handleDelete}
+              disabled={isDeleting}
+              style={{ ...menuItemBase, color: RED }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = BRAND_BG;
+                e.currentTarget.style.background = RED_LIGHT;
               }}
               onMouseLeave={(e) => {
-                if (!subOpen) e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.background = "transparent";
               }}
             >
-              <ChevronLeft size={12} color={LIGHT_TEXT} />
-              <Download size={14} color={BRAND_DEEP} strokeWidth={2} />
-              <span style={{ flex: 1 }}>Download Result</span>
+              <Trash2 size={14} color={RED} strokeWidth={2} />
+              <span>{isDeleting ? "Deleting…" : "Delete Record"}</span>
             </button>
-
-            {/* Nested sub-menu (flyout left) */}
-            {subOpen && (
-              <div
-                onMouseEnter={enterSub}
-                onMouseLeave={leaveSub}
-                role="menu"
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  right: "calc(100% + 8px)",
-                  minWidth: 180,
-                  background: WHITE,
-                  border: `1px solid ${BORDER}`,
-                  borderRadius: 12,
-                  boxShadow: "0 12px 36px rgba(107, 92, 160, 0.18), 0 4px 12px rgba(0, 0, 0, 0.08)",
-                  padding: "4px 0",
-                  zIndex: 61,
-                }}
-              >
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => handleExport("xlsx")}
-                  style={menuItemBase}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = BRAND_BG;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "transparent";
-                  }}
-                >
-                  <FileSpreadsheet size={14} color={XLSX_ICON} strokeWidth={2} />
-                  <span>Export as .xlsx</span>
-                </button>
-
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => handleExport("csv")}
-                  style={menuItemBase}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = BRAND_BG;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "transparent";
-                  }}
-                >
-                  <FileText size={14} color={CSV_ICON} strokeWidth={2} />
-                  <span>Export as .csv</span>
-                </button>
-
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={handleDownloadPdf}
-                  style={menuItemBase}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = BRAND_BG;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "transparent";
-                  }}
-                >
-                  <Download size={14} color={GREEN} strokeWidth={2} />
-                  <span>Download PDF</span>
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div style={{ height: 1, background: BRAND_LIGHT, margin: "4px 10px" }} />
-
-          {/* Delete */}
-          <button
-            type="button"
-            role="menuitem"
-            onClick={handleDelete}
-            disabled={isDeleting}
-            style={{ ...menuItemBase, color: RED }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = RED_LIGHT;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "transparent";
-            }}
-          >
-            <Trash2 size={14} color={RED} strokeWidth={2} />
-            <span>{isDeleting ? "Deleting…" : "Delete Record"}</span>
-          </button>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
