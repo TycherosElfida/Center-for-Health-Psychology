@@ -61,7 +61,7 @@ export function ResultsTable({
   exportActions,
   testSlug,
 }: ResultsTableProps) {
-  const { color, slug, maxScore, shortName } = testConfig;
+  const { color, bg: colorBg, slug, maxScore, shortName } = testConfig;
   const catColors = CATEGORY_COLORS[slug] ?? {};
   const totalPages = Math.ceil(total / pageSize);
 
@@ -283,6 +283,7 @@ export function ResultsTable({
                   row={row}
                   index={i}
                   color={color}
+                  colorBg={colorBg}
                   maxScore={maxScore}
                   catColors={catColors}
                   sexColors={SEX_COLORS}
@@ -406,6 +407,7 @@ function ResultsTableRow({
   row,
   index,
   color,
+  colorBg,
   maxScore,
   catColors,
   sexColors,
@@ -416,6 +418,7 @@ function ResultsTableRow({
   row: ResultRow;
   index: number;
   color: string;
+  colorBg: string;
   maxScore: number;
   catColors: Record<string, { bg: string; text: string }>;
   sexColors: Record<string, { bg: string; text: string }>;
@@ -546,7 +549,11 @@ function ResultsTableRow({
 
       {/* Actions — CENTER aligned, uses unified component */}
       <td style={{ padding: "12px 14px", textAlign: "center" }}>
-        <ResultActionButton resultId={row.id} testSlug={testSlug} accentColor={color} />
+        <ResultActionButton
+          resultId={row.id}
+          testSlug={testSlug}
+          color={{ bg: colorBg, text: color }}
+        />
       </td>
     </tr>
   );

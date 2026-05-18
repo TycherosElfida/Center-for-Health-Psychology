@@ -778,7 +778,7 @@ export default function AdminDashboardPage() {
                           <ResultActionButton
                             resultId={row.scoreId}
                             testSlug={row.testSlug}
-                            accentColor={tc.text}
+                            color={tc}
                           />
                         </td>
                       </tr>

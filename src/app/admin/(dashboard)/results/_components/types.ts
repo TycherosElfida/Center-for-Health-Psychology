@@ -85,15 +85,16 @@ export const DT = {
 export interface TestTabConfig {
   slug: string;
   shortName: string;
-  color: string;
+  color: string; // deep accent (text/icon)
+  bg: string; // soft tint (button bg)
   maxScore: number;
 }
 
 export const TEST_TABS: TestTabConfig[] = [
-  { slug: "srq29", shortName: "SRQ-29", color: "#9B8EC4", maxScore: 29 },
-  { slug: "pss10", shortName: "PSS-10", color: "#6BA3BE", maxScore: 40 },
-  { slug: "gpius2", shortName: "GPIUS-2", color: "#D4A574", maxScore: 75 },
-  { slug: "srs", shortName: "SRS", color: "#7DB4A0", maxScore: 66 },
+  { slug: "srq29", shortName: "SRQ-29", color: "#9B8EC4", bg: "#EDE9F8", maxScore: 29 },
+  { slug: "pss10", shortName: "PSS-10", color: "#6BA3BE", bg: "#E0EFF4", maxScore: 40 },
+  { slug: "gpius2", shortName: "GPIUS-2", color: "#D4A574", bg: "#F7EBDC", maxScore: 75 },
+  { slug: "srs", shortName: "SRS", color: "#7DB4A0", bg: "#E3EFE9", maxScore: 66 },
 ];
 
 /* ── Category badge colors per test ── */
