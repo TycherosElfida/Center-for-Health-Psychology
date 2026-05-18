@@ -42,6 +42,22 @@ export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
   if (!ctx.session?.userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
+
+  // Double check the user actually exists in the DB (wasn't deleted)
+  // to prevent foreign key violations on protected endpoints
+  const { users } = await import("../schema/users");
+  const { eq } = await import("drizzle-orm");
+  const userExists = await ctx.db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.id, ctx.session.userId))
+    .limit(1)
+    .then((r) => r[0]);
+
+  if (!userExists) {
+    throw new TRPCError({ code: "UNAUTHORIZED", message: "User not found" });
+  }
+
   return next({
     ctx: { ...ctx, session: ctx.session },
   });

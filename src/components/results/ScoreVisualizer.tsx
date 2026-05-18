@@ -44,6 +44,8 @@ interface DimensionBar {
   max: number;
   pct: number;
   color: string;
+  interpLabel?: string;
+  interpDescription?: string;
 }
 
 interface ScoreVisualizerProps {
@@ -61,6 +63,8 @@ interface ScoreVisualizerProps {
   maxScore?: number;
   /** Per-dimension max scores. Keys must match dimensionScores. */
   dimensionMaxScores?: Record<string, number>;
+  /** Dimension interpretations */
+  dimensionInterpretations?: Record<string, { label: string; description: string }>;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -75,6 +79,7 @@ export function ScoreVisualizer({
   accentColor,
   maxScore = 100,
   dimensionMaxScores,
+  dimensionInterpretations,
 }: ScoreVisualizerProps) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const scorePct = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
@@ -95,9 +100,11 @@ export function ScoreVisualizer({
         max,
         pct: Math.min(pct, 100),
         color: CHART_COLORS[i % CHART_COLORS.length] ?? "#9B8EC4",
+        interpLabel: dimensionInterpretations?.[label]?.label,
+        interpDescription: dimensionInterpretations?.[label]?.description,
       };
     });
-  }, [dimensionScores, dimensionMaxScores]);
+  }, [dimensionScores, dimensionMaxScores, dimensionInterpretations]);
 
   const hasDimensions = bars.length > 0;
 
@@ -293,13 +300,24 @@ export function ScoreVisualizer({
                     {/* Label */}
                     <text
                       x={labelW - 8}
-                      y={y + barH / 2}
+                      y={y + barH / 2 - (bar.interpLabel ? 6 : 0)}
                       textAnchor="end"
                       dominantBaseline="central"
                       style={{ fontSize: 12, fill: "var(--foreground)" }}
                     >
                       {bar.label.length > 18 ? bar.label.slice(0, 16) + "…" : bar.label}
                     </text>
+                    {bar.interpLabel && (
+                      <text
+                        x={labelW - 8}
+                        y={y + barH / 2 + 8}
+                        textAnchor="end"
+                        dominantBaseline="central"
+                        style={{ fontSize: 9.5, fill: "var(--muted-foreground)" }}
+                      >
+                        {bar.interpLabel}
+                      </text>
+                    )}
 
                     {/* Background track */}
                     <rect
@@ -377,6 +395,7 @@ export function ScoreVisualizer({
                           style={{ fontSize: 11, fill: "var(--background)" }}
                         >
                           {bar.score}/{bar.max} ({bar.pct}%)
+                          {bar.interpLabel ? ` - ${bar.interpLabel}` : ""}
                         </text>
                       </g>
                     )}
@@ -396,6 +415,29 @@ export function ScoreVisualizer({
               />
             </svg>
           </div>
+
+          {/* Dimension Interpretation Descriptions */}
+          {bars.some((b) => b.interpDescription) && (
+            <div className="mt-8 flex flex-col gap-5 border-t border-border/50 pt-6">
+              {bars.map(
+                (bar) =>
+                  bar.interpDescription && (
+                    <div key={bar.label} className="text-[13.5px]">
+                      <strong
+                        className="text-foreground"
+                        style={{ fontFamily: "var(--font-heading), var(--font-sans), sans-serif" }}
+                      >
+                        {bar.label}
+                        {bar.interpLabel ? ` (${bar.interpLabel})` : ""}
+                      </strong>
+                      <p className="mt-1.5 leading-relaxed text-muted-foreground">
+                        {bar.interpDescription}
+                      </p>
+                    </div>
+                  )
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

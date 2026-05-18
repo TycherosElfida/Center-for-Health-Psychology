@@ -264,13 +264,19 @@ export async function assembleReportData(resultId: string): Promise<ReportData> 
   });
 
   // 7. Parse dimension scores from JSONB
-  const rawDimScores =
-    (result.dimensionScores as Record<string, { score: number; maxScore: number }>) ?? {};
+  // In the DB, results.dimensionScores is Record<string, number> (dim -> score)
+  const rawDimScores = (result.dimensionScores as Record<string, number>) ?? {};
+  const computedScores =
+    (result.computedScores as {
+      maxPossibleScore?: number;
+      dimensionMaxScores?: Record<string, number>;
+    }) ?? {};
+
   const dimensionScoreEntries: DimensionScore[] = Object.entries(rawDimScores).map(
-    ([dim, data]) => ({
+    ([dim, score]) => ({
       dimension: dim,
-      score: data.score,
-      maxScore: data.maxScore,
+      score: score,
+      maxScore: computedScores.dimensionMaxScores?.[dim] ?? 0, // Fallback appropriately
     })
   );
 
@@ -315,7 +321,6 @@ export async function assembleReportData(resultId: string): Promise<ReportData> 
 
   // 9. Calculate max possible score from questions × max option value
   // Approximate: number of questions × 4 (typical Likert 0-4)
-  const computedScores = result.computedScores as { maxPossibleScore?: number };
   const maxPossibleScore = computedScores?.maxPossibleScore ?? questionRows.length * 4;
 
   return {

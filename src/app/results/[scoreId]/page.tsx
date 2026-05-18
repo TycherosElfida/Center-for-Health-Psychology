@@ -20,7 +20,7 @@ import type { Metadata } from "next";
 import { db } from "@/server/db";
 import { results } from "@/server/schema/sessions";
 import { users } from "@/server/schema/users";
-import { tests, questions } from "@/server/schema/tests";
+import { tests, questions, resultInterpretations } from "@/server/schema/tests";
 import type { TestMeta } from "@/lib/data/tests";
 import { SEVERITY_COLORS } from "@/lib/types/assessment";
 import { getOptionalSession } from "@/lib/auth/dal";
@@ -151,6 +151,26 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
   const dimensionMaxScores =
     (computed.dimensionMaxScores as Record<string, number> | undefined) ?? undefined;
 
+  // Fetch interpretations to get dimension-level interpretation labels
+  const interpretationRows = await db
+    .select()
+    .from(resultInterpretations)
+    .where(eq(resultInterpretations.testId, row.testId));
+
+  const dimensionInterpretations: Record<string, { label: string; description: string }> = {};
+  for (const [dim, score] of Object.entries(dimensionScores)) {
+    const dimInterp = interpretationRows.find(
+      (r) =>
+        r.dimension === dim && score >= parseFloat(r.minScore) && score <= parseFloat(r.maxScore)
+    );
+    if (dimInterp) {
+      dimensionInterpretations[dim] = {
+        label: dimInterp.label,
+        description: dimInterp.description,
+      };
+    }
+  }
+
   // Engine writes maxPossibleScore into computedScores at submit time.
   // Falls back to 100 only if the value is missing or zero.
   const rawMax = Number(computed.maxPossibleScore);
@@ -181,6 +201,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
       maxScore={maxScore}
       dimensionScores={dimensionScores}
       dimensionMaxScores={dimensionMaxScores}
+      dimensionInterpretations={dimensionInterpretations}
       interpretation={interpretation}
       completedAt={row.createdAt.toISOString()}
       isAuthenticated={isAuthenticated}

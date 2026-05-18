@@ -144,10 +144,16 @@ function GaugeChart({
 function DimensionBars({
   dimensions,
 }: {
-  dimensions: { dimension: string; score: number; maxScore: number; label?: string }[];
+  dimensions: {
+    dimension: string;
+    score: number;
+    maxScore: number;
+    label?: string;
+    description?: string;
+  }[];
 }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {dimensions.map((d) => {
         const pct = d.maxScore > 0 ? Math.round((d.score / d.maxScore) * 100) : 0;
         return (
@@ -179,8 +185,29 @@ function DimensionBars({
               />
             </div>
             {d.label && (
-              <span style={{ fontSize: 10, color: DT.LIGHT_TEXT, marginTop: 2, display: "block" }}>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: DT.MID_TEXT,
+                  marginTop: 4,
+                  display: "block",
+                }}
+              >
                 {d.label}
+              </span>
+            )}
+            {d.description && (
+              <span
+                style={{
+                  fontSize: 11,
+                  color: DT.LIGHT_TEXT,
+                  marginTop: 2,
+                  display: "block",
+                  lineHeight: 1.4,
+                }}
+              >
+                {d.description}
               </span>
             )}
           </div>
@@ -285,7 +312,7 @@ export default function DetailedReportPage() {
     const dimMap = new Map(
       (data.dimensionScores ?? []).map((d) => [
         d.dimension,
-        { score: d.score, max: d.maxScore, label: d.label ?? "" },
+        { score: d.score, max: d.maxScore, label: d.label ?? "", description: d.description ?? "" },
       ])
     );
 
@@ -321,6 +348,7 @@ export default function DetailedReportPage() {
         dimension_score: dim?.score ?? "",
         dimension_max_score: dim?.max ?? "",
         dimension_label: dim?.label ?? "",
+        dimension_description: dim?.description ?? "",
       };
     });
 
@@ -365,6 +393,12 @@ export default function DetailedReportPage() {
           field: `Dimension: ${d.dimension}`,
           value: `${d.score}/${d.maxScore}${d.label ? " — " + d.label : ""}`,
         });
+        if (d.description) {
+          summaryRows.push({
+            field: `Dimension: ${d.dimension} (Desc)`,
+            value: d.description,
+          });
+        }
       }
       const wsSummary = XLSX.utils.json_to_sheet(summaryRows);
       wsSummary["!cols"] = [{ wch: 30 }, { wch: 80 }];

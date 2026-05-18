@@ -14,6 +14,7 @@ import { tests, questions, options as optionsTable } from "@/server/schema/tests
 import { testSessions, answers, results } from "@/server/schema/sessions";
 import { sessionDemographics } from "@/server/schema/session-demographics";
 import { userProfiles } from "@/server/schema/user-profiles";
+import { users } from "@/server/schema/users";
 import { consents } from "@/server/schema/consents";
 import { CONSENT_VERSION } from "@/lib/constants/consent";
 import { computeScore } from "@/server/scoring/engine";
@@ -104,7 +105,22 @@ export const sessionsRouter = createTRPCRouter({
 
     const ipHash = btoa(ip);
     const userAgentHash = btoa(ua);
-    const userId = ctx.session?.userId;
+    let userId = ctx.session?.userId ?? null;
+
+    // Verify user still exists in database to prevent FK constraint violations
+    // (e.g. if a user was deleted but their JWT session is still active)
+    if (userId) {
+      const userExists = await ctx.db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1)
+        .then((res) => res[0]);
+
+      if (!userExists) {
+        userId = null;
+      }
+    }
 
     // Step 3: Generate a single-use claim token (UUID v4 — 122 bits entropy)
     // Allows anonymous users to claim this session after signing up.
@@ -499,7 +515,21 @@ export const sessionsRouter = createTRPCRouter({
     )
     .mutation(async ({ input, ctx }) => {
       const { scoreId, email } = input;
-      const userId = ctx.session?.userId ?? null;
+      let userId = ctx.session?.userId ?? null;
+
+      // Verify user still exists to prevent FK errors when claiming
+      if (userId) {
+        const userExists = await ctx.db
+          .select({ id: users.id })
+          .from(users)
+          .where(eq(users.id, userId))
+          .limit(1)
+          .then((res) => res[0]);
+
+        if (!userExists) {
+          userId = null;
+        }
+      }
 
       // 1. Resolve scoreId → result row
       const result = await ctx.db
