@@ -301,4 +301,35 @@ describe("computeScore — second-order dimensional rollups", () => {
     expect(result.dimensionScores).not.toHaveProperty("CP");
     expect(result.dimensionScores).not.toHaveProperty("CU");
   });
+
+  it("SRS: dimensionMaxScores = {Efficacy: 18, Satisfaction: 18, Control: 30}", () => {
+    const opts6 = [
+      { value: 1 },
+      { value: 2 },
+      { value: 3 },
+      { value: 4 },
+      { value: 5 },
+      { value: 6 },
+    ];
+    // 3 Efficacy + 3 Satisfaction + 5 Control (all reversed) = 11 items
+    const qs = [
+      { id: "e1", dimension: "Efficacy", isReversed: false, weight: 1, options: opts6 },
+      { id: "e2", dimension: "Efficacy", isReversed: false, weight: 1, options: opts6 },
+      { id: "e3", dimension: "Efficacy", isReversed: false, weight: 1, options: opts6 },
+      { id: "s1", dimension: "Satisfaction", isReversed: false, weight: 1, options: opts6 },
+      { id: "s2", dimension: "Satisfaction", isReversed: false, weight: 1, options: opts6 },
+      { id: "s3", dimension: "Satisfaction", isReversed: false, weight: 1, options: opts6 },
+      { id: "c1", dimension: "Control", isReversed: true, weight: 1, options: opts6 },
+      { id: "c2", dimension: "Control", isReversed: true, weight: 1, options: opts6 },
+      { id: "c3", dimension: "Control", isReversed: true, weight: 1, options: opts6 },
+      { id: "c4", dimension: "Control", isReversed: true, weight: 1, options: opts6 },
+      { id: "c5", dimension: "Control", isReversed: true, weight: 1, options: opts6 },
+    ];
+    const answers = Object.fromEntries(qs.map((q) => [q.id, 1]));
+    const result = computeScore({ answers, questions: qs });
+    expect(result.dimensionMaxScores["Efficacy"]).toBe(18); // 3 × 6
+    expect(result.dimensionMaxScores["Satisfaction"]).toBe(18); // 3 × 6
+    expect(result.dimensionMaxScores["Control"]).toBe(30); // 5 × 6
+    expect(result.dimensionMaxScores).not.toHaveProperty("DSR");
+  });
 });
