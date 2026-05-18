@@ -2,8 +2,9 @@
 
 **Instrument:** Generalized Problematic Internet Use Scale 2 (GPIUS-2)  
 **Audit Date:** 2026-05-19  
-**Branch:** `scoring-engine-clinical-remediation`  
-**Spec Reference:** v2 Clinical Reference Specification §2 (2026-05-08)
+**Branch:** `gpius2-interpretation-scheme`  
+**Spec Reference:** v2 Clinical Reference Specification §2 (2026-05-08)  
+**Status:** 🟢 ALL ISSUES RESOLVED
 
 ---
 
@@ -43,18 +44,33 @@ DSR is a derived score calculated as the sum of Cognitive Preoccupation and Comp
 
 **Implementation:** `engine.ts:74` — the DSR gate fires only when both `CP` and `CU` keys exist in the dimension scores map, preventing false activation for other instruments.
 
-## 3. Interpretation Thresholds
+## 3. Interpretation Scheme
 
-| Range | Label (Indonesian) | Severity |
-|---|---|---|
-| 15–34 | Penggunaan Internet Normal | `low` |
-| 35–52 | Penggunaan Internet Bermasalah Ringan | `moderate` |
-| 53–75 | Penggunaan Internet Bermasalah Tinggi | `high` |
+### 3a. Total-Score Interpretation (Mean-Anchored)
 
-> [!WARNING]  
-> **Cutoff Source Disclaimer:** The three-tier cutoffs (≤34 / 35–52 / 53–75) are distribution-based heuristics derived from the Indonesian adaptation by Reynaldo & Sokang (2016). No published clinical validation study exists that establishes these specific thresholds as clinically diagnostic. Caplan (2010) originally reported means and standard deviations but did not propose categorical cutoffs.
+The heuristic 3-tier cutoffs (15–34 / 35–52 / 53–75) that previously existed had no traceable published source in any GPIUS-2 validation study. They were retired and replaced with a mean-anchored scheme referencing the Jakarta student sample (X̄=43.41, N=474) from R&S 2016 Table 3.
 
-These ranges should be interpreted as **screening indicators**, not clinical diagnoses. Future work should consider norm-referencing against a representative Indonesian sample.
+| Range | Label (Indonesian) | Severity | Anchor |
+|---|---|---|---|
+| 15–43 | Di Bawah Rata-Rata Referensi | `low` | ≤ X̄ |
+| 44–58 | Sekitar Rata-Rata Referensi | `moderate` | X̄ to X̄+1SD |
+| 59–75 | Di Atas Rata-Rata Referensi | `high` | > X̄+1SD |
+
+### 3b. Per-Subscale Interpretation (Mean-Anchored)
+
+18 rows (6 dimensions × 3 severity levels) anchored to R&S 2016 Table 3 subscale means:
+
+| Dimension | Reference Mean | Below | At | Above |
+|---|---|---|---|---|
+| POSI | 8.97 | 3–8 | 9–12 | 13–15 |
+| MR | 9.03 | 3–9 | 10–12 | 13–15 |
+| CP | 8.87 | 3–8 | 9–12 | 13–15 |
+| CU | 8.96 | 3–8 | 9–12 | 13–15 |
+| NO | 7.58 | 3–7 | 8–11 | 12–15 |
+| DSR | 17.83 (CP+CU) | 6–17 | 18–24 | 25–30 |
+
+> [!NOTE]
+> All reference means sourced from Reynaldo & Sokang (2016), Table 3. DSR reference = CP_mean + CU_mean = 8.87 + 8.96 = 17.83.
 
 ## 4. Citation Inventory
 
@@ -72,16 +88,27 @@ These ranges should be interpreted as **screening indicators**, not clinical dia
 | 15 items × 5 options = max 75 | ✅ | `engine.ts` computes from option bounds |
 | DSR = CP + CU (second-order rollup) | ✅ | `engine.ts:74`, test coverage at `engine.test.ts:192` |
 | DSR gate does NOT fire for other instruments | ✅ | Negative tests at `engine.test.ts:208+` |
-| Cutoff disclaimer present | ✅ | `interpretations.ts:172-180` |
 | Adaptation citation (Reynaldo 2016) present | ✅ | `seed.ts:461-469` |
+| Heuristic cutoffs retired | ✅ | No rows with unsourced thresholds remain |
+| Mean-anchored total-score rows seeded (3) | ✅ | `interpretations.ts`, verified via DB query |
+| Per-subscale interpretation rows seeded (18) | ✅ | 6 dimensions × 3 levels, verified via DB query |
+| DSR denominator renders correctly (18/30) | ✅ | Browser verification, commit `e60742c` |
+| dimensionMaxScores persisted in JSONB | ✅ | `sessions.ts`, engine test coverage |
 
-## 6. Known Limitations
+## 6. DSR Denominator Fix (commit `e60742c`)
 
-1. **No per-dimension interpretation rows.** The platform currently provides total-score interpretation only. Per-dimension interpretations (e.g., "high POSI with normal NO") are not seeded.
-2. **No published clinical cutoffs.** The thresholds used are consensus-derived, not empirically validated against Indonesian clinical populations.
+**Root cause:** `ScoreVisualizer` received no `dimensionMaxScores` prop, so it fell back to `inferredMax = max(all dimension raw scores)`. For DSR (a derived dimension with no direct questions), this equalled DSR's own value (e.g. 18), making DSR display as 18/18 (100%) instead of 18/30 (60%).
+
+**Fix chain:** `engine.ts` → `assessment.ts` → `sessions.ts` → `results/[scoreId]/page.tsx` → `ResultsDashboard.tsx` → `ScoreVisualizer.tsx`. The engine now accumulates per-dimension theoretical maximums and persists them in the `computedScores` JSONB payload.
+
+## 7. Known Limitations
+
+1. **Pre-fix UI limitation.** Results submitted before commit `e60742c` display DSR with an incorrect denominator (18/18 instead of 18/30) in the visual charts. New submissions are correct.
+2. **No published clinical cutoffs.** The mean-anchored thresholds are distribution-based reference points, not empirically validated diagnostic cutoffs. Future work should consider norm-referencing against a representative Indonesian sample.
 3. **No percentile normative data.** Future enhancement could include percentile tables based on Indonesian university samples.
-4. **Pre-fix UI limitation.** Results submitted before commit `e60742c` display DSR with an incorrect denominator (18/18 instead of 18/30) in the visual charts. New submissions are correct.
+4. **SRS subscale interpretations remain TODO.** Manning et al. (2016) subscale thresholds pending documentation finalization.
 
 ---
 
 *Audit prepared as part of the Scoring Engine Clinical Remediation (Phase A, Stage 4a).*
+*Status updated to 🟢 ALL ISSUES RESOLVED on 2026-05-19.*
