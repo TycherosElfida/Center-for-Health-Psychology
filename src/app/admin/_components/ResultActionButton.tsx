@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   Eye,
   ChevronDown,
-  ChevronRight,
+  ChevronLeft,
   Download,
   FileSpreadsheet,
   FileText,
@@ -305,9 +305,9 @@ export function ResultActionButton({
                 if (!subOpen) e.currentTarget.style.background = "transparent";
               }}
             >
+              <ChevronLeft size={12} color={LIGHT_TEXT} />
               <Download size={14} color={BRAND_DEEP} strokeWidth={2} />
               <span style={{ flex: 1 }}>Download Result</span>
-              <ChevronRight size={12} color={LIGHT_TEXT} />
             </button>
 
             {/* Nested sub-menu (flyout left) */}
@@ -319,7 +319,7 @@ export function ResultActionButton({
                 style={{
                   position: "absolute",
                   top: 0,
-                  right: "100%",
+                  right: "calc(100% + 8px)",
                   minWidth: 180,
                   background: WHITE,
                   border: `1px solid ${BORDER}`,
