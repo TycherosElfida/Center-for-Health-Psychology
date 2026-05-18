@@ -322,6 +322,14 @@ async function main() {
       console.log(`  🧹 Purged stale PSS-10 interpretations (${purged.rowCount ?? 0} rows)`);
     }
 
+    const gpius2TestId = slugToId.get("gpius2");
+    if (gpius2TestId) {
+      const purged = await db
+        .delete(resultInterpretations)
+        .where(eq(resultInterpretations.testId, gpius2TestId));
+      console.log(`  🧹 Purged stale GPIUS-2 interpretations (${purged.rowCount ?? 0} rows)`);
+    }
+
     let inserted = 0;
     let skipped = 0;
 
