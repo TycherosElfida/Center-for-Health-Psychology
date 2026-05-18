@@ -186,7 +186,7 @@ export function ResultActionButton({
       style={{
         position: "relative",
         display: "inline-flex",
-        zIndex: open ? 40 : 1,
+        zIndex: open ? 55 : 1,
         opacity: busy ? 0.55 : 1,
         pointerEvents: busy ? "none" : "auto",
         transition: "opacity 0.2s ease",
@@ -275,12 +275,12 @@ export function ResultActionButton({
             position: "absolute",
             top: "calc(100% + 4px)",
             right: 0,
-            zIndex: 50,
+            zIndex: 60,
             minWidth: 200,
             background: WHITE,
             border: `1px solid ${BORDER}`,
             borderRadius: 12,
-            boxShadow: "0 8px 30px rgba(107, 92, 160, 0.14), 0 2px 8px rgba(0, 0, 0, 0.06)",
+            boxShadow: "0 12px 36px rgba(107, 92, 160, 0.18), 0 4px 12px rgba(0, 0, 0, 0.08)",
             padding: "4px 0",
             animation: "adminFadeIn 0.12s ease-out",
           }}
@@ -318,15 +318,15 @@ export function ResultActionButton({
                 role="menu"
                 style={{
                   position: "absolute",
-                  top: -4,
-                  right: "calc(100% + 6px)",
+                  top: 0,
+                  right: "100%",
                   minWidth: 180,
                   background: WHITE,
                   border: `1px solid ${BORDER}`,
                   borderRadius: 12,
-                  boxShadow: "0 8px 30px rgba(107, 92, 160, 0.14), 0 2px 8px rgba(0, 0, 0, 0.06)",
+                  boxShadow: "0 12px 36px rgba(107, 92, 160, 0.18), 0 4px 12px rgba(0, 0, 0, 0.08)",
                   padding: "4px 0",
-                  zIndex: 51,
+                  zIndex: 61,
                 }}
               >
                 <button
