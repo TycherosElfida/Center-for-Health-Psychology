@@ -30,6 +30,7 @@ export function computeScore(input: ScoringInput): ScoringResult {
   let totalScore = 0;
   let maxPossibleScore = 0;
   const dimensionScores: Record<string, number> = {};
+  const dimensionMaxScores: Record<string, number> = {};
   const perQuestionComputed: Record<string, number> = {};
 
   for (const q of input.questions) {
@@ -61,6 +62,11 @@ export function computeScore(input: ScoringInput): ScoringResult {
     if (q.options && q.options.length > 0) {
       const maxOptVal = Math.max(...q.options.map((o) => o.value));
       maxPossibleScore += maxOptVal * safeWeight;
+
+      if (q.dimension) {
+        dimensionMaxScores[q.dimension] =
+          (dimensionMaxScores[q.dimension] ?? 0) + maxOptVal * safeWeight;
+      }
     }
 
     totalScore += finalVal;
@@ -70,9 +76,20 @@ export function computeScore(input: ScoringInput): ScoringResult {
     }
   }
 
+  // ── Second-order rollup: Deficient Self-Regulation (DSR) ──────
+  // Caplan (2010): DSR = Cognitive Preoccupation (CP) + Compulsive Use (CU).
+  // Gate: only fires when BOTH CP and CU keys are present in dimensionScores,
+  // which is exclusive to GPIUS-2. No instrument-specific slug check needed.
+  if ("CP" in dimensionScores && "CU" in dimensionScores) {
+    dimensionScores["DSR"] = (dimensionScores["CP"] ?? 0) + (dimensionScores["CU"] ?? 0);
+    // DSR_max = CP_max + CU_max — mirrors the score rollup exactly.
+    dimensionMaxScores["DSR"] = (dimensionMaxScores["CP"] ?? 0) + (dimensionMaxScores["CU"] ?? 0);
+  }
+
   return {
     totalScore,
     maxPossibleScore,
+    dimensionMaxScores,
     dimensionScores,
     rawScores: input.answers,
     computedScores: {

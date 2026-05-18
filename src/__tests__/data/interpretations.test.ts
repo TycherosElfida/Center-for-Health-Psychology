@@ -62,23 +62,26 @@ const VALID_SEVERITIES = ["low", "moderate", "high", "critical"] as const;
 describe("Interpretation seed data validation", () => {
   const grouped = groupBySlug(INTERPRETATIONS);
 
-  // ── Per-instrument contiguity (3 tests) ──────────────────────
-  it("PSS-10: bands are contiguous with no gaps", () => {
-    const bands = grouped.get("pss10");
-    expect(bands).toBeDefined();
-    assertContiguity(bands!, "pss10");
+  // ── Per-instrument contiguity (total-score rows only) ────────
+  // Per-dimension rows (e.g. Helplessness 0-24, Self-Efficacy 0-16) have
+  // their own score ranges and must NOT be included in the total-score
+  // contiguity check — they are validated separately via groupBySlugAndDimension.
+  it("PSS-10: total-score bands are contiguous with no gaps", () => {
+    const bands = (grouped.get("pss10") ?? []).filter((r) => r.dimension === null);
+    expect(bands.length).toBeGreaterThan(0);
+    assertContiguity(bands, "pss10");
   });
 
-  it("GPIUS-2: bands are contiguous with no gaps", () => {
-    const bands = grouped.get("gpius2");
-    expect(bands).toBeDefined();
-    assertContiguity(bands!, "gpius2");
+  it("GPIUS-2: total-score bands are contiguous with no gaps", () => {
+    const bands = (grouped.get("gpius2") ?? []).filter((r) => r.dimension === null);
+    expect(bands.length).toBeGreaterThan(0);
+    assertContiguity(bands, "gpius2");
   });
 
-  it("SRS: bands are contiguous with no gaps", () => {
-    const bands = grouped.get("srs");
-    expect(bands).toBeDefined();
-    assertContiguity(bands!, "srs");
+  it("SRS: total-score bands are contiguous with no gaps", () => {
+    const bands = (grouped.get("srs") ?? []).filter((r) => r.dimension === null);
+    expect(bands.length).toBeGreaterThan(0);
+    assertContiguity(bands, "srs");
   });
 
   // ── Non-overlap across all instruments (dimension-aware) ────
@@ -149,13 +152,13 @@ describe("SRQ-29 Dimensional Interpretations", () => {
     }
   });
 
-  it("Neurotic domain: normal 0-4, flagged 5-20", () => {
+  it("Neurotic domain: normal 0-5, flagged 6-20 (Kemenkes/Riskesdas ≥6 cutoff)", () => {
     const neurotic = srq29Rows.filter((r) => r.dimension === "neurotic");
     const normal = neurotic.find((r) => r.severity === "low")!;
     const flagged = neurotic.find((r) => r.severity === "high")!;
     expect(parseFloat(normal.minScore)).toBe(0);
-    expect(parseFloat(normal.maxScore)).toBe(4);
-    expect(parseFloat(flagged.minScore)).toBe(5);
+    expect(parseFloat(normal.maxScore)).toBe(5);
+    expect(parseFloat(flagged.minScore)).toBe(6);
     expect(parseFloat(flagged.maxScore)).toBe(20);
   });
 
@@ -173,6 +176,132 @@ describe("SRQ-29 Dimensional Interpretations", () => {
     const flaggedRows = srq29Rows.filter((r) => r.label !== "Normal");
     for (const row of flaggedRows) {
       expect(row.severity).toBe("high");
+    }
+  });
+});
+
+describe("GPIUS-2 Interpretation Scheme — R&S 2016 mean-anchored", () => {
+  const gpius2Rows = INTERPRETATIONS.filter((r) => r.testSlug === "gpius2");
+  const totalRows = gpius2Rows.filter((r) => r.dimension === null);
+  const subsRows = gpius2Rows.filter((r) => r.dimension !== null);
+
+  // ── Row counts ────────────────────────────────────────────────
+  it("Has exactly 3 total-score rows", () => {
+    expect(totalRows).toHaveLength(3);
+  });
+
+  it("Has exactly 18 subscale rows (6 dimensions × 3 bands)", () => {
+    expect(subsRows).toHaveLength(18);
+  });
+
+  // ── Total-score bands anchored to R&S 2016 mean = 43.41 ──────
+  // Band 1: 15–43 (below mean)   → low
+  // Band 2: 44–58 (near mean)    → moderate
+  // Band 3: 59–75 (above mean)   → high
+  it("Total-score bands have correct boundaries (15-43 / 44-58 / 59-75)", () => {
+    const sorted = [...totalRows].sort((a, b) => parseFloat(a.minScore) - parseFloat(b.minScore));
+    expect(parseFloat(sorted[0]!.minScore)).toBe(15);
+    expect(parseFloat(sorted[0]!.maxScore)).toBe(43);
+    expect(sorted[0]!.severity).toBe("low");
+
+    expect(parseFloat(sorted[1]!.minScore)).toBe(44);
+    expect(parseFloat(sorted[1]!.maxScore)).toBe(58);
+    expect(sorted[1]!.severity).toBe("moderate");
+
+    expect(parseFloat(sorted[2]!.minScore)).toBe(59);
+    expect(parseFloat(sorted[2]!.maxScore)).toBe(75);
+    expect(sorted[2]!.severity).toBe("high");
+  });
+
+  it("Total-score bands are contiguous", () => {
+    assertContiguity(totalRows, "gpius2::total");
+  });
+
+  // ── POSI subscale (M=7.26, scale 3-15) ───────────────────────
+  it("POSI: 3 bands with correct boundaries (3-7 / 8-11 / 12-15)", () => {
+    const rows = subsRows.filter((r) => r.dimension === "POSI");
+    expect(rows).toHaveLength(3);
+    const sorted = [...rows].sort((a, b) => parseFloat(a.minScore) - parseFloat(b.minScore));
+    expect(parseFloat(sorted[0]!.minScore)).toBe(3);
+    expect(parseFloat(sorted[0]!.maxScore)).toBe(7);
+    expect(parseFloat(sorted[1]!.minScore)).toBe(8);
+    expect(parseFloat(sorted[1]!.maxScore)).toBe(11);
+    expect(parseFloat(sorted[2]!.minScore)).toBe(12);
+    expect(parseFloat(sorted[2]!.maxScore)).toBe(15);
+  });
+
+  // ── MR subscale (M=10.59, scale 3-15) ────────────────────────
+  it("MR: 3 bands with correct boundaries (3-10 / 11-13 / 14-15)", () => {
+    const rows = subsRows.filter((r) => r.dimension === "MR");
+    expect(rows).toHaveLength(3);
+    const sorted = [...rows].sort((a, b) => parseFloat(a.minScore) - parseFloat(b.minScore));
+    expect(parseFloat(sorted[0]!.minScore)).toBe(3);
+    expect(parseFloat(sorted[0]!.maxScore)).toBe(10);
+    expect(parseFloat(sorted[1]!.minScore)).toBe(11);
+    expect(parseFloat(sorted[1]!.maxScore)).toBe(13);
+    expect(parseFloat(sorted[2]!.minScore)).toBe(14);
+    expect(parseFloat(sorted[2]!.maxScore)).toBe(15);
+  });
+
+  // ── CP subscale (M=8.76, scale 3-15) ─────────────────────────
+  it("CP: 3 bands with correct boundaries (3-8 / 9-12 / 13-15)", () => {
+    const rows = subsRows.filter((r) => r.dimension === "CP");
+    expect(rows).toHaveLength(3);
+    const sorted = [...rows].sort((a, b) => parseFloat(a.minScore) - parseFloat(b.minScore));
+    expect(parseFloat(sorted[0]!.minScore)).toBe(3);
+    expect(parseFloat(sorted[0]!.maxScore)).toBe(8);
+    expect(parseFloat(sorted[1]!.minScore)).toBe(9);
+    expect(parseFloat(sorted[1]!.maxScore)).toBe(12);
+    expect(parseFloat(sorted[2]!.minScore)).toBe(13);
+    expect(parseFloat(sorted[2]!.maxScore)).toBe(15);
+  });
+
+  // ── CU subscale (M=9.07, scale 3-15) ─────────────────────────
+  it("CU: 3 bands with correct boundaries (3-9 / 10-12 / 13-15)", () => {
+    const rows = subsRows.filter((r) => r.dimension === "CU");
+    expect(rows).toHaveLength(3);
+    const sorted = [...rows].sort((a, b) => parseFloat(a.minScore) - parseFloat(b.minScore));
+    expect(parseFloat(sorted[0]!.minScore)).toBe(3);
+    expect(parseFloat(sorted[0]!.maxScore)).toBe(9);
+    expect(parseFloat(sorted[1]!.minScore)).toBe(10);
+    expect(parseFloat(sorted[1]!.maxScore)).toBe(12);
+    expect(parseFloat(sorted[2]!.minScore)).toBe(13);
+    expect(parseFloat(sorted[2]!.maxScore)).toBe(15);
+  });
+
+  // ── NO subscale (M=7.74, scale 3-15) ─────────────────────────
+  it("NO: 3 bands with correct boundaries (3-7 / 8-11 / 12-15)", () => {
+    const rows = subsRows.filter((r) => r.dimension === "NO");
+    expect(rows).toHaveLength(3);
+    const sorted = [...rows].sort((a, b) => parseFloat(a.minScore) - parseFloat(b.minScore));
+    expect(parseFloat(sorted[0]!.minScore)).toBe(3);
+    expect(parseFloat(sorted[0]!.maxScore)).toBe(7);
+    expect(parseFloat(sorted[1]!.minScore)).toBe(8);
+    expect(parseFloat(sorted[1]!.maxScore)).toBe(11);
+    expect(parseFloat(sorted[2]!.minScore)).toBe(12);
+    expect(parseFloat(sorted[2]!.maxScore)).toBe(15);
+  });
+
+  // ── DSR second-order (M=17.83, scale 6-30) ───────────────────
+  it("DSR: 3 bands with correct boundaries (6-17 / 18-24 / 25-30)", () => {
+    const rows = subsRows.filter((r) => r.dimension === "DSR");
+    expect(rows).toHaveLength(3);
+    const sorted = [...rows].sort((a, b) => parseFloat(a.minScore) - parseFloat(b.minScore));
+    expect(parseFloat(sorted[0]!.minScore)).toBe(6);
+    expect(parseFloat(sorted[0]!.maxScore)).toBe(17);
+    expect(parseFloat(sorted[1]!.minScore)).toBe(18);
+    expect(parseFloat(sorted[1]!.maxScore)).toBe(24);
+    expect(parseFloat(sorted[2]!.minScore)).toBe(25);
+    expect(parseFloat(sorted[2]!.maxScore)).toBe(30);
+  });
+
+  // ── Each subscale has all 3 severity levels ───────────────────
+  it("Each subscale has exactly one low, moderate, and high row", () => {
+    const dims = ["POSI", "MR", "CP", "CU", "NO", "DSR"];
+    for (const dim of dims) {
+      const rows = subsRows.filter((r) => r.dimension === dim);
+      const severities = rows.map((r) => r.severity).sort();
+      expect(severities, `${dim} severity set`).toEqual(["high", "low", "moderate"]);
     }
   });
 });

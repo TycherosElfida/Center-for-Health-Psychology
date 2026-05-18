@@ -205,6 +205,53 @@ describe("computeScore — second-order dimensional rollups", () => {
     expect(result.dimensionScores["DSR"]).toBe(3);
   });
 
+  it("exposes dimensionMaxScores with DSR max = CP_max + CU_max", () => {
+    // GPIUS-2 uses a 1–5 Likert scale. 3 CP questions + 3 CU questions.
+    // DSR = CP + CU, so DSR_max = 3×5 + 3×5 = 30. NOT 18 (the raw score).
+    const opts15 = [{ value: 1 }, { value: 2 }, { value: 3 }, { value: 4 }, { value: 5 }];
+    const qs = [
+      { id: "cp1", dimension: "CP", isReversed: false, weight: 1, options: opts15 },
+      { id: "cp2", dimension: "CP", isReversed: false, weight: 1, options: opts15 },
+      { id: "cp3", dimension: "CP", isReversed: false, weight: 1, options: opts15 },
+      { id: "cu1", dimension: "CU", isReversed: false, weight: 1, options: opts15 },
+      { id: "cu2", dimension: "CU", isReversed: false, weight: 1, options: opts15 },
+      { id: "cu3", dimension: "CU", isReversed: false, weight: 1, options: opts15 },
+      { id: "no1", dimension: "NO", isReversed: false, weight: 1, options: opts15 },
+      { id: "no2", dimension: "NO", isReversed: false, weight: 1, options: opts15 },
+      { id: "no3", dimension: "NO", isReversed: false, weight: 1, options: opts15 },
+    ];
+    // All 3s → CP=9, CU=9, NO=9, DSR=18
+    const answers = Object.fromEntries(qs.map((q) => [q.id, 3]));
+    const result = computeScore({ answers, questions: qs });
+
+    // Scores correct
+    expect(result.dimensionScores["CP"]).toBe(9);
+    expect(result.dimensionScores["CU"]).toBe(9);
+    expect(result.dimensionScores["DSR"]).toBe(18);
+
+    // Max scores: each primary dimension max = count × 5
+    expect(result.dimensionMaxScores["CP"]).toBe(15); // 3 × 5
+    expect(result.dimensionMaxScores["CU"]).toBe(15); // 3 × 5
+    expect(result.dimensionMaxScores["NO"]).toBe(15); // 3 × 5
+    // DSR max = CP_max + CU_max = 15 + 15 = 30 (NOT 18)
+    expect(result.dimensionMaxScores["DSR"]).toBe(30);
+  });
+
+  it("exposes dimensionMaxScores for non-DSR instruments without a DSR key", () => {
+    const opts5 = [{ value: 0 }, { value: 1 }, { value: 2 }, { value: 3 }, { value: 4 }];
+    const qs = [
+      { id: "h1", dimension: "Helplessness", isReversed: false, weight: 1, options: opts5 },
+      { id: "h2", dimension: "Helplessness", isReversed: false, weight: 1, options: opts5 },
+      { id: "se1", dimension: "Self-Efficacy", isReversed: true, weight: 1, options: opts5 },
+    ];
+    const answers = { h1: 3, h2: 2, se1: 1 };
+    const result = computeScore({ answers, questions: qs });
+
+    expect(result.dimensionMaxScores["Helplessness"]).toBe(8); // 2 × 4
+    expect(result.dimensionMaxScores["Self-Efficacy"]).toBe(4); // 1 × 4
+    expect(result.dimensionMaxScores).not.toHaveProperty("DSR");
+  });
+
   it("does NOT produce DSR for PSS-10 dimensions (Helplessness/Self-Efficacy)", () => {
     const opts5 = [{ value: 0 }, { value: 1 }, { value: 2 }, { value: 3 }, { value: 4 }];
     const qs = [

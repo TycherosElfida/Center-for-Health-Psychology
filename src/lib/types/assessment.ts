@@ -58,6 +58,9 @@ export interface ScoringInput {
 export interface ScoringResult {
   totalScore: number;
   maxPossibleScore: number;
+  /** Per-dimension maximum achievable scores. Keys match dimensionScores exactly.
+   * For the DSR second-order rollup, DSR_max = CP_max + CU_max. */
+  dimensionMaxScores: Record<string, number>;
   dimensionScores: Record<string, number>;
   rawScores: Record<string, unknown>;
   computedScores: Record<string, unknown>;
