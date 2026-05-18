@@ -188,7 +188,8 @@ async function main() {
           .limit(1);
 
         if (!existingQ) {
-          const dimension = testMeta.id === "srq29" ? (SRQ29_DIMENSIONS[i] ?? null) : null;
+          const dimension =
+            qData.dimension ?? (testMeta.id === "srq29" ? (SRQ29_DIMENSIONS[i] ?? null) : null);
 
           await db.insert(questions).values({
             id: qData.id,
