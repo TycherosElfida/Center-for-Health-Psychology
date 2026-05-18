@@ -62,23 +62,26 @@ const VALID_SEVERITIES = ["low", "moderate", "high", "critical"] as const;
 describe("Interpretation seed data validation", () => {
   const grouped = groupBySlug(INTERPRETATIONS);
 
-  // ── Per-instrument contiguity (3 tests) ──────────────────────
-  it("PSS-10: bands are contiguous with no gaps", () => {
-    const bands = grouped.get("pss10");
-    expect(bands).toBeDefined();
-    assertContiguity(bands!, "pss10");
+  // ── Per-instrument contiguity (total-score rows only) ────────
+  // Per-dimension rows (e.g. Helplessness 0-24, Self-Efficacy 0-16) have
+  // their own score ranges and must NOT be included in the total-score
+  // contiguity check — they are validated separately via groupBySlugAndDimension.
+  it("PSS-10: total-score bands are contiguous with no gaps", () => {
+    const bands = (grouped.get("pss10") ?? []).filter((r) => r.dimension === null);
+    expect(bands.length).toBeGreaterThan(0);
+    assertContiguity(bands, "pss10");
   });
 
-  it("GPIUS-2: bands are contiguous with no gaps", () => {
-    const bands = grouped.get("gpius2");
-    expect(bands).toBeDefined();
-    assertContiguity(bands!, "gpius2");
+  it("GPIUS-2: total-score bands are contiguous with no gaps", () => {
+    const bands = (grouped.get("gpius2") ?? []).filter((r) => r.dimension === null);
+    expect(bands.length).toBeGreaterThan(0);
+    assertContiguity(bands, "gpius2");
   });
 
-  it("SRS: bands are contiguous with no gaps", () => {
-    const bands = grouped.get("srs");
-    expect(bands).toBeDefined();
-    assertContiguity(bands!, "srs");
+  it("SRS: total-score bands are contiguous with no gaps", () => {
+    const bands = (grouped.get("srs") ?? []).filter((r) => r.dimension === null);
+    expect(bands.length).toBeGreaterThan(0);
+    assertContiguity(bands, "srs");
   });
 
   // ── Non-overlap across all instruments (dimension-aware) ────
