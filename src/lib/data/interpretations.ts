@@ -6,6 +6,7 @@
  *
  * Sources:
  *   - PSS-10: Cohen et al. (1983/1994) — Low ≤13, Moderate 14–26, High 27–40
+ *            + Helplessness (0–24) and Self-Efficacy (0–16) per-dimension interpretations
  *   - GPIUS-2: Caplan (2010); Reynaldo & Sokang (2016) — Normal ≤34, Mild 35–52, Severe 53–75
  *   - SRS: Manning et al. (2016); Schwarzer et al. (1999) — Low 11–33, Moderate 34–50, High 51–66
  *
@@ -42,6 +43,7 @@ export interface InterpretationSeed {
 
 export const INTERPRETATIONS: InterpretationSeed[] = [
   // ── PSS-10 (Total Score Range: 0–40) ───────────────────────
+  // Total-score interpretations (dimension = null)
   {
     testSlug: "pss10",
     dimension: null,
@@ -49,9 +51,9 @@ export const INTERPRETATIONS: InterpretationSeed[] = [
     maxScore: "13.00",
     label: "Stres Rendah",
     description:
-      "Kondisi stres kamu saat ini termasuk rendah. Kamu tampaknya dapat mengelola tuntutan kehidupan dengan baik. Pertahankan kebiasaan sehat dan rutinitas perawatan diri.",
+      "Tingkat stres yang kamu rasakan saat ini termasuk rendah. Kamu tampaknya mampu mengelola tuntutan dan tekanan kehidupan sehari-hari dengan baik. Persepsi terhadap situasi hidup secara umum tidak dirasakan sebagai sesuatu yang tidak terkendali atau berlebihan.",
     recommendation:
-      "Terus jaga pola hidup sehat: tidur cukup, olahraga rutin, dan luangkan waktu untuk aktivitas yang menyenangkan.",
+      "Pertahankan pola hidup sehat yang sudah berjalan: tidur cukup (7–9 jam), aktivitas fisik rutin, dan luangkan waktu untuk kegiatan yang menyenangkan. Lanjutkan strategi coping yang sudah efektif.",
     severity: "low",
     version: 1,
   },
@@ -62,9 +64,9 @@ export const INTERPRETATIONS: InterpretationSeed[] = [
     maxScore: "26.00",
     label: "Stres Sedang",
     description:
-      "Kondisi stres kamu saat ini termasuk sedang. Pertimbangkan untuk menggunakan teknik pengurangan stres seperti mindfulness, meditasi, atau olahraga teratur.",
+      "Tingkat stres yang kamu rasakan saat ini termasuk sedang. Ini merupakan rentang yang umum dialami oleh kebanyakan orang dewasa. Meskipun masih dalam batas yang bisa dikelola, kamu mungkin mulai merasakan bahwa beberapa aspek kehidupan terasa sulit dikendalikan atau membebani.",
     recommendation:
-      "Cobalah teknik relaksasi seperti pernapasan dalam, meditasi, atau journaling. Jika stres berlanjut, pertimbangkan untuk berkonsultasi dengan profesional.",
+      "Pertimbangkan untuk menerapkan teknik pengelolaan stres secara rutin, seperti latihan pernapasan dalam, meditasi mindfulness, atau journaling. Jika stres mulai mengganggu aktivitas sehari-hari, berkonsultasilah dengan psikolog atau konselor.",
     severity: "moderate",
     version: 1,
   },
@@ -75,14 +77,105 @@ export const INTERPRETATIONS: InterpretationSeed[] = [
     maxScore: "40.00",
     label: "Stres Tinggi",
     description:
-      "Kondisi stres kamu saat ini termasuk tinggi. Disarankan untuk berkonsultasi dengan profesional kesehatan mental guna mengembangkan strategi coping yang efektif.",
+      "Tingkat stres yang kamu rasakan saat ini termasuk tinggi. Kamu mungkin merasa bahwa banyak hal dalam hidup terasa di luar kendali, tidak terduga, dan membebani. Kondisi ini dapat berdampak pada kesehatan fisik, emosional, dan produktivitas jika tidak ditangani.",
     recommendation:
-      "Sangat disarankan untuk berkonsultasi dengan psikolog atau konselor. Prioritaskan istirahat dan hindari mengambil terlalu banyak tanggung jawab dalam waktu dekat.",
+      "Sangat disarankan untuk segera berkonsultasi dengan psikolog atau konselor profesional. Prioritaskan istirahat yang cukup, batasi tanggung jawab yang bisa didelegasikan, dan hindari keputusan besar dalam kondisi stres tinggi. Libatkan orang terdekat untuk dukungan sosial.",
+    severity: "high",
+    version: 1,
+  },
+
+  // Per-dimension: Helplessness (Q1,2,3,6,9,10 — 6 items × 0–4 = 0–24)
+  {
+    testSlug: "pss10",
+    dimension: "Helplessness",
+    minScore: "0.00",
+    maxScore: "8.00",
+    label: "Ketidakberdayaan Rendah",
+    description:
+      "Kamu jarang merasa kewalahan atau kehilangan kendali atas situasi kehidupan. Peristiwa-peristiwa yang terjadi tidak kamu persepsikan sebagai sesuatu yang mengancam atau tidak bisa diatasi.",
+    recommendation: "Pertahankan pola pikir positif dan strategi coping yang sudah berjalan baik.",
+    severity: "low",
+    version: 1,
+  },
+  {
+    testSlug: "pss10",
+    dimension: "Helplessness",
+    minScore: "9.00",
+    maxScore: "16.00",
+    label: "Ketidakberdayaan Sedang",
+    description:
+      "Kamu kadang-kadang merasa bahwa tuntutan hidup sulit dikendalikan. Ada perasaan tidak berdaya menghadapi situasi tertentu, terutama yang tidak terduga.",
+    recommendation:
+      "Identifikasi situasi spesifik yang memicu perasaan tidak berdaya. Cobalah teknik problem-solving terstruktur dan latihan mindfulness.",
+    severity: "moderate",
+    version: 1,
+  },
+  {
+    testSlug: "pss10",
+    dimension: "Helplessness",
+    minScore: "17.00",
+    maxScore: "24.00",
+    label: "Ketidakberdayaan Tinggi",
+    description:
+      "Kamu sering merasa kewalahan, tidak mampu mengendalikan hal-hal penting, dan merasa kesulitan menumpuk. Perasaan ini dapat berkontribusi pada kelelahan emosional.",
+    recommendation:
+      "Konsultasikan perasaan ini dengan psikolog. Teknik cognitive-behavioral therapy (CBT) dapat membantu mengubah pola pikir yang tidak adaptif.",
+    severity: "high",
+    version: 1,
+  },
+
+  // Per-dimension: Self-Efficacy (Q4,5,7,8 — 4 items × 0–4 = 0–16, reverse-scored)
+  // NOTE: After reverse-scoring, higher Self-Efficacy score = LOWER actual self-efficacy
+  {
+    testSlug: "pss10",
+    dimension: "Self-Efficacy",
+    minScore: "0.00",
+    maxScore: "5.00",
+    label: "Efikasi Diri Tinggi",
+    description:
+      "Kamu memiliki keyakinan yang kuat terhadap kemampuan diri sendiri dalam mengatasi masalah pribadi dan mengendalikan situasi. Kamu merasa mampu menguasai keadaan.",
+    recommendation:
+      "Pertahankan rasa percaya diri ini. Gunakan pengalaman positif sebagai modal untuk menghadapi tantangan baru.",
+    severity: "low",
+    version: 1,
+  },
+  {
+    testSlug: "pss10",
+    dimension: "Self-Efficacy",
+    minScore: "6.00",
+    maxScore: "10.00",
+    label: "Efikasi Diri Sedang",
+    description:
+      "Keyakinan terhadap kemampuan diri untuk mengatasi masalah dan mengendalikan situasi berada pada tingkat sedang. Kadang kamu merasa yakin, kadang ragu.",
+    recommendation:
+      "Refleksikan pengalaman-pengalaman di mana kamu berhasil mengatasi masalah. Catat pencapaian kecil untuk membangun kepercayaan diri.",
+    severity: "moderate",
+    version: 1,
+  },
+  {
+    testSlug: "pss10",
+    dimension: "Self-Efficacy",
+    minScore: "11.00",
+    maxScore: "16.00",
+    label: "Efikasi Diri Rendah",
+    description:
+      "Kamu kurang yakin terhadap kemampuan diri untuk mengatasi masalah pribadi dan merasa sulit mengendalikan hal-hal dalam hidup. Rendahnya efikasi diri dapat memperkuat persepsi stres.",
+    recommendation:
+      "Pertimbangkan untuk berkonsultasi dengan psikolog. Latihan penguatan efikasi diri (self-efficacy building) melalui pencapaian bertahap dapat sangat membantu.",
     severity: "high",
     version: 1,
   },
 
   // ── GPIUS-2 (Total Score Range: 15–75) ─────────────────────
+  // CUTOFF SOURCE DISCLAIMER:
+  // The three-tier cutoffs (Normal ≤34 / Mild 35–52 / Severe 53–75) are
+  // distribution-based heuristics derived from the Indonesian adaptation by
+  // Reynaldo & Sokang (2016). No published clinical validation study exists
+  // that establishes these specific thresholds as clinically diagnostic.
+  // Caplan (2010) originally reported means and SDs but did not propose
+  // categorical cutoffs. These ranges should be interpreted as screening
+  // indicators, not clinical diagnoses. Future work should consider
+  // norm-referencing against a representative Indonesian sample.
   {
     testSlug: "gpius2",
     dimension: null,
@@ -165,12 +258,12 @@ export const INTERPRETATIONS: InterpretationSeed[] = [
   },
 
   // ── SRQ-29 — Cluster-based multi-domain interpretation ─────
-  // Domain: Neurotic (Q1-Q20) — flag at ≥5 "Ya"
+  // Domain: Neurotic (Q1-Q20) — flag at ≥6 "Ya" (Kemenkes/Riskesdas standard)
   {
     testSlug: "srq29",
     dimension: "neurotic",
     minScore: "0.00",
-    maxScore: "4.00",
+    maxScore: "5.00",
     label: "Normal",
     description:
       "Tidak ditemukan indikasi masalah psikologis yang signifikan pada domain kecemasan dan depresi.",
@@ -182,7 +275,7 @@ export const INTERPRETATIONS: InterpretationSeed[] = [
   {
     testSlug: "srq29",
     dimension: "neurotic",
-    minScore: "5.00",
+    minScore: "6.00",
     maxScore: "20.00",
     label: "Cemas / Depresi",
     description:
