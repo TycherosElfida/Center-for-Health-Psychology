@@ -376,6 +376,7 @@ export const adminResultsRouter = createTRPCRouter({
           city: sessionDemographics.city,
           totalScore: results.totalScore,
           resultLabel: results.resultLabel,
+          scoringVersion: results.scoringVersion,
           createdAt: results.createdAt,
         })
         .from(results)
@@ -448,6 +449,7 @@ export const adminResultsRouter = createTRPCRouter({
           city: r.city ?? null,
           totalScore: r.totalScore ? Number(r.totalScore) : 0,
           resultLabel: r.resultLabel ?? null,
+          scoringVersion: r.scoringVersion ?? null,
           createdAt: r.createdAt.toISOString(),
           itemAnswers: sessionAnswerMap.get(r.sessionId) ?? {},
         })),

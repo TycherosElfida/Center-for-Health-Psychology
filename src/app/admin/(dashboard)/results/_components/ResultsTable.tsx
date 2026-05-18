@@ -1,9 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Search, RotateCcw, Eye, ChevronUp, ChevronDown, MoreVertical, Trash2 } from "lucide-react";
-import { trpc } from "@/lib/trpc/client";
+import { Search, RotateCcw, ChevronUp, ChevronDown } from "lucide-react";
 import {
   DT,
   CATEGORY_COLORS,
@@ -13,6 +10,7 @@ import {
   type SortDirection,
   type TestTabConfig,
 } from "./types";
+import { ResultActionButton } from "./ResultActionButton";
 
 /* ── Sort icon ── */
 function SortIcon({ active, direction }: { active: boolean; direction: SortDirection | null }) {
@@ -65,15 +63,20 @@ export function ResultsTable({
   const catColors = CATEGORY_COLORS[slug] ?? {};
   const totalPages = Math.ceil(total / pageSize);
 
-  const columns: { key: SortField | "domicile" | "actions"; label: string }[] = [
-    { key: "name", label: "Name" },
-    { key: "sex", label: "Sex" },
-    { key: "domicile", label: "Province/City" },
-    { key: "age", label: "Age" },
-    { key: "score", label: "Score" },
-    { key: "category", label: "Result Category" },
-    { key: "testDate", label: "Test Date" },
-    { key: "actions", label: "Actions" },
+  /* ── Column definitions with explicit alignment ── */
+  const columns: {
+    key: SortField | "domicile" | "actions";
+    label: string;
+    align: "left" | "center";
+  }[] = [
+    { key: "name", label: "Name", align: "left" },
+    { key: "sex", label: "Sex", align: "center" },
+    { key: "domicile", label: "Province/City", align: "center" },
+    { key: "age", label: "Age", align: "center" },
+    { key: "score", label: "Score", align: "center" },
+    { key: "category", label: "Result Category", align: "center" },
+    { key: "testDate", label: "Test Date", align: "center" },
+    { key: "actions", label: "Actions", align: "center" },
   ];
 
   const colWidths = ["15%", "7%", "16%", "5%", "13%", "17%", "10%", "12%"];
@@ -180,8 +183,8 @@ export function ResultsTable({
                       : undefined
                   }
                   style={{
-                    padding: "12px 16px",
-                    textAlign: "center",
+                    padding: "12px 14px",
+                    textAlign: h.align,
                     fontSize: 10,
                     fontWeight: 700,
                     color: sortField === h.key ? DT.TEAL_DARK : DT.MID_TEXT,
@@ -201,7 +204,7 @@ export function ResultsTable({
                       display: "inline-flex",
                       alignItems: "center",
                       gap: 4,
-                      justifyContent: "center",
+                      justifyContent: h.align === "left" ? "flex-start" : "center",
                       width: "100%",
                     }}
                   >
@@ -394,6 +397,8 @@ export function ResultsTable({
   );
 }
 
+/* ── Table Row (uses unified ResultActionButton) ── */
+
 function ResultsTableRow({
   row,
   index,
@@ -413,53 +418,26 @@ function ResultsTableRow({
   formatDate: (iso: string) => string;
   scorePercent: (score: number) => number;
 }) {
-  const router = useRouter();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  const deleteMutation = trpc.adminResults.deleteResult.useMutation({
-    onSuccess: () => {
-      router.refresh();
-      setIsDeleting(false);
-      setMenuOpen(false);
-    },
-    onError: (err) => {
-      alert(`Failed to delete result: ${err.message}`);
-      setIsDeleting(false);
-      setMenuOpen(false);
-    },
-  });
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setMenuOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   const catStyle = catColors[row.resultLabel || ""] || { bg: DT.BG_CONTENT, text: DT.DARK_TEXT };
   const sexStyle = sexColors[row.sex || ""] || { bg: DT.BG_CONTENT, text: DT.DARK_TEXT };
 
   return (
     <tr
+      className="admin-row-hover"
       style={{
         borderBottom: `1px solid ${DT.BORDER}`,
-        background: index % 2 === 0 ? DT.WHITE : DT.BG_CONTENT,
-        opacity: isDeleting ? 0.5 : 1,
-        pointerEvents: isDeleting ? "none" : "auto",
-        transition: "opacity 0.2s ease",
+        background: index % 2 === 0 ? DT.WHITE : "#FBFAFD",
       }}
     >
-      <td style={{ padding: "12px 16px" }}>
+      {/* Name — LEFT aligned */}
+      <td style={{ padding: "12px 14px", textAlign: "left" }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: DT.DARK_TEXT }}>
           {row.name || "Unknown"}
         </div>
       </td>
-      <td style={{ padding: "12px 16px" }}>
+
+      {/* Sex — CENTER aligned */}
+      <td style={{ padding: "12px 14px", textAlign: "center" }}>
         <span
           style={{
             padding: "4px 8px",
@@ -473,7 +451,9 @@ function ResultsTableRow({
           {row.sex}
         </span>
       </td>
-      <td style={{ padding: "12px 16px" }}>
+
+      {/* Province/City — CENTER aligned */}
+      <td style={{ padding: "12px 14px", textAlign: "center" }}>
         <div style={{ fontSize: 12, color: DT.DARK_TEXT, fontWeight: 500 }}>
           {row.city || row.province}
         </div>
@@ -481,11 +461,30 @@ function ResultsTableRow({
           <div style={{ fontSize: 10, color: DT.LIGHT_TEXT, marginTop: 2 }}>{row.province}</div>
         )}
       </td>
-      <td style={{ padding: "12px 16px", fontSize: 13, color: DT.DARK_TEXT, fontWeight: 600 }}>
+
+      {/* Age — CENTER aligned */}
+      <td
+        style={{
+          padding: "12px 14px",
+          fontSize: 13,
+          color: DT.DARK_TEXT,
+          fontWeight: 600,
+          textAlign: "center",
+        }}
+      >
         {row.age}
       </td>
-      <td style={{ padding: "12px 16px" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+
+      {/* Score — CENTER aligned */}
+      <td style={{ padding: "12px 14px", textAlign: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 4,
+            alignItems: "center",
+          }}
+        >
           <div style={{ fontSize: 12, fontWeight: 700, color: color }}>
             {row.totalScore}/{maxScore}
           </div>
@@ -496,6 +495,7 @@ function ResultsTableRow({
               background: `${color}20`,
               overflow: "hidden",
               width: "100%",
+              maxWidth: 80,
             }}
           >
             <div
@@ -509,7 +509,9 @@ function ResultsTableRow({
           </div>
         </div>
       </td>
-      <td style={{ padding: "12px 16px" }}>
+
+      {/* Category — CENTER aligned */}
+      <td style={{ padding: "12px 14px", textAlign: "center" }}>
         <span
           style={{
             padding: "4px 10px",
@@ -523,95 +525,23 @@ function ResultsTableRow({
           {row.resultLabel || "Uncategorized"}
         </span>
       </td>
-      <td style={{ padding: "12px 16px", fontSize: 12, color: DT.DARK_TEXT }}>
+
+      {/* Date — CENTER aligned */}
+      <td
+        style={{
+          padding: "12px 14px",
+          fontSize: 12,
+          color: DT.DARK_TEXT,
+          textAlign: "center",
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
         {formatDate(row.createdAt)}
       </td>
-      <td style={{ padding: "12px 16px", position: "relative" }}>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <button
-            onClick={() => router.push(`/admin/results/${row.id}`)}
-            title="View Details"
-            style={{
-              padding: 6,
-              borderRadius: 6,
-              background: DT.WHITE,
-              border: `1px solid ${DT.BORDER}`,
-              color: DT.TEAL,
-              cursor: "pointer",
-            }}
-          >
-            <Eye size={14} />
-          </button>
 
-          <div ref={menuRef} style={{ position: "relative" }}>
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              title="More actions"
-              style={{
-                padding: 6,
-                borderRadius: 6,
-                background: menuOpen ? DT.BG_CONTENT : "transparent",
-                border: "none",
-                color: DT.LIGHT_TEXT,
-                cursor: "pointer",
-              }}
-            >
-              <MoreVertical size={14} />
-            </button>
-
-            {menuOpen && (
-              <div
-                style={{
-                  position: "absolute",
-                  right: 0,
-                  top: "100%",
-                  marginTop: 4,
-                  background: DT.WHITE,
-                  border: `1px solid ${DT.BORDER}`,
-                  borderRadius: 8,
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                  zIndex: 50,
-                  minWidth: 120,
-                  padding: 4,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 2,
-                }}
-              >
-                <button
-                  onClick={() => {
-                    const ok = window.confirm(
-                      "Are you sure you want to delete this result? This action cannot be undone."
-                    );
-                    if (ok) {
-                      setIsDeleting(true);
-                      deleteMutation.mutate({ scoreId: row.id });
-                    } else {
-                      setMenuOpen(false);
-                    }
-                  }}
-                  disabled={isDeleting}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "8px 12px",
-                    borderRadius: 6,
-                    background: "transparent",
-                    border: "none",
-                    color: DT.RED,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    textAlign: "left",
-                  }}
-                >
-                  <Trash2 size={12} /> {isDeleting ? "Deleting..." : "Delete"}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+      {/* Actions — CENTER aligned, uses unified component */}
+      <td style={{ padding: "12px 14px", textAlign: "center" }}>
+        <ResultActionButton resultId={row.id} accentColor={color} />
       </td>
     </tr>
   );

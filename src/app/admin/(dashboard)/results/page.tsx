@@ -22,39 +22,6 @@ function TestResultsContent() {
         fontFamily: "'Inter', sans-serif",
       }}
     >
-      {/* Page Header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 20,
-        }}
-      >
-        <div>
-          <h1
-            style={{
-              fontSize: "1.5rem",
-              fontWeight: 700,
-              color: DT.DARK_TEXT,
-              margin: 0,
-              letterSpacing: "-0.015em",
-            }}
-          >
-            Test Results
-          </h1>
-          <p
-            style={{
-              fontSize: 13,
-              color: DT.LIGHT_TEXT,
-              margin: "4px 0 0",
-            }}
-          >
-            Browse, filter, and export assessment results
-          </p>
-        </div>
-      </div>
-
       {/* Active test view */}
       <TestResultsView key={activeSlug} testConfig={activeConfig} />
     </div>

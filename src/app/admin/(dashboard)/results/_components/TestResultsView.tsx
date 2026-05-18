@@ -35,6 +35,8 @@ function downloadData(
   const exportData = rows.map((r) => {
     const itemAnswers = (r.itemAnswers ?? {}) as Record<number, number | string>;
     const row: Record<string, unknown> = {
+      "Result ID": r.id ?? "",
+      "Session ID": r.sessionId ?? "",
       Name: r.name ?? "",
       Sex: r.sex ?? "",
       "Province/City": `${r.province ?? ""} ${r.city ?? ""}`.trim(),
@@ -48,6 +50,7 @@ function downloadData(
 
     row["Total (Computed)"] = r.totalScore ?? 0;
     row["Category"] = r.resultLabel ?? "";
+    row["Score Version"] = r.scoringVersion ?? "";
     row["Date"] = r.createdAt ? new Date(r.createdAt as string).toLocaleDateString("en-GB") : "";
 
     return row;

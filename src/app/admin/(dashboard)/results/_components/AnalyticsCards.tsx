@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import {
   PieChart,
   Pie,
@@ -13,6 +14,7 @@ import {
 } from "recharts";
 import { Users, TrendingUp, TrendingDown, Activity } from "lucide-react";
 import { DT, type ResultsStats, type TestTabConfig } from "./types";
+import { SaveChartButton } from "../[scoreId]/_components/SaveChartButton";
 
 /* ── Filtered indicator badge ── */
 function FilteredBadge({ active }: { active: boolean }) {
@@ -31,7 +33,7 @@ function FilteredBadge({ active }: { active: boolean }) {
         fontWeight: 700,
         position: "absolute",
         top: 10,
-        right: 12,
+        left: 12,
         zIndex: 10,
       }}
     >
@@ -67,7 +69,12 @@ export function AnalyticsCards({
   hasAnyFilter,
   testConfig,
 }: AnalyticsCardsProps) {
-  const { color, maxScore } = testConfig;
+  const { color, maxScore, shortName } = testConfig;
+
+  // Refs for SaveChartButton screenshot targets
+  const avgScoreRef = useRef<HTMLDivElement>(null);
+  const quickStatsRef = useRef<HTMLDivElement>(null);
+  const scoreDistRef = useRef<HTMLDivElement>(null);
 
   if (isLoading || !stats) {
     return (
@@ -112,6 +119,7 @@ export function AnalyticsCards({
     >
       {/* Card 1 — Average Score Gauge */}
       <div
+        ref={avgScoreRef}
         style={{
           background: DT.WHITE,
           border: `1.5px solid ${color}22`,
@@ -126,6 +134,10 @@ export function AnalyticsCards({
         }}
       >
         <FilteredBadge active={hasAnyFilter} />
+        {/* Save button — top-right */}
+        <div style={{ position: "absolute", top: 10, right: 12, zIndex: 10 }}>
+          <SaveChartButton targetRef={avgScoreRef} fileName={`${shortName}-avg-score`} />
+        </div>
         <div
           style={{
             fontSize: 11,
@@ -198,6 +210,7 @@ export function AnalyticsCards({
 
       {/* Card 2 — Quick Stats */}
       <div
+        ref={quickStatsRef}
         style={{
           background: DT.WHITE,
           border: `1.5px solid ${DT.SAGE}22`,
@@ -208,6 +221,10 @@ export function AnalyticsCards({
         }}
       >
         <FilteredBadge active={hasAnyFilter} />
+        {/* Save button — top-right */}
+        <div style={{ position: "absolute", top: 10, right: 12, zIndex: 10 }}>
+          <SaveChartButton targetRef={quickStatsRef} fileName={`${shortName}-quick-stats`} />
+        </div>
         <div
           style={{
             fontSize: 11,
@@ -288,6 +305,7 @@ export function AnalyticsCards({
 
       {/* Card 3 — Score Distribution */}
       <div
+        ref={scoreDistRef}
         style={{
           background: DT.WHITE,
           border: "1.5px solid #E8F4F2",
@@ -298,6 +316,10 @@ export function AnalyticsCards({
         }}
       >
         <FilteredBadge active={hasAnyFilter} />
+        {/* Save button — top-right */}
+        <div style={{ position: "absolute", top: 10, right: 12, zIndex: 10 }}>
+          <SaveChartButton targetRef={scoreDistRef} fileName={`${shortName}-score-distribution`} />
+        </div>
         <div
           style={{
             fontSize: 11,

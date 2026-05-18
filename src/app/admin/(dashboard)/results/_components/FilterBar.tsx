@@ -1,6 +1,7 @@
 "use client";
 
-import { Search, X, SlidersHorizontal, RotateCcw, Calendar } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Search, X, SlidersHorizontal, RotateCcw, Calendar, ChevronDown } from "lucide-react";
 import { DT, type FilterState } from "./types";
 import { MiniSelect } from "./MiniSelect";
 
@@ -53,6 +54,17 @@ export function FilterBar({
   cities,
   categories,
 }: FilterBarProps) {
+  const [isOpen, setIsOpen] = useState(true);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const [bodyHeight, setBodyHeight] = useState<number | undefined>(undefined);
+
+  // Measure the inner content height for smooth animation
+  useEffect(() => {
+    if (bodyRef.current) {
+      setBodyHeight(bodyRef.current.scrollHeight);
+    }
+  }, [filters, provinces, cities, categories]);
+
   return (
     <div
       style={{
@@ -62,15 +74,24 @@ export function FilterBar({
         overflow: "hidden",
       }}
     >
-      {/* Header */}
-      <div
+      {/* Header — always visible */}
+      <button
+        onClick={() => setIsOpen((o) => !o)}
+        type="button"
         style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          width: "100%",
           padding: "12px 20px",
-          borderBottom: `1px solid ${DT.BORDER}`,
+          borderBottom: isOpen ? `1px solid ${DT.BORDER}` : "none",
+          borderTop: "none",
+          borderLeft: "none",
+          borderRight: "none",
           background: DT.BG_CONTENT,
+          cursor: "pointer",
+          fontFamily: "'Inter', sans-serif",
+          transition: "border-bottom 0.2s ease",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -97,274 +118,297 @@ export function FilterBar({
             </span>
           )}
         </div>
-        {hasAnyFilter && (
-          <button
-            onClick={onReset}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "4px 10px",
-              borderRadius: 8,
-              fontSize: 11,
-              fontWeight: 600,
-              color: "#E53E3E",
-              background: "#FFF5F5",
-              border: "1px solid #FED7D7",
-              cursor: "pointer",
-            }}
-          >
-            <RotateCcw size={10} /> Reset All
-          </button>
-        )}
-      </div>
 
-      {/* Filter grid */}
-      <div style={{ padding: "16px 20px" }}>
-        {/* Row 1: 6 equal columns */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(6, 1fr)",
-            gap: 12,
-            marginBottom: 12,
-          }}
-        >
-          {/* Name search */}
-          <div>
-            <div style={labelStyle}>Name</div>
-            <div
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {hasAnyFilter && (
+            <span
+              onClick={(e) => {
+                e.stopPropagation();
+                onReset();
+              }}
               style={{
-                ...inputStyle,
-                padding: 0,
-                paddingLeft: 10,
                 display: "flex",
                 alignItems: "center",
                 gap: 6,
+                padding: "4px 10px",
+                borderRadius: 8,
+                fontSize: 11,
+                fontWeight: 600,
+                color: "#E53E3E",
+                background: "#FFF5F5",
+                border: "1px solid #FED7D7",
+                cursor: "pointer",
               }}
             >
-              <Search size={12} color={DT.LIGHT_TEXT} style={{ flexShrink: 0 }} />
-              <input
-                type="text"
-                placeholder="Search by name..."
-                value={filters.search}
-                onChange={(e) => onFilterChange("search", e.target.value)}
+              <RotateCcw size={10} /> Reset All
+            </span>
+          )}
+          <ChevronDown
+            size={16}
+            color={DT.MID_TEXT}
+            style={{
+              transition: "transform 0.25s ease",
+              transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+            }}
+          />
+        </div>
+      </button>
+
+      {/* Collapsible body */}
+      <div
+        style={{
+          maxHeight: isOpen ? (bodyHeight ?? 400) : 0,
+          opacity: isOpen ? 1 : 0,
+          overflow: "hidden",
+          transition: "max-height 0.3s ease, opacity 0.25s ease",
+        }}
+      >
+        <div ref={bodyRef} style={{ padding: "16px 20px" }}>
+          {/* Row 1: 6 equal columns */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(6, 1fr)",
+              gap: 12,
+              marginBottom: 12,
+            }}
+          >
+            {/* Name search */}
+            <div>
+              <div style={labelStyle}>Name</div>
+              <div
                 style={{
-                  border: "none",
-                  outline: "none",
-                  background: "transparent",
-                  fontSize: 12,
-                  color: DT.DARK_TEXT,
-                  fontWeight: 500,
-                  width: "100%",
-                  padding: "7px 10px 7px 4px",
-                  fontFamily: "'Inter', sans-serif",
+                  ...inputStyle,
+                  padding: 0,
+                  paddingLeft: 10,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
                 }}
-              />
-              {filters.search && (
-                <button
-                  onClick={() => onFilterChange("search", "")}
+              >
+                <Search size={12} color={DT.LIGHT_TEXT} style={{ flexShrink: 0 }} />
+                <input
+                  type="text"
+                  placeholder="Search by name..."
+                  value={filters.search}
+                  onChange={(e) => onFilterChange("search", e.target.value)}
                   style={{
-                    background: "none",
                     border: "none",
-                    cursor: "pointer",
-                    padding: "0 8px",
-                    display: "flex",
+                    outline: "none",
+                    background: "transparent",
+                    fontSize: 12,
+                    color: DT.DARK_TEXT,
+                    fontWeight: 500,
+                    width: "100%",
+                    padding: "7px 10px 7px 4px",
+                    fontFamily: "'Inter', sans-serif",
+                  }}
+                />
+                {filters.search && (
+                  <button
+                    onClick={() => onFilterChange("search", "")}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: "0 8px",
+                      display: "flex",
+                    }}
+                  >
+                    <X size={11} color={DT.LIGHT_TEXT} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Sex */}
+            <div>
+              <div style={labelStyle}>Sex</div>
+              <MiniSelect
+                value={filters.sex}
+                onChange={(v) => onFilterChange("sex", v as FilterState["sex"])}
+                options={["Male", "Female"]}
+                placeholder="All"
+              />
+            </div>
+
+            {/* Province */}
+            <div>
+              <div style={labelStyle}>Province</div>
+              <MiniSelect
+                value={filters.province}
+                onChange={(v) => onFilterChange("province", v)}
+                options={provinces}
+                placeholder="All"
+              />
+            </div>
+
+            {/* City */}
+            <div>
+              <div style={labelStyle}>City / Regency</div>
+              <MiniSelect
+                value={filters.city}
+                onChange={(v) => onFilterChange("city", v)}
+                options={cities}
+                placeholder="All"
+              />
+            </div>
+
+            {/* Age range */}
+            <div>
+              <div style={labelStyle}>Age Range</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <input
+                  type="number"
+                  placeholder="Min"
+                  value={filters.ageMin}
+                  onChange={(e) => onFilterChange("ageMin", e.target.value)}
+                  style={{ ...inputStyle, textAlign: "center" }}
+                  min={0}
+                />
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: DT.LIGHT_TEXT,
+                    flexShrink: 0,
                   }}
                 >
-                  <X size={11} color={DT.LIGHT_TEXT} />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Sex */}
-          <div>
-            <div style={labelStyle}>Sex</div>
-            <MiniSelect
-              value={filters.sex}
-              onChange={(v) => onFilterChange("sex", v as FilterState["sex"])}
-              options={["Male", "Female"]}
-              placeholder="All"
-            />
-          </div>
-
-          {/* Province */}
-          <div>
-            <div style={labelStyle}>Province</div>
-            <MiniSelect
-              value={filters.province}
-              onChange={(v) => onFilterChange("province", v)}
-              options={provinces}
-              placeholder="All"
-            />
-          </div>
-
-          {/* City */}
-          <div>
-            <div style={labelStyle}>City / Regency</div>
-            <MiniSelect
-              value={filters.city}
-              onChange={(v) => onFilterChange("city", v)}
-              options={cities}
-              placeholder="All"
-            />
-          </div>
-
-          {/* Age range */}
-          <div>
-            <div style={labelStyle}>Age Range</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <input
-                type="number"
-                placeholder="Min"
-                value={filters.ageMin}
-                onChange={(e) => onFilterChange("ageMin", e.target.value)}
-                style={{ ...inputStyle, textAlign: "center" }}
-                min={0}
-              />
-              <span
-                style={{
-                  fontSize: 11,
-                  color: DT.LIGHT_TEXT,
-                  flexShrink: 0,
-                }}
-              >
-                –
-              </span>
-              <input
-                type="number"
-                placeholder="Max"
-                value={filters.ageMax}
-                onChange={(e) => onFilterChange("ageMax", e.target.value)}
-                style={{ ...inputStyle, textAlign: "center" }}
-                min={0}
-              />
-            </div>
-          </div>
-
-          {/* Score range */}
-          <div>
-            <div style={labelStyle}>{scoreLabel}</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <input
-                type="number"
-                placeholder="Min"
-                value={filters.scoreMin}
-                onChange={(e) => onFilterChange("scoreMin", e.target.value)}
-                style={{ ...inputStyle, textAlign: "center" }}
-                min={0}
-              />
-              <span
-                style={{
-                  fontSize: 11,
-                  color: DT.LIGHT_TEXT,
-                  flexShrink: 0,
-                }}
-              >
-                –
-              </span>
-              <input
-                type="number"
-                placeholder="Max"
-                value={filters.scoreMax}
-                onChange={(e) => onFilterChange("scoreMax", e.target.value)}
-                style={{ ...inputStyle, textAlign: "center" }}
-                min={0}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Row 2: Category + Date range */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 2fr",
-            gap: 12,
-          }}
-        >
-          {/* Category */}
-          <div>
-            <div style={labelStyle}>Result Category</div>
-            <MiniSelect
-              value={filters.category}
-              onChange={(v) => onFilterChange("category", v)}
-              options={categories}
-              placeholder="All"
-            />
-          </div>
-
-          {/* Date range */}
-          <div>
-            <div style={labelStyle}>Test Date Range</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div
-                style={{
-                  ...inputStyle,
-                  padding: 0,
-                  paddingLeft: 8,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  flex: 1,
-                }}
-              >
-                <Calendar size={12} color={DT.LIGHT_TEXT} style={{ flexShrink: 0 }} />
+                  –
+                </span>
                 <input
-                  type="date"
-                  value={filters.dateFrom}
-                  onChange={(e) => onFilterChange("dateFrom", e.target.value)}
-                  style={{
-                    border: "none",
-                    outline: "none",
-                    background: "transparent",
-                    fontSize: 12,
-                    color: filters.dateFrom ? DT.DARK_TEXT : DT.LIGHT_TEXT,
-                    fontWeight: 500,
-                    width: "100%",
-                    padding: "5px 6px",
-                    fontFamily: "'Inter', sans-serif",
-                  }}
+                  type="number"
+                  placeholder="Max"
+                  value={filters.ageMax}
+                  onChange={(e) => onFilterChange("ageMax", e.target.value)}
+                  style={{ ...inputStyle, textAlign: "center" }}
+                  min={0}
                 />
               </div>
-              <span
-                style={{
-                  fontSize: 11,
-                  color: DT.LIGHT_TEXT,
-                  flexShrink: 0,
-                }}
-              >
-                to
-              </span>
-              <div
-                style={{
-                  ...inputStyle,
-                  padding: 0,
-                  paddingLeft: 8,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  flex: 1,
-                }}
-              >
-                <Calendar size={12} color={DT.LIGHT_TEXT} style={{ flexShrink: 0 }} />
+            </div>
+
+            {/* Score range */}
+            <div>
+              <div style={labelStyle}>{scoreLabel}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <input
-                  type="date"
-                  value={filters.dateTo}
-                  onChange={(e) => onFilterChange("dateTo", e.target.value)}
-                  style={{
-                    border: "none",
-                    outline: "none",
-                    background: "transparent",
-                    fontSize: 12,
-                    color: filters.dateTo ? DT.DARK_TEXT : DT.LIGHT_TEXT,
-                    fontWeight: 500,
-                    width: "100%",
-                    padding: "5px 6px",
-                    fontFamily: "'Inter', sans-serif",
-                  }}
+                  type="number"
+                  placeholder="Min"
+                  value={filters.scoreMin}
+                  onChange={(e) => onFilterChange("scoreMin", e.target.value)}
+                  style={{ ...inputStyle, textAlign: "center" }}
+                  min={0}
                 />
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: DT.LIGHT_TEXT,
+                    flexShrink: 0,
+                  }}
+                >
+                  –
+                </span>
+                <input
+                  type="number"
+                  placeholder="Max"
+                  value={filters.scoreMax}
+                  onChange={(e) => onFilterChange("scoreMax", e.target.value)}
+                  style={{ ...inputStyle, textAlign: "center" }}
+                  min={0}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Row 2: Category + Date range */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 2fr",
+              gap: 12,
+            }}
+          >
+            {/* Category */}
+            <div>
+              <div style={labelStyle}>Result Category</div>
+              <MiniSelect
+                value={filters.category}
+                onChange={(v) => onFilterChange("category", v)}
+                options={categories}
+                placeholder="All"
+              />
+            </div>
+
+            {/* Date range */}
+            <div>
+              <div style={labelStyle}>Test Date Range</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div
+                  style={{
+                    ...inputStyle,
+                    padding: 0,
+                    paddingLeft: 8,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    flex: 1,
+                  }}
+                >
+                  <Calendar size={12} color={DT.LIGHT_TEXT} style={{ flexShrink: 0 }} />
+                  <input
+                    type="date"
+                    value={filters.dateFrom}
+                    onChange={(e) => onFilterChange("dateFrom", e.target.value)}
+                    style={{
+                      border: "none",
+                      outline: "none",
+                      background: "transparent",
+                      fontSize: 12,
+                      color: filters.dateFrom ? DT.DARK_TEXT : DT.LIGHT_TEXT,
+                      fontWeight: 500,
+                      width: "100%",
+                      padding: "5px 6px",
+                      fontFamily: "'Inter', sans-serif",
+                    }}
+                  />
+                </div>
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: DT.LIGHT_TEXT,
+                    flexShrink: 0,
+                  }}
+                >
+                  to
+                </span>
+                <div
+                  style={{
+                    ...inputStyle,
+                    padding: 0,
+                    paddingLeft: 8,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    flex: 1,
+                  }}
+                >
+                  <Calendar size={12} color={DT.LIGHT_TEXT} style={{ flexShrink: 0 }} />
+                  <input
+                    type="date"
+                    value={filters.dateTo}
+                    onChange={(e) => onFilterChange("dateTo", e.target.value)}
+                    style={{
+                      border: "none",
+                      outline: "none",
+                      background: "transparent",
+                      fontSize: 12,
+                      color: filters.dateTo ? DT.DARK_TEXT : DT.LIGHT_TEXT,
+                      fontWeight: 500,
+                      width: "100%",
+                      padding: "5px 6px",
+                      fontFamily: "'Inter', sans-serif",
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </div>
