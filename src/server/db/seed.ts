@@ -330,6 +330,14 @@ async function main() {
       console.log(`  🧹 Purged stale GPIUS-2 interpretations (${purged.rowCount ?? 0} rows)`);
     }
 
+    const srsTestId = slugToId.get("srs");
+    if (srsTestId) {
+      const purged = await db
+        .delete(resultInterpretations)
+        .where(eq(resultInterpretations.testId, srsTestId));
+      console.log(`  🧹 Purged stale SRS interpretations (${purged.rowCount ?? 0} rows)`);
+    }
+
     let inserted = 0;
     let skipped = 0;
 

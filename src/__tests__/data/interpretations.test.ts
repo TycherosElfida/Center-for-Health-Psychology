@@ -305,3 +305,150 @@ describe("GPIUS-2 Interpretation Scheme — R&S 2016 mean-anchored", () => {
     }
   });
 });
+
+describe("SRS Subscale Interpretations — heuristic tertiles", () => {
+  const srsRows = INTERPRETATIONS.filter((r) => r.testSlug === "srs");
+  const totalRows = srsRows.filter((r) => r.dimension === null);
+  const subsRows = srsRows.filter((r) => r.dimension !== null);
+  const subscales = ["Efficacy", "Satisfaction", "Control"] as const;
+
+  // ── Row counts ────────────────────────────────────────────────
+  it("Has exactly 12 total rows (3 existing total + 9 new subscale)", () => {
+    expect(srsRows).toHaveLength(12);
+  });
+
+  it("Has exactly 3 total-score rows (dimension null)", () => {
+    expect(totalRows).toHaveLength(3);
+  });
+
+  it("Has exactly 9 subscale rows (3 subscales × 3 bands)", () => {
+    expect(subsRows).toHaveLength(9);
+  });
+
+  it("Each subscale has exactly 3 rows", () => {
+    for (const dim of subscales) {
+      const rows = subsRows.filter((r) => r.dimension === dim);
+      expect(rows, `${dim} row count`).toHaveLength(3);
+    }
+  });
+
+  // ── Band boundaries ───────────────────────────────────────────
+  it("Efficacy: 3 bands with correct boundaries (3-8 / 9-14 / 15-18)", () => {
+    const rows = subsRows.filter((r) => r.dimension === "Efficacy");
+    expect(rows).toHaveLength(3);
+    const sorted = [...rows].sort((a, b) => parseFloat(a.minScore) - parseFloat(b.minScore));
+    expect(parseFloat(sorted[0]!.minScore)).toBe(3);
+    expect(parseFloat(sorted[0]!.maxScore)).toBe(8);
+    expect(sorted[0]!.severity).toBe("high");
+    expect(parseFloat(sorted[1]!.minScore)).toBe(9);
+    expect(parseFloat(sorted[1]!.maxScore)).toBe(14);
+    expect(sorted[1]!.severity).toBe("moderate");
+    expect(parseFloat(sorted[2]!.minScore)).toBe(15);
+    expect(parseFloat(sorted[2]!.maxScore)).toBe(18);
+    expect(sorted[2]!.severity).toBe("low");
+  });
+
+  it("Satisfaction: 3 bands with correct boundaries (3-8 / 9-14 / 15-18)", () => {
+    const rows = subsRows.filter((r) => r.dimension === "Satisfaction");
+    expect(rows).toHaveLength(3);
+    const sorted = [...rows].sort((a, b) => parseFloat(a.minScore) - parseFloat(b.minScore));
+    expect(parseFloat(sorted[0]!.minScore)).toBe(3);
+    expect(parseFloat(sorted[0]!.maxScore)).toBe(8);
+    expect(sorted[0]!.severity).toBe("high");
+    expect(parseFloat(sorted[1]!.minScore)).toBe(9);
+    expect(parseFloat(sorted[1]!.maxScore)).toBe(14);
+    expect(sorted[1]!.severity).toBe("moderate");
+    expect(parseFloat(sorted[2]!.minScore)).toBe(15);
+    expect(parseFloat(sorted[2]!.maxScore)).toBe(18);
+    expect(sorted[2]!.severity).toBe("low");
+  });
+
+  it("Control: 3 bands with correct boundaries (5-13 / 14-22 / 23-30)", () => {
+    const rows = subsRows.filter((r) => r.dimension === "Control");
+    expect(rows).toHaveLength(3);
+    const sorted = [...rows].sort((a, b) => parseFloat(a.minScore) - parseFloat(b.minScore));
+    expect(parseFloat(sorted[0]!.minScore)).toBe(5);
+    expect(parseFloat(sorted[0]!.maxScore)).toBe(13);
+    expect(sorted[0]!.severity).toBe("high");
+    expect(parseFloat(sorted[1]!.minScore)).toBe(14);
+    expect(parseFloat(sorted[1]!.maxScore)).toBe(22);
+    expect(sorted[1]!.severity).toBe("moderate");
+    expect(parseFloat(sorted[2]!.minScore)).toBe(23);
+    expect(parseFloat(sorted[2]!.maxScore)).toBe(30);
+    expect(sorted[2]!.severity).toBe("low");
+  });
+
+  // ── Polarity (inverted: high score = low severity) ────────────
+  it("Polarity: Efficacy maxScore=18 row has severity 'low' (high efficacy = good)", () => {
+    const row = subsRows.find((r) => r.dimension === "Efficacy" && parseFloat(r.maxScore) === 18);
+    expect(row).toBeDefined();
+    expect(row!.severity).toBe("low");
+  });
+
+  it("Polarity: Efficacy maxScore=8 row has severity 'high' (low efficacy = concerning)", () => {
+    const row = subsRows.find((r) => r.dimension === "Efficacy" && parseFloat(r.maxScore) === 8);
+    expect(row).toBeDefined();
+    expect(row!.severity).toBe("high");
+  });
+
+  it("Polarity: Control maxScore=30 row has severity 'low' (high control = good)", () => {
+    const row = subsRows.find((r) => r.dimension === "Control" && parseFloat(r.maxScore) === 30);
+    expect(row).toBeDefined();
+    expect(row!.severity).toBe("low");
+  });
+
+  // ── Contiguity ────────────────────────────────────────────────
+  it("Efficacy bands are contiguous", () => {
+    assertContiguity(
+      subsRows.filter((r) => r.dimension === "Efficacy"),
+      "srs::Efficacy"
+    );
+  });
+
+  it("Satisfaction bands are contiguous", () => {
+    assertContiguity(
+      subsRows.filter((r) => r.dimension === "Satisfaction"),
+      "srs::Satisfaction"
+    );
+  });
+
+  it("Control bands are contiguous", () => {
+    assertContiguity(
+      subsRows.filter((r) => r.dimension === "Control"),
+      "srs::Control"
+    );
+  });
+
+  // ── Disclosure note ───────────────────────────────────────────
+  it("Each subscale's moderate band contains the normative disclosure note", () => {
+    for (const dim of subscales) {
+      const moderate = subsRows.find((r) => r.dimension === dim && r.severity === "moderate");
+      expect(moderate, `${dim} moderate row`).toBeDefined();
+      expect(moderate!.description, `${dim} moderate disclosure`).toContain(
+        "Belum tersedia data normatif"
+      );
+    }
+  });
+
+  // ── Forbidden population-comparison language ──────────────────
+  it("No SRS row description contains population-comparison language", () => {
+    const FORBIDDEN = ["rata-rata", "X̅", "M="];
+    for (const row of srsRows) {
+      for (const phrase of FORBIDDEN) {
+        expect(
+          row.description,
+          `${row.testSlug}/${row.label} contains forbidden phrase "${phrase}"`
+        ).not.toContain(phrase);
+      }
+    }
+  });
+
+  // ── Each subscale has all 3 severity levels ───────────────────
+  it("Each subscale has exactly one low, moderate, and high row", () => {
+    for (const dim of subscales) {
+      const rows = subsRows.filter((r) => r.dimension === dim);
+      const severities = rows.map((r) => r.severity).sort();
+      expect(severities, `${dim} severity set`).toEqual(["high", "low", "moderate"]);
+    }
+  });
+});

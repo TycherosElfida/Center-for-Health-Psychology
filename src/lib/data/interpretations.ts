@@ -513,6 +513,130 @@ export const INTERPRETATIONS: InterpretationSeed[] = [
     version: 1,
   },
 
+  // ── SRS Subscale Interpretations (heuristic tertiles) ────────
+  // Efficacy (range 3–18, 3 items: Q6/Q8/Q10, NOT reversed)
+  {
+    testSlug: "srs",
+    dimension: "Efficacy",
+    minScore: "3.00",
+    maxScore: "8.00",
+    label: "Efikasi Rendah",
+    description:
+      "Skor subskala Efikasi Anda berada di rentang rendah. Subskala ini mengukur keyakinan Anda terhadap kemampuan diri sendiri dalam menghadapi tantangan. Hasil ini bukan diagnosis.",
+    recommendation:
+      "Pertimbangkan untuk mendiskusikan hasil ini dengan psikolog atau konselor untuk pemahaman yang lebih mendalam. Ingat bahwa resiliensi adalah kemampuan yang dapat dikembangkan.",
+    severity: "high" as const,
+    version: 1,
+  },
+  {
+    testSlug: "srs",
+    dimension: "Efficacy",
+    minScore: "9.00",
+    maxScore: "14.00",
+    label: "Efikasi Sedang",
+    description:
+      "Skor subskala Efikasi Anda berada di rentang sedang. Catatan: Belum tersedia data normatif untuk populasi Indonesia untuk versi adaptasi skala ini. Skor ini mencerminkan posisi dalam rentang teoritis skala, bukan perbandingan dengan populasi tertentu.",
+    recommendation:
+      "Pertimbangkan untuk mendiskusikan hasil ini dengan psikolog atau konselor untuk pemahaman yang lebih mendalam. Ingat bahwa resiliensi adalah kemampuan yang dapat dikembangkan.",
+    severity: "moderate" as const,
+    version: 1,
+  },
+  {
+    testSlug: "srs",
+    dimension: "Efficacy",
+    minScore: "15.00",
+    maxScore: "18.00",
+    label: "Efikasi Tinggi",
+    description:
+      "Skor subskala Efikasi Anda berada di rentang tinggi. Ini mengindikasikan keyakinan yang kuat terhadap kemampuan diri Anda dalam menghadapi situasi sulit. Hasil ini bukan diagnosis.",
+    recommendation:
+      "Pertimbangkan untuk mendiskusikan hasil ini dengan psikolog atau konselor untuk pemahaman yang lebih mendalam. Ingat bahwa resiliensi adalah kemampuan yang dapat dikembangkan.",
+    severity: "low" as const,
+    version: 1,
+  },
+
+  // Satisfaction (range 3–18, 3 items: Q2/Q4/Q9, NOT reversed)
+  {
+    testSlug: "srs",
+    dimension: "Satisfaction",
+    minScore: "3.00",
+    maxScore: "8.00",
+    label: "Kepuasan Hidup Rendah",
+    description:
+      "Skor subskala Kepuasan Hidup Anda berada di rentang rendah. Subskala ini mengukur sejauh mana Anda merasa puas dan menemukan makna dalam kehidupan sehari-hari. Hasil ini bukan diagnosis.",
+    recommendation:
+      "Pertimbangkan untuk mendiskusikan hasil ini dengan psikolog atau konselor untuk pemahaman yang lebih mendalam. Ingat bahwa resiliensi adalah kemampuan yang dapat dikembangkan.",
+    severity: "high" as const,
+    version: 1,
+  },
+  {
+    testSlug: "srs",
+    dimension: "Satisfaction",
+    minScore: "9.00",
+    maxScore: "14.00",
+    label: "Kepuasan Hidup Sedang",
+    description:
+      "Skor subskala Kepuasan Hidup Anda berada di rentang sedang. Catatan: Belum tersedia data normatif untuk populasi Indonesia untuk versi adaptasi skala ini. Skor ini mencerminkan posisi dalam rentang teoritis skala, bukan perbandingan dengan populasi tertentu.",
+    recommendation:
+      "Pertimbangkan untuk mendiskusikan hasil ini dengan psikolog atau konselor untuk pemahaman yang lebih mendalam. Ingat bahwa resiliensi adalah kemampuan yang dapat dikembangkan.",
+    severity: "moderate" as const,
+    version: 1,
+  },
+  {
+    testSlug: "srs",
+    dimension: "Satisfaction",
+    minScore: "15.00",
+    maxScore: "18.00",
+    label: "Kepuasan Hidup Tinggi",
+    description:
+      "Skor subskala Kepuasan Hidup Anda berada di rentang tinggi. Ini mengindikasikan tingkat kepuasan dan rasa bermakna dalam kehidupan yang baik. Hasil ini bukan diagnosis.",
+    recommendation:
+      "Pertimbangkan untuk mendiskusikan hasil ini dengan psikolog atau konselor untuk pemahaman yang lebih mendalam. Ingat bahwa resiliensi adalah kemampuan yang dapat dikembangkan.",
+    severity: "low" as const,
+    version: 1,
+  },
+
+  // Control (range 5–30, 5 items: Q1*/Q3*/Q5*/Q7*/Q11*, ALL reversed)
+  {
+    testSlug: "srs",
+    dimension: "Control",
+    minScore: "5.00",
+    maxScore: "13.00",
+    label: "Rasa Kendali Rendah",
+    description:
+      "Skor subskala Rasa Kendali Anda berada di rentang rendah. Subskala ini mengukur seberapa besar Anda merasa memiliki kendali atas apa yang terjadi dalam hidup Anda. Hasil ini bukan diagnosis.",
+    recommendation:
+      "Pertimbangkan untuk mendiskusikan hasil ini dengan psikolog atau konselor untuk pemahaman yang lebih mendalam. Ingat bahwa resiliensi adalah kemampuan yang dapat dikembangkan.",
+    severity: "high" as const,
+    version: 1,
+  },
+  {
+    testSlug: "srs",
+    dimension: "Control",
+    minScore: "14.00",
+    maxScore: "22.00",
+    label: "Rasa Kendali Sedang",
+    description:
+      "Skor subskala Rasa Kendali Anda berada di rentang sedang. Catatan: Belum tersedia data normatif untuk populasi Indonesia untuk versi adaptasi skala ini. Skor ini mencerminkan posisi dalam rentang teoritis skala, bukan perbandingan dengan populasi tertentu.",
+    recommendation:
+      "Pertimbangkan untuk mendiskusikan hasil ini dengan psikolog atau konselor untuk pemahaman yang lebih mendalam. Ingat bahwa resiliensi adalah kemampuan yang dapat dikembangkan.",
+    severity: "moderate" as const,
+    version: 1,
+  },
+  {
+    testSlug: "srs",
+    dimension: "Control",
+    minScore: "23.00",
+    maxScore: "30.00",
+    label: "Rasa Kendali Tinggi",
+    description:
+      "Skor subskala Rasa Kendali Anda berada di rentang tinggi. Ini mengindikasikan rasa kendali internal yang kuat terhadap peristiwa-peristiwa dalam hidup Anda. Hasil ini bukan diagnosis.",
+    recommendation:
+      "Pertimbangkan untuk mendiskusikan hasil ini dengan psikolog atau konselor untuk pemahaman yang lebih mendalam. Ingat bahwa resiliensi adalah kemampuan yang dapat dikembangkan.",
+    severity: "low" as const,
+    version: 1,
+  },
+
   // ── SRQ-29 — Cluster-based multi-domain interpretation ─────
   // Domain: Neurotic (Q1-Q20) — flag at ≥6 "Ya" (Kemenkes/Riskesdas standard)
   {
