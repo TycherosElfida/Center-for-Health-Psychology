@@ -10,7 +10,7 @@ import {
   type SortDirection,
   type TestTabConfig,
 } from "./types";
-import { ResultActionButton } from "./ResultActionButton";
+import { ResultActionButton } from "../../../_components/ResultActionButton";
 
 /* ── Sort icon ── */
 function SortIcon({ active, direction }: { active: boolean; direction: SortDirection | null }) {
@@ -42,6 +42,7 @@ interface ResultsTableProps {
   onClearFilters: () => void;
   testConfig: TestTabConfig;
   exportActions?: React.ReactNode;
+  testSlug?: string;
 }
 
 export function ResultsTable({
@@ -58,6 +59,7 @@ export function ResultsTable({
   onClearFilters,
   testConfig,
   exportActions,
+  testSlug,
 }: ResultsTableProps) {
   const { color, slug, maxScore, shortName } = testConfig;
   const catColors = CATEGORY_COLORS[slug] ?? {};
@@ -286,6 +288,7 @@ export function ResultsTable({
                   sexColors={SEX_COLORS}
                   formatDate={formatDate}
                   scorePercent={scorePercent}
+                  testSlug={testSlug}
                 />
               ))
             )}
@@ -408,6 +411,7 @@ function ResultsTableRow({
   sexColors,
   formatDate,
   scorePercent,
+  testSlug,
 }: {
   row: ResultRow;
   index: number;
@@ -417,6 +421,7 @@ function ResultsTableRow({
   sexColors: Record<string, { bg: string; text: string }>;
   formatDate: (iso: string) => string;
   scorePercent: (score: number) => number;
+  testSlug?: string;
 }) {
   const catStyle = catColors[row.resultLabel || ""] || { bg: DT.BG_CONTENT, text: DT.DARK_TEXT };
   const sexStyle = sexColors[row.sex || ""] || { bg: DT.BG_CONTENT, text: DT.DARK_TEXT };
@@ -541,7 +546,7 @@ function ResultsTableRow({
 
       {/* Actions — CENTER aligned, uses unified component */}
       <td style={{ padding: "12px 14px", textAlign: "center" }}>
-        <ResultActionButton resultId={row.id} accentColor={color} />
+        <ResultActionButton resultId={row.id} testSlug={testSlug} accentColor={color} />
       </td>
     </tr>
   );

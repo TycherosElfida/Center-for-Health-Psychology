@@ -40,6 +40,7 @@ const filterSchema = z.object({
   category: z.string().optional(),
   dateFrom: z.string().optional(), // ISO date
   dateTo: z.string().optional(), // ISO date
+  scoreId: z.string().optional(),
 });
 
 const listInputSchema = filterSchema.extend({
@@ -98,6 +99,9 @@ function buildFilterConditions(testId: string, filters: z.infer<typeof filterSch
     const toDate = new Date(filters.dateTo);
     toDate.setDate(toDate.getDate() + 1);
     conditions.push(lte(results.createdAt, toDate));
+  }
+  if (filters.scoreId) {
+    conditions.push(eq(results.id, filters.scoreId));
   }
 
   return conditions;

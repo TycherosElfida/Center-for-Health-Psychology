@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { trpc } from "@/lib/trpc/client";
 import {
@@ -10,7 +9,6 @@ import {
   Award,
   Search,
   RotateCcw,
-  Eye,
   ChevronUp,
   ChevronDown,
   Calendar,
@@ -26,6 +24,7 @@ import {
   LIGHT_TEXT,
   BORDER,
 } from "../../_components/DesignTokens";
+import { ResultActionButton } from "../../_components/ResultActionButton";
 
 /* ── Constants ─────────────────────────────────────────────── */
 
@@ -92,7 +91,6 @@ type SortDir = "asc" | "desc";
 /* ── Component ─────────────────────────────────────────────── */
 
 export default function AdminDashboardPage() {
-  const router = useRouter();
   const statsQuery = trpc.adminDashboard.stats.useQuery(undefined, {
     refetchInterval: 30_000,
   });
@@ -777,31 +775,11 @@ export default function AdminDashboardPage() {
                             textAlign: "center",
                           }}
                         >
-                          <button
-                            onClick={() => router.push(`/admin/results/${row.scoreId}`)}
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: 4,
-                              padding: "5px 12px",
-                              borderRadius: 8,
-                              background: `${tc.text}12`,
-                              border: `1px solid ${tc.text}30`,
-                              color: tc.text,
-                              fontSize: 11,
-                              fontWeight: 600,
-                              cursor: "pointer",
-                              transition: "all 0.15s",
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.background = `${tc.text}20`;
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.background = `${tc.text}12`;
-                            }}
-                          >
-                            <Eye size={12} /> View
-                          </button>
+                          <ResultActionButton
+                            resultId={row.scoreId}
+                            testSlug={row.testSlug}
+                            accentColor={tc.text}
+                          />
                         </td>
                       </tr>
                     );
