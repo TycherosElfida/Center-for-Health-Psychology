@@ -152,13 +152,13 @@ describe("SRQ-29 Dimensional Interpretations", () => {
     }
   });
 
-  it("Neurotic domain: normal 0-4, flagged 5-20", () => {
+  it("Neurotic domain: normal 0-5, flagged 6-20 (Kemenkes/Riskesdas ≥6 cutoff)", () => {
     const neurotic = srq29Rows.filter((r) => r.dimension === "neurotic");
     const normal = neurotic.find((r) => r.severity === "low")!;
     const flagged = neurotic.find((r) => r.severity === "high")!;
     expect(parseFloat(normal.minScore)).toBe(0);
-    expect(parseFloat(normal.maxScore)).toBe(4);
-    expect(parseFloat(flagged.minScore)).toBe(5);
+    expect(parseFloat(normal.maxScore)).toBe(5);
+    expect(parseFloat(flagged.minScore)).toBe(6);
     expect(parseFloat(flagged.maxScore)).toBe(20);
   });
 
