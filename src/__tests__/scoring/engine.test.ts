@@ -185,3 +185,73 @@ describe("computeScore — SRQ-29 dimensional grouping", () => {
     expect(computeScore({ answers, questions: qs }).maxPossibleScore).toBe(29);
   });
 });
+
+describe("computeScore — second-order dimensional rollups", () => {
+  const binary = [{ value: 0 }, { value: 1 }];
+
+  it("calculates DSR as the sum of CP and CU dimensions", () => {
+    const qs = [
+      { id: "cp1", dimension: "CP", isReversed: false, weight: 1, options: binary },
+      { id: "cp2", dimension: "CP", isReversed: false, weight: 1, options: binary },
+      { id: "cu1", dimension: "CU", isReversed: false, weight: 1, options: binary },
+      { id: "no1", dimension: "NO", isReversed: false, weight: 1, options: binary }, // Shouldn't affect DSR
+    ];
+    // CP = 2, CU = 1, NO = 1 -> DSR should be 3
+    const answers = { cp1: 1, cp2: 1, cu1: 1, no1: 1 };
+    const result = computeScore({ answers, questions: qs });
+    expect(result.dimensionScores["CP"]).toBe(2);
+    expect(result.dimensionScores["CU"]).toBe(1);
+    expect(result.dimensionScores["NO"]).toBe(1);
+    expect(result.dimensionScores["DSR"]).toBe(3);
+  });
+
+  it("does NOT produce DSR for PSS-10 dimensions (Helplessness/Self-Efficacy)", () => {
+    const opts5 = [{ value: 0 }, { value: 1 }, { value: 2 }, { value: 3 }, { value: 4 }];
+    const qs = [
+      { id: "h1", dimension: "Helplessness", isReversed: false, weight: 1, options: opts5 },
+      { id: "h2", dimension: "Helplessness", isReversed: false, weight: 1, options: opts5 },
+      { id: "se1", dimension: "Self-Efficacy", isReversed: true, weight: 1, options: opts5 },
+    ];
+    const answers = { h1: 3, h2: 2, se1: 1 };
+    const result = computeScore({ answers, questions: qs });
+    expect(result.dimensionScores["Helplessness"]).toBe(5);
+    expect(result.dimensionScores["Self-Efficacy"]).toBe(3); // reversed: 4 - 1 + 0 = 3
+    expect(result.dimensionScores).not.toHaveProperty("DSR");
+  });
+
+  it("does NOT produce DSR for SRQ-29 dimensions (neurotic/substance/psychotic/ptsd)", () => {
+    const binary = [{ value: 0 }, { value: 1 }];
+    const qs = [
+      { id: "n1", dimension: "neurotic", isReversed: false, weight: 1, options: binary },
+      { id: "s1", dimension: "substance", isReversed: false, weight: 1, options: binary },
+      { id: "p1", dimension: "psychotic", isReversed: false, weight: 1, options: binary },
+      { id: "t1", dimension: "ptsd", isReversed: false, weight: 1, options: binary },
+    ];
+    const answers = { n1: 1, s1: 1, p1: 0, t1: 1 };
+    const result = computeScore({ answers, questions: qs });
+    expect(result.dimensionScores).not.toHaveProperty("DSR");
+    expect(result.dimensionScores).not.toHaveProperty("CP");
+    expect(result.dimensionScores).not.toHaveProperty("CU");
+  });
+
+  it("does NOT produce DSR for SRS dimensions (Efficacy/Satisfaction/Control)", () => {
+    const opts6 = [
+      { value: 1 },
+      { value: 2 },
+      { value: 3 },
+      { value: 4 },
+      { value: 5 },
+      { value: 6 },
+    ];
+    const qs = [
+      { id: "e1", dimension: "Efficacy", isReversed: false, weight: 1, options: opts6 },
+      { id: "s1", dimension: "Satisfaction", isReversed: false, weight: 1, options: opts6 },
+      { id: "c1", dimension: "Control", isReversed: true, weight: 1, options: opts6 },
+    ];
+    const answers = { e1: 4, s1: 5, c1: 2 };
+    const result = computeScore({ answers, questions: qs });
+    expect(result.dimensionScores).not.toHaveProperty("DSR");
+    expect(result.dimensionScores).not.toHaveProperty("CP");
+    expect(result.dimensionScores).not.toHaveProperty("CU");
+  });
+});
