@@ -6,10 +6,6 @@
  * This domain defines the structure of psychological assessment instruments.
  * All tables use native PostgreSQL uuid PKs and timestamptz for timezone
  * awareness (Indonesia / WIB).
- *
- * TECH DEBT: questions table has schema drift (column rename detected
- *   by drizzle-kit during 1D.7). Resolve before 1D.8 (Question Management).
- *   Do NOT run pnpm db:generate without resolving this first.
  */
 import {
   pgTable,
