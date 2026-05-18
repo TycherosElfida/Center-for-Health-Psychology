@@ -166,53 +166,309 @@ export const INTERPRETATIONS: InterpretationSeed[] = [
     version: 1,
   },
 
-  // ── GPIUS-2 (Total Score Range: 15–75) ─────────────────────
-  // CUTOFF SOURCE DISCLAIMER:
-  // The three-tier cutoffs (Normal ≤34 / Mild 35–52 / Severe 53–75) are
-  // distribution-based heuristics derived from the Indonesian adaptation by
-  // Reynaldo & Sokang (2016). No published clinical validation study exists
-  // that establishes these specific thresholds as clinically diagnostic.
-  // Caplan (2010) originally reported means and SDs but did not propose
-  // categorical cutoffs. These ranges should be interpreted as screening
-  // indicators, not clinical diagnoses. Future work should consider
-  // norm-referencing against a representative Indonesian sample.
+  // ── GPIUS-2 (Total Score Range: 15–75) ─────────────────────────
+  // Three-band scheme anchored to Reynaldo & Sokang (2016) Jakarta student
+  // sample mean (N=474, M_total=43.41). Bands: below mean / near mean /
+  // above mean. Non-diagnostic screening indicators only — not clinical
+  // diagnoses. Labels use "indikasi" throughout to preserve non-diagnostic
+  // framing per clinical audit requirement.
+  //
+  // CUTOFF SOURCE: Reynaldo, R. & Sokang, Y.A. (2016). Internet Addiction,
+  // Can You Be Trapped? Adaptation of Generalized Problematic Internet Use
+  // Scale 2 for Indonesian Adolescents. Makara Hubs-Asia, 20(1), 59–68.
+  // doi:10.7454/mssh.v20i1.3498
   {
     testSlug: "gpius2",
     dimension: null,
     minScore: "15.00",
-    maxScore: "34.00",
+    maxScore: "43.00",
     label: "Penggunaan Internet Normal",
     description:
-      "Penggunaan internet kamu berada dalam batas wajar dan terkendali. Tidak ditemukan indikasi signifikan penggunaan internet yang bermasalah.",
+      "Pola penggunaan internetmu berada di bawah rata-rata sampel mahasiswa Jakarta (R&S 2016, M=43.41). Tidak ditemukan indikasi signifikan penggunaan internet yang bermasalah.",
     recommendation:
       "Pertahankan kebiasaan digital yang sehat. Tetap perhatikan waktu yang dihabiskan online dan pastikan aktivitas digital tidak mengganggu kehidupan sehari-hari.",
-    severity: "low",
+    severity: "low" as const,
     version: 1,
   },
   {
     testSlug: "gpius2",
     dimension: null,
-    minScore: "35.00",
-    maxScore: "52.00",
-    label: "Penggunaan Internet Bermasalah Ringan",
+    minScore: "44.00",
+    maxScore: "58.00",
+    label: "Indikasi Penggunaan Internet Bermasalah Ringan",
     description:
-      "Terdapat beberapa indikasi penggunaan internet yang kurang sehat. Perhatikan kebiasaan online kamu dan tetapkan batasan yang sehat.",
+      "Skor totalmu berada di atas rata-rata sampel rujukan (M=43.41). Terdapat beberapa indikasi penggunaan internet yang kurang sehat pada satu atau lebih dimensi.",
     recommendation:
-      "Mulai pantau waktu penggunaan internet. Tetapkan jadwal 'offline' dan cari aktivitas alternatif di luar jaringan. Pertimbangkan digital detox secara berkala.",
-    severity: "moderate",
+      "Pantau waktu penggunaan internet dan tetapkan jadwal 'offline'. Perhatikan dimensi mana yang paling tinggi pada profil subskala di bawah, dan mulai dari sana.",
+    severity: "moderate" as const,
     version: 1,
   },
   {
     testSlug: "gpius2",
     dimension: null,
-    minScore: "53.00",
+    minScore: "59.00",
     maxScore: "75.00",
-    label: "Penggunaan Internet Bermasalah Tinggi",
+    label: "Indikasi Penggunaan Internet Bermasalah Tinggi",
     description:
-      "Pola penggunaan internet menunjukkan dampak signifikan terhadap kehidupan sehari-hari. Disarankan untuk berkonsultasi dengan profesional mengenai kebiasaan digital yang lebih sehat.",
+      "Skor totalmu jauh di atas rata-rata sampel rujukan (M=43.41). Pola penggunaan internet menunjukkan indikasi dampak signifikan terhadap kehidupan sehari-hari.",
     recommendation:
-      "Sangat disarankan untuk berkonsultasi dengan psikolog yang berpengalaman dalam isu perilaku digital. Mulai batasi penggunaan internet secara bertahap dan libatkan orang terdekat dalam proses perubahan.",
-    severity: "high",
+      "Sangat disarankan untuk berkonsultasi dengan psikolog yang berpengalaman dalam isu perilaku digital. Lihat profil subskala di bawah untuk memahami area yang paling membutuhkan perhatian.",
+    severity: "high" as const,
+    version: 1,
+  },
+
+  // ── GPIUS-2 Subscale: POSI — Preferensi Interaksi Sosial Online ─
+  // Scale 3–15, R&S 2016 M=7.26. Bands: 3–7 / 8–11 / 12–15.
+  // POSI: prefers online over face-to-face social interaction.
+  {
+    testSlug: "gpius2",
+    dimension: "POSI",
+    minScore: "3.00",
+    maxScore: "7.00",
+    label: "POSI: Preferensi Daring Rendah",
+    description:
+      "Kamu tidak menunjukkan kecenderungan kuat untuk memilih interaksi daring dibanding tatap muka. Ini berada di bawah rata-rata sampel rujukan (M=7.26).",
+    recommendation: "Pertahankan keseimbangan antara interaksi daring dan tatap muka.",
+    severity: "low" as const,
+    version: 1,
+  },
+  {
+    testSlug: "gpius2",
+    dimension: "POSI",
+    minScore: "8.00",
+    maxScore: "11.00",
+    label: "POSI: Preferensi Daring Sedang",
+    description:
+      "Kamu menunjukkan kecenderungan moderat untuk memilih interaksi sosial secara daring. Ini berada di atas rata-rata sampel rujukan (M=7.26).",
+    recommendation:
+      "Tetap jaga keseimbangan. Usahakan untuk secara aktif mencari interaksi tatap muka sebagai pelengkap.",
+    severity: "moderate" as const,
+    version: 1,
+  },
+  {
+    testSlug: "gpius2",
+    dimension: "POSI",
+    minScore: "12.00",
+    maxScore: "15.00",
+    label: "POSI: Preferensi Daring Tinggi",
+    description:
+      "Kamu sangat cenderung memilih interaksi daring dibanding tatap muka. Preferensi yang sangat tinggi ini dapat membatasi pengembangan keterampilan sosial langsung.",
+    recommendation:
+      "Pertimbangkan untuk aktif mencari dan berlatih interaksi tatap muka. Diskusikan dengan konselor jika ini menyulitkan.",
+    severity: "high" as const,
+    version: 1,
+  },
+
+  // ── GPIUS-2 Subscale: MR — Regulasi Suasana Hati ───────────────
+  // Scale 3–15, R&S 2016 M=10.59. Bands: 3–10 / 11–13 / 14–15.
+  // MR: uses internet to regulate/escape negative moods.
+  {
+    testSlug: "gpius2",
+    dimension: "MR",
+    minScore: "3.00",
+    maxScore: "10.00",
+    label: "MR: Regulasi Suasana Hati Rendah",
+    description:
+      "Kamu jarang menggunakan internet sebagai strategi utama untuk mengatur suasana hati. Ini berada di bawah rata-rata sampel rujukan (M=10.59).",
+    recommendation: "Pertahankan strategi coping yang beragam dan tidak bergantung pada internet.",
+    severity: "low" as const,
+    version: 1,
+  },
+  {
+    testSlug: "gpius2",
+    dimension: "MR",
+    minScore: "11.00",
+    maxScore: "13.00",
+    label: "MR: Regulasi Suasana Hati Sedang",
+    description:
+      "Kamu cenderung menggunakan internet untuk mengatasi suasana hati negatif pada tingkat yang moderat, sedikit di atas rata-rata sampel rujukan (M=10.59).",
+    recommendation:
+      "Kembangkan strategi coping alternatif seperti olahraga, journaling, atau berbicara dengan orang terpercaya.",
+    severity: "moderate" as const,
+    version: 1,
+  },
+  {
+    testSlug: "gpius2",
+    dimension: "MR",
+    minScore: "14.00",
+    maxScore: "15.00",
+    label: "MR: Regulasi Suasana Hati Tinggi",
+    description:
+      "Kamu sangat mengandalkan internet sebagai cara utama mengatur suasana hati. Pola ini dapat memperkuat siklus penggunaan bermasalah.",
+    recommendation:
+      "Sangat disarankan untuk berkonsultasi dengan psikolog guna mengembangkan strategi regulasi emosi yang lebih sehat.",
+    severity: "high" as const,
+    version: 1,
+  },
+
+  // ── GPIUS-2 Subscale: CP — Preokupasi Kognitif ─────────────────
+  // Scale 3–15, R&S 2016 M=8.76. Bands: 3–8 / 9–12 / 13–15.
+  // CP: obsessive thoughts about being online.
+  {
+    testSlug: "gpius2",
+    dimension: "CP",
+    minScore: "3.00",
+    maxScore: "8.00",
+    label: "CP: Preokupasi Kognitif Rendah",
+    description:
+      "Kamu jarang memikirkan internet secara obsesif saat sedang offline. Ini berada di bawah rata-rata sampel rujukan (M=8.76).",
+    recommendation: "Pertahankan pola pikir yang seimbang antara aktivitas daring dan luring.",
+    severity: "low" as const,
+    version: 1,
+  },
+  {
+    testSlug: "gpius2",
+    dimension: "CP",
+    minScore: "9.00",
+    maxScore: "12.00",
+    label: "CP: Preokupasi Kognitif Sedang",
+    description:
+      "Kamu menunjukkan kecenderungan moderat untuk memikirkan internet saat tidak sedang menggunakannya, di atas rata-rata sampel rujukan (M=8.76).",
+    recommendation:
+      "Latih teknik mindfulness untuk tetap hadir secara penuh dalam aktivitas sehari-hari tanpa distraksi pikiran tentang internet.",
+    severity: "moderate" as const,
+    version: 1,
+  },
+  {
+    testSlug: "gpius2",
+    dimension: "CP",
+    minScore: "13.00",
+    maxScore: "15.00",
+    label: "CP: Preokupasi Kognitif Tinggi",
+    description:
+      "Pikiran tentang internet mendominasi secara berlebihan bahkan saat kamu tidak sedang online. Ini adalah indikasi kunci penggunaan internet bermasalah.",
+    recommendation:
+      "Pertimbangkan konsultasi profesional. Teknik CBT (Cognitive Behavioral Therapy) dapat membantu merestrukturisasi pola pikir obsesif tentang internet.",
+    severity: "high" as const,
+    version: 1,
+  },
+
+  // ── GPIUS-2 Subscale: CU — Penggunaan Kompulsif ────────────────
+  // Scale 3–15, R&S 2016 M=9.07. Bands: 3–9 / 10–12 / 13–15.
+  // CU: compulsive, uncontrolled internet use patterns.
+  {
+    testSlug: "gpius2",
+    dimension: "CU",
+    minScore: "3.00",
+    maxScore: "9.00",
+    label: "CU: Penggunaan Kompulsif Rendah",
+    description:
+      "Kamu tidak menunjukkan pola penggunaan internet yang kompulsif secara signifikan. Ini berada di bawah rata-rata sampel rujukan (M=9.07).",
+    recommendation: "Pertahankan kontrol diri yang baik atas waktu penggunaan internet.",
+    severity: "low" as const,
+    version: 1,
+  },
+  {
+    testSlug: "gpius2",
+    dimension: "CU",
+    minScore: "10.00",
+    maxScore: "12.00",
+    label: "CU: Penggunaan Kompulsif Sedang",
+    description:
+      "Kamu menunjukkan beberapa kesulitan dalam membatasi atau menghentikan penggunaan internet saat diperlukan, di atas rata-rata sampel rujukan (M=9.07).",
+    recommendation:
+      "Tetapkan aturan waktu layar yang jelas. Gunakan fitur pembatas waktu aplikasi dan buat jadwal 'offline' yang konsisten.",
+    severity: "moderate" as const,
+    version: 1,
+  },
+  {
+    testSlug: "gpius2",
+    dimension: "CU",
+    minScore: "13.00",
+    maxScore: "15.00",
+    label: "CU: Penggunaan Kompulsif Tinggi",
+    description:
+      "Kamu mengalami kesulitan nyata mengendalikan penggunaan internet meskipun ada keinginan untuk berhenti atau mengurangi. Ini adalah indikasi penggunaan kompulsif yang serius.",
+    recommendation:
+      "Konsultasikan dengan psikolog. Strategi manajemen perilaku dan dukungan sosial sangat dianjurkan untuk membantu mengurangi pola kompulsif ini.",
+    severity: "high" as const,
+    version: 1,
+  },
+
+  // ── GPIUS-2 Subscale: NO — Dampak Negatif ──────────────────────
+  // Scale 3–15, R&S 2016 M=7.74. Bands: 3–7 / 8–11 / 12–15.
+  // NO: negative real-world outcomes caused by internet use.
+  {
+    testSlug: "gpius2",
+    dimension: "NO",
+    minScore: "3.00",
+    maxScore: "7.00",
+    label: "NO: Dampak Negatif Rendah",
+    description:
+      "Penggunaan internet belum menimbulkan dampak negatif yang signifikan pada kehidupanmu. Ini berada di bawah rata-rata sampel rujukan (M=7.74).",
+    recommendation:
+      "Pertahankan pola penggunaan yang tidak mengganggu aktivitas dan hubungan sosial sehari-hari.",
+    severity: "low" as const,
+    version: 1,
+  },
+  {
+    testSlug: "gpius2",
+    dimension: "NO",
+    minScore: "8.00",
+    maxScore: "11.00",
+    label: "NO: Dampak Negatif Sedang",
+    description:
+      "Penggunaan internet mulai menimbulkan beberapa dampak negatif pada aktivitas atau hubungan sosialmu, di atas rata-rata sampel rujukan (M=7.74).",
+    recommendation:
+      "Identifikasi area kehidupan mana yang paling terdampak (misalnya tidur, studi, hubungan sosial) dan buat rencana konkret untuk meminimalkan gangguan.",
+    severity: "moderate" as const,
+    version: 1,
+  },
+  {
+    testSlug: "gpius2",
+    dimension: "NO",
+    minScore: "12.00",
+    maxScore: "15.00",
+    label: "NO: Dampak Negatif Tinggi",
+    description:
+      "Penggunaan internet telah menyebabkan dampak negatif yang nyata dan signifikan pada kehidupan sehari-hari, seperti melewatkan acara penting atau kesulitan mengatur kehidupan.",
+    recommendation:
+      "Konsultasikan dengan profesional kesehatan mental. Dampak yang sudah nyata di kehidupan nyata memerlukan intervensi yang lebih terstruktur.",
+    severity: "high" as const,
+    version: 1,
+  },
+
+  // ── GPIUS-2 Subscale: DSR — Disregulasi Diri (CP + CU) ─────────
+  // Second-order dimension: DSR = CP + CU. Scale 6–30, R&S 2016 M=17.83.
+  // Bands: 6–17 (below mean) / 18–24 (near-above mean) / 25–30 (high).
+  // Caplan (2010): DSR is the core cognitive-behavioral pathway in GPIUS.
+  {
+    testSlug: "gpius2",
+    dimension: "DSR",
+    minScore: "6.00",
+    maxScore: "17.00",
+    label: "DSR: Disregulasi Diri Rendah",
+    description:
+      "Kombinasi preokupasi kognitif dan penggunaan kompulsif berada di bawah rata-rata sampel rujukan (M=17.83). Tidak ditemukan indikasi signifikan disregulasi diri terkait internet.",
+    recommendation:
+      "Pertahankan kendali diri yang baik atas pikiran dan perilaku penggunaan internet.",
+    severity: "low" as const,
+    version: 1,
+  },
+  {
+    testSlug: "gpius2",
+    dimension: "DSR",
+    minScore: "18.00",
+    maxScore: "24.00",
+    label: "DSR: Disregulasi Diri Sedang",
+    description:
+      "Skor gabungan preokupasi kognitif dan penggunaan kompulsif berada di atas rata-rata sampel rujukan (M=17.83). Ini adalah dimensi inti yang perlu diperhatikan.",
+    recommendation:
+      "Kembangkan strategi manajemen diri: jadwal penggunaan internet yang terstruktur, teknik mindfulness, dan identifikasi pemicu penggunaan berlebih.",
+    severity: "moderate" as const,
+    version: 1,
+  },
+  {
+    testSlug: "gpius2",
+    dimension: "DSR",
+    minScore: "25.00",
+    maxScore: "30.00",
+    label: "DSR: Disregulasi Diri Tinggi",
+    description:
+      "Kombinasi preokupasi kognitif dan penggunaan kompulsif yang sangat tinggi — ini adalah dimensi inti penggunaan internet bermasalah menurut model Caplan (2010). Indikasi ini memerlukan perhatian serius.",
+    recommendation:
+      "Sangat disarankan untuk berkonsultasi dengan psikolog. CBT dan strategi regulasi diri berbasis bukti dapat membantu mengatasi pola disregulasi kognitif dan perilaku ini.",
+    severity: "high" as const,
     version: 1,
   },
 
