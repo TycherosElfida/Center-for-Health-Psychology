@@ -7,23 +7,15 @@ import { trpc } from "@/lib/trpc/client";
 import { BRAND, WHITE, DARK_TEXT, BORDER, RED, RED_LIGHT } from "./DesignTokens";
 import { downloadData } from "./exportUtils";
 
-const HOVER_BG = "#FAFAFE";
-
-/**
- * Unified action button for result rows.
- *
- * Renders a compact button group:  [ 👁 View ][ ˅ ]
- * Replaces the ad-hoc action cells previously scattered across tables.
- */
+/* Lavender hover tint matching Figma reference */
+const HOVER_TINT = "#F7F5FC";
+/* Inner divider between View and chevron — white at ~30% opacity */
+const INNER_DIVIDER = "rgba(255, 255, 255, 0.30)";
 
 interface ResultActionButtonProps {
-  /** UUID of the result row */
   resultId: string;
-  /** Slug of the test to export */
   testSlug?: string;
-  /** Optional callback after successful delete */
   onDeleted?: () => void;
-  /** Accent color (defaults to BRAND) */
   accentColor?: string;
 }
 
@@ -37,7 +29,7 @@ export function ResultActionButton({
   const [menuOpen, setMenuOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const utils = trpc.useUtils();
 
   const deleteMutation = trpc.adminResults.deleteResult.useMutation({
@@ -54,16 +46,16 @@ export function ResultActionButton({
     },
   });
 
-  // Close menu on outside click
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+    if (!menuOpen) return;
+    function handler(e: MouseEvent) {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
       }
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOpen]);
 
   const handleView = () => {
     window.location.href = `/admin/results/${resultId}`;
@@ -112,208 +104,200 @@ export function ResultActionButton({
     }
   };
 
+  const busy = isDeleting || isExporting;
+
+  /* Subtle shadow tinted by accent — matches admin-btn-primary spirit */
+  const groupShadow = `0 1px 3px ${accentColor}40, 0 1px 2px rgba(0, 0, 0, 0.06)`;
+
+  /* Shared half styles */
+  const halfBase: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: accentColor,
+    color: WHITE,
+    border: "none",
+    fontSize: 12,
+    fontWeight: 600,
+    cursor: "pointer",
+    transition: "filter 0.15s ease",
+    fontFamily: "'Inter', sans-serif",
+    height: 30,
+    boxSizing: "border-box",
+  };
+
+  /* Dropdown item shared styles */
+  const itemBase: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    padding: "10px 14px",
+    width: "100%",
+    background: "transparent",
+    border: "none",
+    color: DARK_TEXT,
+    fontSize: 12,
+    fontWeight: 500,
+    fontFamily: "'Inter', sans-serif",
+    cursor: "pointer",
+    textAlign: "left",
+    transition: "background 0.12s ease",
+    whiteSpace: "nowrap",
+  };
+
   return (
     <div
+      ref={rootRef}
       style={{
-        display: "flex",
-        alignItems: "stretch",
-        justifyContent: "center",
-        opacity: isDeleting || isExporting ? 0.5 : 1,
-        pointerEvents: isDeleting || isExporting ? "none" : "auto",
+        position: "relative",
+        display: "inline-flex",
+        opacity: busy ? 0.55 : 1,
+        pointerEvents: busy ? "none" : "auto",
         transition: "opacity 0.2s ease",
-        height: 28,
+        borderRadius: 8,
+        boxShadow: groupShadow,
       }}
     >
-      {/* View Button */}
+      {/* ── View half ── */}
       <button
+        type="button"
         onClick={handleView}
-        title="View Details"
+        title="View Detailed Report"
         style={{
-          display: "flex",
-          alignItems: "center",
+          ...halfBase,
           gap: 6,
-          padding: "0 10px",
-          borderTopLeftRadius: 6,
-          borderBottomLeftRadius: 6,
-          background: accentColor,
-          border: `1px solid ${accentColor}`,
-          color: "#fff",
-          fontSize: 12,
-          fontWeight: 600,
-          cursor: "pointer",
-          transition: "filter 0.15s ease",
+          padding: "0 12px",
+          borderTopLeftRadius: 8,
+          borderBottomLeftRadius: 8,
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.filter = "brightness(1.1)";
+          e.currentTarget.style.filter = "brightness(0.92)";
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.filter = "none";
         }}
       >
-        <Eye size={14} />
+        <Eye size={14} strokeWidth={2.25} />
         View
       </button>
 
-      {/* Chevron Dropdown Trigger */}
-      <div ref={menuRef} style={{ position: "relative", display: "flex" }}>
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          title="More actions"
+      {/* ── Chevron half ── */}
+      <button
+        type="button"
+        onClick={() => setMenuOpen((p) => !p)}
+        title="More actions"
+        aria-haspopup="menu"
+        aria-expanded={menuOpen}
+        style={{
+          ...halfBase,
+          width: 32,
+          borderTopRightRadius: 8,
+          borderBottomRightRadius: 8,
+          borderLeft: `1px solid ${INNER_DIVIDER}`,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.filter = "brightness(0.92)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.filter = "none";
+        }}
+      >
+        <ChevronDown
+          size={14}
+          strokeWidth={2.25}
           style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "0 6px",
-            borderTopRightRadius: 6,
-            borderBottomRightRadius: 6,
-            background: accentColor,
-            border: `1px solid ${accentColor}`,
-            borderLeft: `1px solid rgba(255,255,255,0.2)`,
-            color: "#fff",
-            cursor: "pointer",
-            transition: "filter 0.15s ease",
+            transform: menuOpen ? "rotate(180deg)" : "rotate(0deg)",
+            transition: "transform 0.15s ease",
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.filter = "brightness(1.1)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.filter = "none";
+        />
+      </button>
+
+      {/* ── Dropdown ── */}
+      {menuOpen && (
+        <div
+          role="menu"
+          style={{
+            position: "absolute",
+            top: "calc(100% + 6px)",
+            right: 0,
+            zIndex: 50,
+            minWidth: 200,
+            background: WHITE,
+            border: `1px solid ${BORDER}`,
+            borderRadius: 12,
+            boxShadow: "0 8px 30px rgba(107, 92, 160, 0.14), 0 2px 8px rgba(0, 0, 0, 0.06)",
+            padding: "4px 0",
+            animation: "adminFadeIn 0.12s ease-out",
           }}
         >
-          <ChevronDown size={14} />
-        </button>
-
-        {menuOpen && (
-          <div
-            style={{
-              position: "absolute",
-              right: 0,
-              top: "100%",
-              marginTop: 4,
-              background: WHITE,
-              border: `1px solid ${BORDER}`,
-              borderRadius: 8,
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-              zIndex: 50,
-              minWidth: 160,
-              padding: 4,
-              display: "flex",
-              flexDirection: "column",
-              gap: 2,
-              animation: "adminFadeIn 0.12s ease-out",
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => handleExport("xlsx")}
+            style={itemBase}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = HOVER_TINT;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
             }}
           >
-            <button
-              onClick={() => handleExport("xlsx")}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "8px 12px",
-                borderRadius: 6,
-                background: "transparent",
-                border: "none",
-                color: DARK_TEXT,
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: "pointer",
-                textAlign: "left",
-                transition: "background 0.15s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = HOVER_BG;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-              }}
-            >
-              <FileSpreadsheet size={14} style={{ color: "#107C41" }} /> Export as .xlsx
-            </button>
-            <button
-              onClick={() => handleExport("csv")}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "8px 12px",
-                borderRadius: 6,
-                background: "transparent",
-                border: "none",
-                color: DARK_TEXT,
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: "pointer",
-                textAlign: "left",
-                transition: "background 0.15s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = HOVER_BG;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-              }}
-            >
-              <FileText size={14} style={{ color: "#0078D4" }} /> Export as .csv
-            </button>
-            <button
-              onClick={handleDownloadPdf}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "8px 12px",
-                borderRadius: 6,
-                background: "transparent",
-                border: "none",
-                color: DARK_TEXT,
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: "pointer",
-                textAlign: "left",
-                transition: "background 0.15s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = HOVER_BG;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-              }}
-            >
-              <Download size={14} style={{ color: RED }} /> Download PDF
-            </button>
+            <FileSpreadsheet size={15} color="#107C41" strokeWidth={2} />
+            <span>Export as .xlsx</span>
+          </button>
 
-            <div style={{ height: 1, background: BORDER, margin: "4px 0" }} />
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => handleExport("csv")}
+            style={itemBase}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = HOVER_TINT;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+            }}
+          >
+            <FileText size={15} color="#1565C0" strokeWidth={2} />
+            <span>Export as .csv</span>
+          </button>
 
-            <button
-              onClick={handleDelete}
-              disabled={isDeleting}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "8px 12px",
-                borderRadius: 6,
-                background: "transparent",
-                border: "none",
-                color: RED,
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: "pointer",
-                textAlign: "left",
-                transition: "background 0.15s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = RED_LIGHT;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-              }}
-            >
-              <Trash2 size={14} /> {isDeleting ? "Deleting..." : "Delete Record"}
-            </button>
-          </div>
-        )}
-      </div>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={handleDownloadPdf}
+            style={itemBase}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = HOVER_TINT;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+            }}
+          >
+            <Download size={15} color="#6B5CA0" strokeWidth={2} />
+            <span>Download PDF</span>
+          </button>
+
+          <div style={{ height: 1, background: "#F0ECF8", margin: "4px 10px" }} />
+
+          <button
+            type="button"
+            role="menuitem"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            style={{ ...itemBase, color: RED }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = RED_LIGHT;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+            }}
+          >
+            <Trash2 size={15} color={RED} strokeWidth={2} />
+            <span>{isDeleting ? "Deleting…" : "Delete Record"}</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
