@@ -146,9 +146,27 @@ export function ResultActionButton({
     window.location.href = `/admin/results/${resultId}`;
   };
 
-  const handleDownloadPdf = () => {
-    window.open(`/admin/results/${resultId}?print=true`, "_blank");
+  const handleDownloadPdf = async () => {
+    setIsExporting(true);
     close();
+    try {
+      const res = await fetch(`/api/admin/report-pdf?scoreId=${resultId}`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("PDF generation failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `report-${testSlug ?? "assessment"}-${resultId.slice(0, 8)}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to generate PDF. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleExport = async (format: "csv" | "xlsx") => {
