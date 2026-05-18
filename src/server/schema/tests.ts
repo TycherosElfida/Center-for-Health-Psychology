@@ -136,3 +136,28 @@ export const resultInterpretations = pgTable(
   },
   (t) => [index("idx_result_interp_test_dimension").on(t.testId, t.dimension)]
 );
+
+// ── testCitations ─────────────────────────────────────────────────────
+// Clinical literature citations attached to a test. Used on results pages
+// and in audit trails to surface the evidence base for scoring schemes.
+// Seeded by seed.ts; queryable via the admin citations UI (planned).
+
+export const testCitations = pgTable(
+  "test_citations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    testId: uuid("test_id")
+      .references(() => tests.id, { onDelete: "cascade" })
+      .notNull(),
+    type: text("type").notNull(), // e.g. "foundational" | "indonesian_validation" | "original_instrument"
+    citation: text("citation").notNull(),
+    doi: text("doi"),
+    year: integer("year"),
+    url: text("url"),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("idx_test_citations_test_id").on(t.testId),
+    index("idx_test_citations_type").on(t.type),
+  ]
+);

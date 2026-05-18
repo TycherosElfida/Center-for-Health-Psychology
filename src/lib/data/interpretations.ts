@@ -173,10 +173,10 @@ export const INTERPRETATIONS: InterpretationSeed[] = [
   // diagnoses. Labels use "indikasi" throughout to preserve non-diagnostic
   // framing per clinical audit requirement.
   //
-  // CUTOFF SOURCE: Reynaldo, R. & Sokang, Y.A. (2016). Internet Addiction,
-  // Can You Be Trapped? Adaptation of Generalized Problematic Internet Use
-  // Scale 2 for Indonesian Adolescents. Makara Hubs-Asia, 20(1), 59–68.
-  // doi:10.7454/mssh.v20i1.3498
+  // CUTOFF SOURCE: Reynaldo, R. & Sokang, Y.A. (2016). Mahasiswa dan internet:
+  // Dua sisi mata uang? Problematic internet use pada mahasiswa.
+  // Jurnal Psikologi (UGM), 43(2), 107–120.
+  // doi:10.22146/jpsi.17276
   {
     testSlug: "gpius2",
     dimension: null,
