@@ -398,7 +398,27 @@ export function ClinicalReportPDF({ data }: { data: ReportData }) {
           </View>
         ))}
 
-        {/* ── 7. Crisis Hotlines ── */}
+        {/* ── 7. Citations ── */}
+        {data.citations && data.citations.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>Referensi Medis & Sitasi</Text>
+            {data.citations.map((cite, i) => (
+              <View key={cite.id} style={{ marginBottom: 6 }}>
+                <Text style={{ fontSize: 9, color: colors.text, lineHeight: 1.4 }}>
+                  [{i + 1}] {cite.citation}
+                </Text>
+                {(cite.doi || cite.url) && (
+                  <Text style={{ fontSize: 8, color: colors.accent, marginTop: 1 }}>
+                    {cite.doi && `DOI: ${cite.doi}  `}
+                    {cite.url && `URL: ${cite.url}`}
+                  </Text>
+                )}
+              </View>
+            ))}
+          </>
+        )}
+
+        {/* ── 8. Crisis Hotlines ── */}
         <Text style={styles.sectionTitle}>Layanan Krisis</Text>
         {data.crisisHotlines.map((h) => (
           <View key={h.name} style={styles.hotlineRow}>
@@ -408,7 +428,7 @@ export function ClinicalReportPDF({ data }: { data: ReportData }) {
           </View>
         ))}
 
-        {/* ── 8. Disclaimer ── */}
+        {/* ── 9. Disclaimer ── */}
         <View style={styles.disclaimer}>
           <Text style={styles.disclaimerText}>
             PENTING: Hasil assessment ini merupakan alat skrining awal dan BUKAN diagnosis klinis.
@@ -418,7 +438,7 @@ export function ClinicalReportPDF({ data }: { data: ReportData }) {
           </Text>
         </View>
 
-        {/* ── 9. Footer ── */}
+        {/* ── 10. Footer ── */}
         <View style={styles.footer} fixed>
           <Text style={styles.footerText}>
             CHP Platform v1 — Center for Health Psychology, UKRIDA

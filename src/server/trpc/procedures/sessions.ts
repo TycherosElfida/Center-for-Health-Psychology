@@ -1,4 +1,4 @@
-import { eq, and, sql, desc, inArray } from "drizzle-orm";
+import { eq, and, sql, desc, inArray, or, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import { TRPCError } from "@trpc/server";
@@ -10,7 +10,12 @@ import {
   submitAssessmentSchema,
 } from "@/lib/types/assessment";
 
-import { tests, questions, options as optionsTable } from "@/server/schema/tests";
+import {
+  tests,
+  questions,
+  options as optionsTable,
+  resultInterpretations,
+} from "@/server/schema/tests";
 import { testSessions, answers, results } from "@/server/schema/sessions";
 import { sessionDemographics } from "@/server/schema/session-demographics";
 import { userProfiles } from "@/server/schema/user-profiles";
@@ -355,11 +360,26 @@ export const sessionsRouter = createTRPCRouter({
         }
       }
 
-      // Total-score interpretation — skip for dimension-only instruments
-      // (e.g. SRQ-29 has no total-score bands, only per-dimension bands)
-      const interpretation = hasDimensions
-        ? null
-        : await lookupInterpretation(session.testId, scoreResult.totalScore);
+      // Total-score interpretation
+      // Check if instrument has any total-score bands before looking up (to avoid false-positive Sentry warnings)
+      const hasTotalBands = await ctx.db
+        .select({ id: resultInterpretations.id })
+        .from(resultInterpretations)
+        .where(
+          and(
+            eq(resultInterpretations.testId, session.testId),
+            or(
+              isNull(resultInterpretations.dimension),
+              eq(resultInterpretations.dimension, "total")
+            )
+          )
+        )
+        .limit(1)
+        .then((res) => res.length > 0);
+
+      const interpretation = hasTotalBands
+        ? await lookupInterpretation(session.testId, scoreResult.totalScore)
+        : null;
 
       const enrichedComputedScores = {
         ...scoreResult.computedScores,

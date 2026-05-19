@@ -19,6 +19,7 @@ import {
   Download,
   Shield,
   Trash2,
+  BookOpen,
 } from "lucide-react";
 import { useState, useMemo, useRef, useEffect } from "react";
 import * as XLSX from "xlsx";
@@ -1355,7 +1356,67 @@ export default function DetailedReportPage() {
         </div>
       </div>
 
-      {/* ═══ 5. SEND REPORT CARD ═══ */}
+      {/* ═══ 5. CITATIONS ═══ */}
+      {data.citations && data.citations.length > 0 && (
+        <div
+          style={{
+            borderRadius: 16,
+            border: `1px solid ${DT.BORDER}`,
+            padding: 20,
+            background: DT.WHITE,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <BookOpen size={15} color={DT.TEAL_DARK} />
+            <span
+              style={{
+                fontSize: 14,
+                fontWeight: 700,
+                color: DT.DARK_TEXT,
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+            >
+              Clinical Citations
+            </span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {data.citations.map((cite) => (
+              <div
+                key={cite.id}
+                style={{
+                  borderRadius: 12,
+                  padding: 12,
+                  background: DT.BG_CONTENT,
+                  border: `1px solid ${DT.BORDER}`,
+                }}
+              >
+                <div
+                  style={{ fontSize: 13, color: DT.DARK_TEXT, lineHeight: 1.5, marginBottom: 4 }}
+                >
+                  {cite.citation}
+                </div>
+                {(cite.doi || cite.url) && (
+                  <div style={{ fontSize: 11, color: DT.TEAL_DARK }}>
+                    {cite.doi && <span style={{ marginRight: 12 }}>DOI: {cite.doi}</span>}
+                    {cite.url && (
+                      <a
+                        href={cite.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{ color: DT.TEAL, textDecoration: "none" }}
+                      >
+                        {cite.url}
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ═══ 6. SEND REPORT CARD ═══ */}
       <div
         style={{
           borderRadius: 16,

@@ -151,23 +151,33 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
   const dimensionMaxScores =
     (computed.dimensionMaxScores as Record<string, number> | undefined) ?? undefined;
 
-  // Fetch interpretations to get dimension-level interpretation labels
-  const interpretationRows = await db
-    .select()
-    .from(resultInterpretations)
-    .where(eq(resultInterpretations.testId, row.testId));
+  // Engine writes dimension interpretations into computedScores at submit time.
+  const computedDimInterps = computed.dimensionInterpretations as Record<
+    string,
+    { label: string; description: string }
+  >;
 
-  const dimensionInterpretations: Record<string, { label: string; description: string }> = {};
-  for (const [dim, score] of Object.entries(dimensionScores)) {
-    const dimInterp = interpretationRows.find(
-      (r) =>
-        r.dimension === dim && score >= parseFloat(r.minScore) && score <= parseFloat(r.maxScore)
-    );
-    if (dimInterp) {
-      dimensionInterpretations[dim] = {
-        label: dimInterp.label,
-        description: dimInterp.description,
-      };
+  // Fallback recomputation for older results that didn't have dimensionInterpretations saved
+  const dimensionInterpretations: Record<string, { label: string; description: string }> =
+    computedDimInterps ?? {};
+
+  if (!computedDimInterps) {
+    const interpretationRows = await db
+      .select()
+      .from(resultInterpretations)
+      .where(eq(resultInterpretations.testId, row.testId));
+
+    for (const [dim, score] of Object.entries(dimensionScores)) {
+      const dimInterp = interpretationRows.find(
+        (r) =>
+          r.dimension === dim && score >= parseFloat(r.minScore) && score <= parseFloat(r.maxScore)
+      );
+      if (dimInterp) {
+        dimensionInterpretations[dim] = {
+          label: dimInterp.label,
+          description: dimInterp.description,
+        };
+      }
     }
   }
 

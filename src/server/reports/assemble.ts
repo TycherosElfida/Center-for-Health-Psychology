@@ -7,7 +7,13 @@
  */
 import { eq, asc, inArray, sql } from "drizzle-orm";
 import { db } from "@/server/db";
-import { tests, questions, resultInterpretations, options } from "@/server/schema/tests";
+import {
+  tests,
+  questions,
+  resultInterpretations,
+  options,
+  testCitations,
+} from "@/server/schema/tests";
 import { testSessions, answers, results } from "@/server/schema/sessions";
 import { guestLeads } from "@/server/schema/consents";
 import { sessionDemographics } from "@/server/schema/session-demographics";
@@ -86,6 +92,18 @@ export interface ReportData {
 
   /** Crisis hotlines (static) */
   crisisHotlines: CrisisHotline[];
+
+  /** Clinical citations */
+  citations: ReportCitation[];
+}
+
+export interface ReportCitation {
+  id: string;
+  type: string;
+  citation: string;
+  doi: string | null;
+  year: number | null;
+  url: string | null;
 }
 
 export interface CrisisHotline {
@@ -270,6 +288,10 @@ export async function assembleReportData(resultId: string): Promise<ReportData> 
     (result.computedScores as {
       maxPossibleScore?: number;
       dimensionMaxScores?: Record<string, number>;
+      dimensionInterpretations?: Record<
+        string,
+        { label: string; description: string; severity?: string }
+      >;
     }) ?? {};
 
   const dimensionScoreEntries: DimensionScore[] = Object.entries(rawDimScores).map(
@@ -296,17 +318,29 @@ export async function assembleReportData(resultId: string): Promise<ReportData> 
   );
 
   // Enrich dimension scores with interpretation labels
+  // Prioritize dimension interpretations from computedScores (the new payload format)
+  // Fall back to querying the database for legacy results
   for (const ds of dimensionScoreEntries) {
-    const dimInterp = interpretationRows.find(
-      (row) =>
-        row.dimension === ds.dimension &&
-        ds.score >= parseFloat(row.minScore) &&
-        ds.score <= parseFloat(row.maxScore)
-    );
-    if (dimInterp) {
-      ds.label = dimInterp.label;
-      ds.description = dimInterp.description;
-      ds.severity = dimInterp.severity;
+    const computedInterp = computedScores.dimensionInterpretations?.[ds.dimension];
+
+    if (computedInterp) {
+      ds.label = computedInterp.label;
+      ds.description = computedInterp.description;
+      if (computedInterp.severity) {
+        ds.severity = computedInterp.severity;
+      }
+    } else {
+      const dimInterp = interpretationRows.find(
+        (row) =>
+          row.dimension === ds.dimension &&
+          ds.score >= parseFloat(row.minScore) &&
+          ds.score <= parseFloat(row.maxScore)
+      );
+      if (dimInterp) {
+        ds.label = dimInterp.label;
+        ds.description = dimInterp.description;
+        ds.severity = dimInterp.severity;
+      }
     }
   }
 
@@ -322,6 +356,22 @@ export async function assembleReportData(resultId: string): Promise<ReportData> 
   // 9. Calculate max possible score from questions × max option value
   // Approximate: number of questions × 4 (typical Likert 0-4)
   const maxPossibleScore = computedScores?.maxPossibleScore ?? questionRows.length * 4;
+
+  // 10. Fetch citations
+  const citationRows = await db
+    .select()
+    .from(testCitations)
+    .where(eq(testCitations.testId, result.testId))
+    .orderBy(asc(testCitations.createdAt));
+
+  const citations: ReportCitation[] = citationRows.map((c) => ({
+    id: c.id,
+    type: c.type,
+    citation: c.citation,
+    doi: c.doi,
+    year: c.year,
+    url: c.url,
+  }));
 
   return {
     testName: test.title,
@@ -345,5 +395,6 @@ export async function assembleReportData(resultId: string): Promise<ReportData> 
       : null,
     items,
     crisisHotlines: CRISIS_HOTLINES,
+    citations,
   };
 }
