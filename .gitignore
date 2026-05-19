@@ -44,21 +44,37 @@ next-env.d.ts
 #docs
 /docs/**
 !/docs/keterbatasan-platform-chp.md
-!/docs/HANDOFF_LIMITATIONS.md
-!/docs/superpowers/
 !/docs/clinical-audits/
+docs/superpowers/
+docs/LaporanKP/
+
 # Sentry Config File
 .env.sentry-build-plugin
 
-# Figma Design Reference
+# Design artifacts
+DesignReference/
 /DesignReference
 
-# Agent Skills
-.agents
+# AI agent tooling
+.claude/
+.agents/
+.agent/
 skills-lock.json
-
 AGENTS.md
 CLAUDE.md
-# Worktrees
 .worktrees/
-.claude/
+
+# One-off maintenance scripts
+scripts/remediate-*.ts
+scripts/migrate.ts
+scripts/test-trpc-demographics.ts
+audit.ts
+get_thumbs.ts
+
+# Logs
+*.log
+*.tmp
+*.bak
+
+# OS files
+Thumbs.db
