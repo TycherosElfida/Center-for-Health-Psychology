@@ -72,7 +72,10 @@ export function ClaimCTA({ sessionId, scoreId, accentColor }: ClaimCTAProps) {
         <Shield size={18} className="mt-0.5 shrink-0" style={{ color: accentColor }} />
         <div>
           <p className="mb-1.5 font-heading text-sm font-bold text-foreground">Simpan Hasil Anda</p>
-          <p className="mb-3 text-[13px] leading-relaxed text-muted-foreground">
+          <p
+            suppressHydrationWarning
+            className="mb-3 text-[13px] leading-relaxed text-muted-foreground"
+          >
             {hasClaimData
               ? "Masuk atau buat akun untuk menyimpan hasil ini ke dashboard pribadi Anda. Data asesmen Anda akan terhubung dengan akun Anda secara aman."
               : "Buat akun untuk menyimpan hasil asesmen ke dashboard pribadi Anda dan melacak perkembangan dari waktu ke waktu."}

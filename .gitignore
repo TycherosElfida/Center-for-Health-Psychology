@@ -47,6 +47,7 @@ next-env.d.ts
 !/docs/clinical-audits/
 docs/superpowers/
 docs/LaporanKP/
+docs/plans/
 
 # Sentry Config File
 .env.sentry-build-plugin
@@ -70,7 +71,7 @@ scripts/migrate.ts
 scripts/test-trpc-demographics.ts
 audit.ts
 get_thumbs.ts
-
+scratch_*.ps1
 # Logs
 *.log
 *.tmp
