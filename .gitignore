@@ -43,6 +43,7 @@ next-env.d.ts
 
 #docs
 /docs/**
+!/docs/keterbatasan-platform-chp.md
 !/docs/HANDOFF_LIMITATIONS.md
 !/docs/superpowers/
 !/docs/clinical-audits/
