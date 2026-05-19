@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,6 +12,14 @@ import {
 } from "@/lib/schemas/personal-info";
 import { getProvinces, getCitiesByProvince } from "@/lib/data/indonesia-regions";
 import { trpc } from "@/lib/trpc/client";
+
+/** Capitalize every word — e.g. "kota baru" → "Kota Baru" */
+function toTitleCase(str: string): string {
+  return str
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 /* ═══════════════════════════════════════════════════════
    Props
@@ -47,16 +55,44 @@ export function PersonalInfoForm({
   const searchParams = useSearchParams();
   const hasConsent = searchParams.get("consent") === "1";
   const provinces = getProvinces();
+  const [customProvince, setCustomProvince] = useState("");
+  const [customCity, setCustomCity] = useState("");
 
   // Resolve province code from saved name (profile stores human-readable names)
-  const savedProvinceCode = savedProfile?.province
-    ? (provinces.find((p) => p.name === savedProfile.province)?.code ?? "")
-    : "";
-  const savedCityCode =
-    savedProvinceCode && savedProfile?.city
-      ? (getCitiesByProvince(savedProvinceCode).find((c) => c.name === savedProfile.city)?.code ??
-        "")
-      : "";
+  // If saved name doesn't match any known province, treat as custom
+  const matchedProvinceCode = savedProfile?.province
+    ? (provinces.find((p) => p.name === savedProfile.province)?.code ?? null)
+    : null;
+  const savedProvinceCode = matchedProvinceCode ?? (savedProfile?.province ? "__other__" : "");
+
+  const matchedCityCode =
+    matchedProvinceCode && savedProfile?.city
+      ? (getCitiesByProvince(matchedProvinceCode).find((c) => c.name === savedProfile.city)?.code ??
+        null)
+      : null;
+  const savedCityCode = matchedCityCode ?? (savedProfile?.city ? "__other__" : "");
+
+  // Pre-fill custom text fields if saved values don't match known codes
+  const initialCustomProvince =
+    !matchedProvinceCode && savedProfile?.province ? savedProfile.province : "";
+  const initialCustomCity = !matchedCityCode && savedProfile?.city ? savedProfile.city : "";
+
+  const customProvinceInitialized = useRef(false);
+  const customCityInitialized = useRef(false);
+
+  useEffect(() => {
+    if (!customProvinceInitialized.current && initialCustomProvince) {
+      setCustomProvince(initialCustomProvince);
+      customProvinceInitialized.current = true;
+    }
+  }, [initialCustomProvince]);
+
+  useEffect(() => {
+    if (!customCityInitialized.current && initialCustomCity) {
+      setCustomCity(initialCustomCity);
+      customCityInitialized.current = true;
+    }
+  }, [initialCustomCity]);
 
   // Guard: redirect back to briefing if consent param is missing
   useEffect(() => {
@@ -85,7 +121,8 @@ export function PersonalInfoForm({
 
   /* ── Cascading: reset city when province changes ── */
   const selectedProvince = useWatch({ control, name: "province" }) as string;
-  const cities = selectedProvince ? getCitiesByProvince(selectedProvince) : [];
+  const isCustomProvince = selectedProvince === "__other__";
+  const cities = selectedProvince && !isCustomProvince ? getCitiesByProvince(selectedProvince) : [];
 
   // Track previous province to only reset city on actual user-initiated change
   const prevProvinceRef = useRef(savedProvinceCode);
@@ -94,6 +131,12 @@ export function PersonalInfoForm({
     if (selectedProvince !== prevProvinceRef.current) {
       if (prevProvinceRef.current !== "") {
         resetField("city", { defaultValue: "" });
+
+        setCustomCity("");
+      }
+      if (selectedProvince !== "__other__") {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setCustomProvince("");
       }
       prevProvinceRef.current = selectedProvince;
     }
@@ -142,12 +185,22 @@ export function PersonalInfoForm({
               : undefined;
 
         // Map codes back to human-readable names for database storage
-        const allProvinces = getProvinces();
-        const provinceName =
-          allProvinces.find((p) => p.code === data.province)?.name || data.province;
+        // Use custom text if "Lainnya" was selected
+        let provinceName: string;
+        if (data.province === "__other__") {
+          provinceName = toTitleCase(customProvince);
+        } else {
+          const allProvinces = getProvinces();
+          provinceName = allProvinces.find((p) => p.code === data.province)?.name || data.province;
+        }
 
-        const allCities = data.province ? getCitiesByProvince(data.province) : [];
-        const cityName = allCities.find((c) => c.code === data.city)?.name || data.city;
+        let cityName: string;
+        if (data.city === "__other__") {
+          cityName = toTitleCase(customCity);
+        } else {
+          const allCities = data.province ? getCitiesByProvince(data.province) : [];
+          cityName = allCities.find((c) => c.code === data.city)?.name || data.city;
+        }
 
         await saveDemographics.mutateAsync({
           sessionId: sessionData.sessionId,
@@ -170,12 +223,6 @@ export function PersonalInfoForm({
       // 3b. Also save to user_profiles if authenticated
       if (isAuthenticated) {
         try {
-          const allProvinces2 = getProvinces();
-          const provinceName2 =
-            allProvinces2.find((p) => p.code === data.province)?.name || data.province;
-          const allCities2 = data.province ? getCitiesByProvince(data.province) : [];
-          const cityName2 = allCities2.find((c) => c.code === data.city)?.name || data.city;
-
           const rawAge2 = data.age as unknown;
           const parsedAge2 =
             typeof rawAge2 === "string" && rawAge2.trim() !== ""
@@ -183,6 +230,24 @@ export function PersonalInfoForm({
               : typeof rawAge2 === "number"
                 ? rawAge2
                 : undefined;
+
+          // Resolve names again for profile upsert (use custom text if applicable)
+          let provinceName2: string;
+          if (data.province === "__other__") {
+            provinceName2 = toTitleCase(customProvince);
+          } else {
+            const allProvinces2 = getProvinces();
+            provinceName2 =
+              allProvinces2.find((p) => p.code === data.province)?.name || data.province;
+          }
+
+          let cityName2: string;
+          if (data.city === "__other__") {
+            cityName2 = toTitleCase(customCity);
+          } else {
+            const allCities2 = data.province ? getCitiesByProvince(data.province) : [];
+            cityName2 = allCities2.find((c) => c.code === data.city)?.name || data.city;
+          }
 
           await upsertProfile.mutateAsync({
             displayName: data.name,
@@ -215,6 +280,7 @@ export function PersonalInfoForm({
   const ageVal = useWatch({ control, name: "age" }) as string;
   const sexVal = useWatch({ control, name: "sex" }) as string;
   const cityVal = useWatch({ control, name: "city" }) as string;
+  const isCustomCity = cityVal === "__other__";
 
   function borderColor(filled: boolean, hasError: boolean): string {
     if (hasError) return "1.5px solid #FC8181";
@@ -361,7 +427,21 @@ export function PersonalInfoForm({
                   {p.name}
                 </option>
               ))}
+              <option value="__other__">Lainnya (ketik manual)</option>
             </select>
+            {isCustomProvince && (
+              <input
+                type="text"
+                placeholder="Ketik nama provinsi…"
+                value={customProvince}
+                onChange={(e) => setCustomProvince(e.target.value)}
+                className="mt-2 w-full rounded-[14px] px-4 py-3 text-sm text-foreground outline-none transition-colors"
+                style={{
+                  border: borderColor(!!customProvince, false),
+                  background: bgColor(!!customProvince),
+                }}
+              />
+            )}
           </FieldWrapper>
 
           {/* ── City / Regency ── */}
@@ -384,15 +464,40 @@ export function PersonalInfoForm({
                 backgroundPosition: "right 14px center",
               }}
             >
-              <option value="">
-                {selectedProvince ? "Pilih kota / kabupaten…" : "Pilih provinsi terlebih dahulu"}
-              </option>
-              {cities.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.name}
-                </option>
-              ))}
+              {isCustomProvince ? (
+                <>
+                  <option value="">Pilih opsi…</option>
+                  <option value="__other__">Lainnya (ketik manual)</option>
+                </>
+              ) : (
+                <>
+                  <option value="">
+                    {selectedProvince
+                      ? "Pilih kota / kabupaten…"
+                      : "Pilih provinsi terlebih dahulu"}
+                  </option>
+                  {cities.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.name}
+                    </option>
+                  ))}
+                  <option value="__other__">Lainnya (ketik manual)</option>
+                </>
+              )}
             </select>
+            {isCustomCity && (
+              <input
+                type="text"
+                placeholder="Ketik nama kota / kabupaten…"
+                value={customCity}
+                onChange={(e) => setCustomCity(e.target.value)}
+                className="mt-2 w-full rounded-[14px] px-4 py-3 text-sm text-foreground outline-none transition-colors"
+                style={{
+                  border: borderColor(!!customCity, false),
+                  background: bgColor(!!customCity),
+                }}
+              />
+            )}
           </FieldWrapper>
 
           {/* ── Submit ── */}

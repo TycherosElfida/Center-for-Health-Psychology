@@ -46,8 +46,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const meta = await getTestBySlug(slug);
   if (!meta) return { title: "Assessment Not Found" };
   return {
-    title: `${meta.abbreviation} — Before You Begin | CHP`,
-    description: `Read the briefing for the ${meta.title} assessment before you start.`,
+    title: `${meta.abbreviation} — Sebelum Memulai | CHP`,
+    description: `Baca pengantar asesmen ${meta.title} sebelum Anda memulai.`,
   };
 }
 

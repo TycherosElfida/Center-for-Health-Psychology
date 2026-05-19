@@ -25,8 +25,8 @@ import { ProfileForm } from "./_components/ProfileForm";
    ═══════════════════════════════════════════════════════ */
 
 export const metadata: Metadata = {
-  title: "Profile — Center for Health Psychology",
-  description: "Update your personal information and preferences.",
+  title: "Profil — Center for Health Psychology",
+  description: "Perbarui informasi pribadi dan preferensi Anda.",
   robots: { index: false, follow: false },
 };
 
@@ -74,7 +74,7 @@ export default async function ProfilePage() {
           className="mb-6 inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground no-underline transition-colors hover:text-foreground"
         >
           <ArrowLeft size={14} />
-          Back to Dashboard
+          Kembali ke Dasbor
         </Link>
 
         {/* ── Header ── */}
@@ -83,13 +83,13 @@ export default async function ProfilePage() {
             className="mb-1 text-xs font-bold uppercase tracking-[0.15em]"
             style={{ color: "var(--brand-primary-dark, #6B5CA0)" }}
           >
-            Update Profile
+            Perbarui Profil
           </p>
           <h1 className="mb-1.5 font-heading text-[clamp(24px,4vw,32px)] font-extrabold tracking-tight text-foreground">
-            Your Information
+            Informasi Anda
           </h1>
           <p className="text-sm text-muted-foreground">
-            Saved here once — and auto-filled into every future assessment.
+            Disimpan sekali — dan otomatis terisi pada setiap asesmen berikutnya.
           </p>
         </div>
 

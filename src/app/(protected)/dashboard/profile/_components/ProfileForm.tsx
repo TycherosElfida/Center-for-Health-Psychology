@@ -32,16 +32,24 @@ import { getProvinces, getCitiesByProvince } from "@/lib/data/indonesia-regions"
 import { trpc } from "@/lib/trpc/client";
 import { ChangePasswordModal } from "@/components/profile/ChangePasswordModal";
 
+/** Capitalize every word — e.g. "kota baru" → "Kota Baru" */
+function toTitleCase(str: string): string {
+  return str
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 /* ═══════════════════════════════════════════════════════
    Schema
    ═══════════════════════════════════════════════════════ */
 
 const profileSchema = z.object({
-  displayName: z.string().min(1, "Name is required").max(100),
+  displayName: z.string().min(1, "Nama wajib diisi").max(100),
   age: z.string().optional(),
-  sex: z.enum(["Male", "Female"], { message: "Sex is required" }),
-  province: z.string().min(1, "Province is required"),
-  city: z.string().min(1, "City is required"),
+  sex: z.enum(["Male", "Female"], { message: "Jenis kelamin wajib dipilih" }),
+  province: z.string().min(1, "Provinsi wajib dipilih"),
+  city: z.string().min(1, "Kota wajib dipilih"),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -68,16 +76,45 @@ interface ProfileFormProps {
 export function ProfileForm({ profile, userName }: ProfileFormProps) {
   const [saved, setSaved] = useState(false);
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [customProvince, setCustomProvince] = useState("");
+  const [customCity, setCustomCity] = useState("");
   const provinces = getProvinces();
 
   // Resolve province/city codes from saved names
-  const savedProvinceCode = profile?.province
-    ? (provinces.find((p) => p.name === profile.province)?.code ?? "")
-    : "";
-  const savedCityCode =
-    savedProvinceCode && profile?.city
-      ? (getCitiesByProvince(savedProvinceCode).find((c) => c.name === profile.city)?.code ?? "")
-      : "";
+  // If saved name doesn't match any known province, treat as custom
+  const matchedProvinceCode = profile?.province
+    ? (provinces.find((p) => p.name === profile.province)?.code ?? null)
+    : null;
+  const savedProvinceCode = matchedProvinceCode ?? (profile?.province ? "__other__" : "");
+
+  const matchedCityCode =
+    matchedProvinceCode && profile?.city
+      ? (getCitiesByProvince(matchedProvinceCode).find((c) => c.name === profile.city)?.code ??
+        null)
+      : null;
+  const savedCityCode = matchedCityCode ?? (profile?.city ? "__other__" : "");
+
+  // Pre-fill custom text fields if saved values don't match known codes
+  const initialCustomProvince = !matchedProvinceCode && profile?.province ? profile.province : "";
+  const initialCustomCity = !matchedCityCode && profile?.city ? profile.city : "";
+
+  // Set initial custom values
+  const customProvinceInitialized = useRef(false);
+  const customCityInitialized = useRef(false);
+
+  useEffect(() => {
+    if (!customProvinceInitialized.current && initialCustomProvince) {
+      setCustomProvince(initialCustomProvince);
+      customProvinceInitialized.current = true;
+    }
+  }, [initialCustomProvince]);
+
+  useEffect(() => {
+    if (!customCityInitialized.current && initialCustomCity) {
+      setCustomCity(initialCustomCity);
+      customCityInitialized.current = true;
+    }
+  }, [initialCustomCity]);
 
   const {
     register,
@@ -98,7 +135,8 @@ export function ProfileForm({ profile, userName }: ProfileFormProps) {
   });
 
   const selectedProvince = useWatch({ control, name: "province" }) as string;
-  const cities = selectedProvince ? getCitiesByProvince(selectedProvince) : [];
+  const isCustomProvince = selectedProvince === "__other__";
+  const cities = selectedProvince && !isCustomProvince ? getCitiesByProvince(selectedProvince) : [];
 
   // Track previous province to only reset city on actual user-initiated change
   const prevProvinceRef = useRef(savedProvinceCode);
@@ -107,6 +145,13 @@ export function ProfileForm({ profile, userName }: ProfileFormProps) {
     if (selectedProvince !== prevProvinceRef.current) {
       if (prevProvinceRef.current !== "") {
         resetField("city", { defaultValue: "" });
+
+        setCustomCity("");
+      }
+      // If switching away from custom province, clear custom text
+      if (selectedProvince !== "__other__") {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setCustomProvince("");
       }
       prevProvinceRef.current = selectedProvince;
     }
@@ -116,10 +161,23 @@ export function ProfileForm({ profile, userName }: ProfileFormProps) {
 
   async function onSubmit(data: ProfileFormData) {
     setSaved(false);
-    const allProvinces = getProvinces();
-    const provinceName = allProvinces.find((p) => p.code === data.province)?.name || data.province;
-    const allCities = data.province ? getCitiesByProvince(data.province) : [];
-    const cityName = allCities.find((c) => c.code === data.city)?.name || data.city;
+
+    // Resolve human-readable names — use custom text if "Lainnya" was selected
+    let provinceName: string;
+    if (data.province === "__other__") {
+      provinceName = toTitleCase(customProvince);
+    } else {
+      const allProvinces = getProvinces();
+      provinceName = allProvinces.find((p) => p.code === data.province)?.name || data.province;
+    }
+
+    let cityName: string;
+    if (data.city === "__other__") {
+      cityName = toTitleCase(customCity);
+    } else {
+      const allCities = data.province ? getCitiesByProvince(data.province) : [];
+      cityName = allCities.find((c) => c.code === data.city)?.name || data.city;
+    }
 
     const parsedAge = data.age?.trim() ? parseInt(data.age, 10) : undefined;
 
@@ -139,6 +197,7 @@ export function ProfileForm({ profile, userName }: ProfileFormProps) {
   const ageVal = useWatch({ control, name: "age" }) as string;
   const sexVal = useWatch({ control, name: "sex" }) as string;
   const cityVal = useWatch({ control, name: "city" }) as string;
+  const isCustomCity = cityVal === "__other__";
 
   const accentColor = "var(--brand-primary, #9B8EC4)";
 
@@ -177,8 +236,8 @@ export function ProfileForm({ profile, userName }: ProfileFormProps) {
           >
             <Lock size={16} className="mt-0.5 shrink-0" style={{ color: accentColor }} />
             <p className="m-0 text-[13px] leading-relaxed text-muted-foreground">
-              Your information is stored only on your device and is auto-populated when you start a
-              new assessment.
+              Informasi Anda hanya disimpan di perangkat Anda dan akan otomatis terisi saat Anda
+              memulai asesmen baru.
             </p>
           </div>
 
@@ -186,13 +245,13 @@ export function ProfileForm({ profile, userName }: ProfileFormProps) {
             {/* ── Name ── */}
             <FieldWrapper
               icon={<User size={15} style={{ color: nameVal ? accentColor : undefined }} />}
-              label="Name or Initials"
+              label="Nama atau Inisial"
               required
               error={errors.displayName?.message}
             >
               <input
                 type="text"
-                placeholder="e.g. Alex or A.S."
+                placeholder="cth. Alex atau A.S."
                 {...register("displayName")}
                 className="w-full rounded-xl px-4 py-3 text-sm text-foreground outline-none transition-colors"
                 style={{
@@ -205,7 +264,7 @@ export function ProfileForm({ profile, userName }: ProfileFormProps) {
             {/* ── Age ── */}
             <FieldWrapper
               icon={<Calendar size={15} style={{ color: ageVal ? accentColor : undefined }} />}
-              label="Age"
+              label="Usia"
               optional
               error={errors.age?.message}
             >
@@ -213,7 +272,7 @@ export function ProfileForm({ profile, userName }: ProfileFormProps) {
                 type="number"
                 min={5}
                 max={120}
-                placeholder="e.g. 24"
+                placeholder="cth. 24"
                 {...register("age")}
                 className="w-full rounded-xl px-4 py-3 text-sm text-foreground outline-none transition-colors"
                 style={{
@@ -226,13 +285,14 @@ export function ProfileForm({ profile, userName }: ProfileFormProps) {
             {/* ── Sex ── */}
             <FieldWrapper
               icon={<Users size={15} style={{ color: sexVal ? accentColor : undefined }} />}
-              label="Sex"
+              label="Jenis Kelamin"
               required
               error={errors.sex?.message}
             >
               <div className="flex gap-3">
                 {(["Male", "Female"] as const).map((option) => {
                   const selected = sexVal === option;
+                  const displayLabel = option === "Male" ? "Laki-laki" : "Perempuan";
                   return (
                     <label
                       key={option}
@@ -250,7 +310,7 @@ export function ProfileForm({ profile, userName }: ProfileFormProps) {
                     >
                       <input type="radio" value={option} {...register("sex")} className="sr-only" />
                       {selected && <CheckCircle2 size={14} />}
-                      {option}
+                      {displayLabel}
                     </label>
                   );
                 })}
@@ -262,7 +322,7 @@ export function ProfileForm({ profile, userName }: ProfileFormProps) {
               icon={
                 <MapPin size={15} style={{ color: selectedProvince ? accentColor : undefined }} />
               }
-              label="Province"
+              label="Provinsi"
               required
               error={errors.province?.message}
             >
@@ -278,19 +338,33 @@ export function ProfileForm({ profile, userName }: ProfileFormProps) {
                   backgroundPosition: "right 14px center",
                 }}
               >
-                <option value="">Select province…</option>
+                <option value="">Pilih provinsi…</option>
                 {provinces.map((p) => (
                   <option key={p.code} value={p.code}>
                     {p.name}
                   </option>
                 ))}
+                <option value="__other__">Lainnya (ketik manual)</option>
               </select>
+              {isCustomProvince && (
+                <input
+                  type="text"
+                  placeholder="Ketik nama provinsi…"
+                  value={customProvince}
+                  onChange={(e) => setCustomProvince(e.target.value)}
+                  className="mt-2 w-full rounded-xl px-4 py-3 text-sm text-foreground outline-none transition-colors"
+                  style={{
+                    border: borderStyle(!!customProvince, false),
+                    background: customProvince ? `var(--brand-primary-light, #EDE9F8)10` : "white",
+                  }}
+                />
+              )}
             </FieldWrapper>
 
             {/* ── City / Region ── */}
             <FieldWrapper
               icon={<MapPin size={15} style={{ color: cityVal ? accentColor : undefined }} />}
-              label="City / Region"
+              label="Kota / Kabupaten"
               required
               error={errors.city?.message}
             >
@@ -305,15 +379,40 @@ export function ProfileForm({ profile, userName }: ProfileFormProps) {
                   backgroundPosition: "right 14px center",
                 }}
               >
-                <option value="">
-                  {selectedProvince ? "Select city / region…" : "Select province first"}
-                </option>
-                {cities.map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {c.name}
-                  </option>
-                ))}
+                {isCustomProvince ? (
+                  <>
+                    <option value="">Pilih opsi…</option>
+                    <option value="__other__">Lainnya (ketik manual)</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="">
+                      {selectedProvince
+                        ? "Pilih kota / kabupaten…"
+                        : "Pilih provinsi terlebih dahulu"}
+                    </option>
+                    {cities.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.name}
+                      </option>
+                    ))}
+                    <option value="__other__">Lainnya (ketik manual)</option>
+                  </>
+                )}
               </select>
+              {isCustomCity && (
+                <input
+                  type="text"
+                  placeholder="Ketik nama kota / kabupaten…"
+                  value={customCity}
+                  onChange={(e) => setCustomCity(e.target.value)}
+                  className="mt-2 w-full rounded-xl px-4 py-3 text-sm text-foreground outline-none transition-colors"
+                  style={{
+                    border: borderStyle(!!customCity, false),
+                    background: customCity ? `var(--brand-primary-light, #EDE9F8)10` : "white",
+                  }}
+                />
+              )}
             </FieldWrapper>
 
             {/* ── Save Button ── */}
@@ -332,17 +431,17 @@ export function ProfileForm({ profile, userName }: ProfileFormProps) {
               {isSubmitting ? (
                 <>
                   <Loader2 size={18} className="animate-spin" />
-                  Saving…
+                  Menyimpan…
                 </>
               ) : saved ? (
                 <>
                   <CheckCircle2 size={18} />
-                  Profile Saved!
+                  Profil Tersimpan!
                 </>
               ) : (
                 <>
                   <Save size={18} />
-                  Save Profile
+                  Simpan Profil
                 </>
               )}
             </button>
@@ -368,9 +467,9 @@ export function ProfileForm({ profile, userName }: ProfileFormProps) {
 
         {/* Text */}
         <div className="min-w-0 flex-1">
-          <p className="font-heading text-[14px] font-bold text-foreground">Password</p>
+          <p className="font-heading text-[14px] font-bold text-foreground">Kata Sandi</p>
           <p className="mt-0.5 text-[12px] text-muted-foreground">
-            Last changed recently &middot; keep it strong and unique.
+            Terakhir diubah baru-baru ini &middot; pastikan tetap kuat dan unik.
           </p>
         </div>
 
@@ -386,7 +485,7 @@ export function ProfileForm({ profile, userName }: ProfileFormProps) {
           }}
         >
           <Lock size={13} />
-          Change Password
+          Ubah Kata Sandi
         </button>
       </div>
 
@@ -427,7 +526,7 @@ function FieldWrapper({
             </span>
           )}
         </label>
-        {optional && <span className="text-[11px] text-muted-foreground/60">Optional</span>}
+        {optional && <span className="text-[11px] text-muted-foreground/60">Opsional</span>}
       </div>
       {children}
       {error && <p className="mt-1.5 text-xs text-destructive">{error}</p>}

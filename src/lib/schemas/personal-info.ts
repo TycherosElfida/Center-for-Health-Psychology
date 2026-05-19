@@ -11,8 +11,8 @@ import { z } from "zod";
 export const personalInfoSchema = z.object({
   name: z
     .string()
-    .min(1, { error: "Name or initials is required." })
-    .max(100, { error: "Name must be under 100 characters." }),
+    .min(1, { error: "Nama atau inisial wajib diisi." })
+    .max(100, { error: "Nama harus kurang dari 100 karakter." }),
 
   age: z
     .string()
@@ -23,18 +23,17 @@ export const personalInfoSchema = z.object({
       if (Number.isNaN(n) || !Number.isInteger(n)) return undefined;
       return n;
     })
-    .refine(
-      (v) => v === undefined || (v >= 5 && v <= 120),
-      { error: "Please enter a valid age (5–120)." },
-    ),
+    .refine((v) => v === undefined || (v >= 5 && v <= 120), {
+      error: "Masukkan usia yang valid (5–120).",
+    }),
 
   sex: z.enum(["Male", "Female"], {
-    error: "Please select your sex.",
+    error: "Pilih jenis kelamin Anda.",
   }),
 
-  province: z.string().min(1, { error: "Province is required." }),
+  province: z.string().min(1, { error: "Provinsi wajib dipilih." }),
 
-  city: z.string().min(1, { error: "City / Regency is required." }),
+  city: z.string().min(1, { error: "Kota / Kabupaten wajib dipilih." }),
 });
 
 /** Input shape — what the form fields produce (all strings). */
