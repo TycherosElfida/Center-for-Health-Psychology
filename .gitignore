@@ -47,6 +47,9 @@ next-env.d.ts
 !/docs/clinical-audits/
 docs/superpowers/
 docs/LaporanKP/
+!docs/LaporanKP/
+!docs/LaporanKP/latex/
+!docs/LaporanKP/latex/**
 docs/plans/
 
 # Sentry Config File

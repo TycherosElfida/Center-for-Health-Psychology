@@ -1,0 +1,189 @@
+% =============================================================================
+% Laporan Kerja Praktik — Platform Asesmen Psikologi Digital CHP
+% Sanders · 412023020 · Informatika · FTC · UKRIDA · 2025
+% =============================================================================
+\documentclass[12pt,a4paper,oneside]{report}
+
+% ── Encoding ──────────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+
+% ── Font: Times New Roman ─────────────────────────────────────────────────────
+\usepackage{mathptmx}
+
+% ── Page Layout (Pedoman: L=4cm, R=3cm, T=3cm, B=3cm) ────────────────────────
+\usepackage[left=4cm, right=3cm, top=3cm, bottom=3cm]{geometry}
+
+% ── Spacing: Spasi Dua (double spacing) ───────────────────────────────────────
+\usepackage{setspace}
+\setstretch{2}
+\emergencystretch=3em
+\raggedbottom
+\hbadness=10001
+\vbadness=10001
+\hfuzz=1000pt
+\AtBeginDocument{%
+  \hbadness=10001%
+  \vbadness=10001%
+  \hfuzz=1000pt%
+}
+\makeatletter
+\g@addto@macro\@arrayparboxrestore{%
+  \hbadness=10001%
+  \vbadness=10001%
+  \hfuzz=1000pt%
+}
+\makeatother
+
+% ── Chapter & Section Titles ──────────────────────────────────────────────────
+\usepackage{titlesec}
+
+% BAB heading: 14pt bold centered uppercase
+\titleformat{\chapter}[display]
+  {\normalfont\fontsize{14}{16}\bfseries\centering}
+  {\MakeUppercase{\chaptertitlename}\ \thechapter}{0pt}
+  {\fontsize{14}{16}\bfseries\MakeUppercase}
+\titlespacing*{\chapter}{0pt}{-20pt}{20pt}
+
+% Section heading: 12pt bold
+\titleformat{\section}
+  {\normalfont\fontsize{12}{14}\bfseries}
+  {\thesection}{1em}{}
+
+% Subsection heading: 12pt bold
+\titleformat{\subsection}
+  {\normalfont\fontsize{12}{14}\bfseries}
+  {\thesubsection}{1em}{}
+
+% Subsubsection heading: 12pt bold
+\titleformat{\subsubsection}
+  {\normalfont\fontsize{12}{14}\bfseries}
+  {\thesubsubsection}{1em}{}
+
+% ── Page Numbering & Headers ──────────────────────────────────────────────────
+\usepackage{fancyhdr}
+
+% Default style for body: Arabic, bottom-right
+\fancypagestyle{body}{%
+  \fancyhf{}%
+  \fancyfoot[R]{\thepage}%
+  \renewcommand{\headrulewidth}{0pt}%
+}
+
+% Style for front matter: Roman, bottom-right
+\fancypagestyle{frontmatter}{%
+  \fancyhf{}%
+  \fancyfoot[R]{\thepage}%
+  \renewcommand{\headrulewidth}{0pt}%
+}
+
+% Style for chapter opening pages
+\fancypagestyle{plain}{%
+  \fancyhf{}%
+  \fancyfoot[R]{\thepage}%
+  \renewcommand{\headrulewidth}{0pt}%
+}
+
+% ── Tables ────────────────────────────────────────────────────────────────────
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{multirow}
+
+% ── Graphics ──────────────────────────────────────────────────────────────────
+\usepackage{graphicx}
+\usepackage{svg}
+\graphicspath{{figures/}}
+\svgpath{{figures/}}
+
+% ── Lists ─────────────────────────────────────────────────────────────────────
+\usepackage{enumitem}
+
+% ── Caption formatting ────────────────────────────────────────────────────────
+\usepackage{caption}
+\captionsetup{font={small}, labelfont={bf}, skip=8pt}
+
+% ── Custom Commands ───────────────────────────────────────────────────────────
+\newcommand{\judulLaporan}{Perancangan dan Pengembangan Platform Asesmen Psikologi Digital untuk Pusat Kesehatan Psikologi (CHP) Universitas Kristen Krida Wacana}
+\newcommand{\namaMahasiswa}{Sanders Keane Dylan Daniyolla}
+\newcommand{\nimMahasiswa}{412023020}
+\newcommand{\prodiMahasiswa}{Informatika}
+\newcommand{\fakultasMahasiswa}{Fakultas Teknologi Cerdas (FTC)}
+\newcommand{\universitasMahasiswa}{Universitas Kristen Krida Wacana}
+\newcommand{\tahunSidang}{2026}
+
+% ── Indonesian babel (optional, for hyphenation) ──────────────────────────────
+\usepackage[indonesian]{babel}
+\addto\captionsindonesian{\renewcommand{\bibname}{DAFTAR PUSTAKA}}
+
+% ── Hyperlinks (load last) ────────────────────────────────────────────────────
+\usepackage[hidelinks,hypertexnames=false]{hyperref}
+
+% =============================================================================
+% DOCUMENT
+% =============================================================================
+\begin{document}
+
+% ═══════════════════════════════════════════════════════════════════════════════
+% FRONT MATTER — Roman numerals, bottom-right
+% ═══════════════════════════════════════════════════════════════════════════════
+\pagenumbering{roman}
+\pagestyle{frontmatter}
+
+% ── Halaman Judul (counted but NOT printed) ───────────────────────────────────
+\input{parts/00-title}
+
+% ── Halaman Persetujuan (counted but NOT printed) ─────────────────────────────
+\input{parts/01-persetujuan}
+
+% ── Halaman Pengesahan (counted but NOT printed) ──────────────────────────────
+\input{parts/02-pengesahan}
+
+% ── Kata Pengantar (first printed Roman numeral) ──────────────────────────────
+\input{parts/03-kata-pengantar}
+
+% ── Daftar Isi ────────────────────────────────────────────────────────────────
+\input{parts/04-daftar-isi}
+
+% ── Daftar Tabel ──────────────────────────────────────────────────────────────
+\input{parts/05-daftar-tabel}
+
+% ── Daftar Gambar ─────────────────────────────────────────────────────────────
+\input{parts/06-daftar-gambar}
+
+% ═══════════════════════════════════════════════════════════════════════════════
+% BODY — Arabic numerals, bottom-right
+% BAB numbering: I → II → III → IV → V (sequential)
+% ═══════════════════════════════════════════════════════════════════════════════
+\clearpage
+\pagenumbering{arabic}
+\pagestyle{body}
+
+% ── BAB I: Pendahuluan ──────────────────────────────────────────────────────
+\input{parts/10-bab1}
+
+% ── BAB II: Landasan Teori ──────────────────────────────────────────────────
+\input{parts/20-bab2}
+
+% ── BAB III: Analisa dan Perancangan ────────────────────────────────────────
+\input{parts/30-bab3}
+
+% ── BAB IV: Implementasi dan Testing ────────────────────────────────────────
+\input{parts/40-bab4}
+
+% ── BAB V: Penutup ──────────────────────────────────────────────────────────
+\input{parts/50-bab5}
+
+% ═══════════════════════════════════════════════════════════════════════════════
+% BACK MATTER
+% ═══════════════════════════════════════════════════════════════════════════════
+
+% ── Daftar Pustaka ────────────────────────────────────────────────────────────
+\input{parts/70-daftar-pustaka}
+
+% ── Lampiran ──────────────────────────────────────────────────────────────────
+\input{parts/80-lampiran}
+
+\end{document}
