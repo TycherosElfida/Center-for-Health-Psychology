@@ -163,7 +163,7 @@ Pengiriman surel menggunakan layanan Resend versi 6.12.2, yang menyediakan API t
 \section{Pengujian Unit}
 \label{sec:impl-unit-test}
 
-Pengujian unit dilaksanakan menggunakan Vitest versi 4.1.5 dengan konfigurasi yang didefinisikan dalam \texttt{vitest.config.ts}. Total 235 kasus uji (\textit{test cases}) ditulis dalam 20 \textit{file} uji yang diorganisasi berdasarkan modul. Tabel~\ref{tab:inventaris-test} menyajikan inventaris lengkap.
+Pengujian unit dilaksanakan menggunakan Vitest versi 4.1.5 dengan konfigurasi yang didefinisikan dalam \texttt{vitest.config.ts}. Total 191 kasus uji (\textit{test cases}) ditulis dalam 21 \textit{file} uji yang diorganisasi berdasarkan modul. Tabel~\ref{tab:inventaris-test} menyajikan inventaris lengkap.
 
 \begin{longtable}{@{}p{6.5cm} c@{}}
   \caption{Inventaris \textit{File} Pengujian Unit}
@@ -178,31 +178,32 @@ Pengujian unit dilaksanakan menggunakan Vitest versi 4.1.5 dengan konfigurasi ya
   \endhead
   \bottomrule
   \endfoot
-  \texttt{scoring/engine.test.ts} & $\sim$25 \\
-  \texttt{scoring/reverseScore.test.ts} & $\sim$26 \\
-  \texttt{scoring/validation.test.ts} & $\sim$21 \\
-  \texttt{data/interpretations.test.ts} & $\sim$44 \\
-  \texttt{data/srq29-questions.test.ts} & $\sim$8 \\
-  \texttt{\seqsplit{admin-questions/admin-questions.test.ts}} & $\sim$18 \\
-  \texttt{\seqsplit{admin-accounts/admin-accounts.test.ts}} & $\sim$16 \\
-  \texttt{\seqsplit{admin-scales/admin-scales.test.ts}} & $\sim$12 \\
-  \texttt{encryption.test.ts} & $\sim$12 \\
-  \texttt{\seqsplit{admin-auth/rate-limiter.test.ts}} & $\sim$9 \\
-  \texttt{\seqsplit{reports/report-requests.test.ts}} & $\sim$7 \\
-  \texttt{\seqsplit{admin-tests/admin-tests.test.ts}} & $\sim$6 \\
-  \texttt{admin-auth/jwt.test.ts} & $\sim$6 \\
-  \texttt{\seqsplit{admin-profile/admin-profile.test.ts}} & $\sim$6 \\
-  \texttt{\seqsplit{admin-results/admin-results-delete.test.ts}} & $\sim$5 \\
-  \texttt{\seqsplit{admin-audit/admin-audit.test.ts}} & $\sim$4 \\
-  \texttt{\seqsplit{admin-accounts/admin-user-accounts.test.ts}} & $\sim$4 \\
-  \texttt{schema/admin-schema.test.ts} & $\sim$3 \\
-  \texttt{\seqsplit{schema/admin-tests-guards.test.ts}} & $\sim$3 \\
-  \texttt{smoke.test.ts} & $\sim$2 \\
+  \texttt{data/interpretations.test.ts} & 40 \\
+  \texttt{scoring/engine.test.ts} & 20 \\
+  \texttt{scoring/reverseScore.test.ts} & 20 \\
+  \texttt{scoring/validation.test.ts} & 19 \\
+  \texttt{\seqsplit{admin-questions/admin-questions.test.ts}} & 12 \\
+  \texttt{\seqsplit{admin-accounts/admin-accounts.test.ts}} & 10 \\
+  \texttt{\seqsplit{scoring/lookupInterpretation.test.ts}} & 9 \\
+  \texttt{encryption.test.ts} & 9 \\
+  \texttt{\seqsplit{admin-scales/admin-scales.test.ts}} & 8 \\
+  \texttt{data/srq29-questions.test.ts} & 7 \\
+  \texttt{\seqsplit{reports/report-requests.test.ts}} & 6 \\
+  \texttt{admin-auth/jwt.test.ts} & 5 \\
+  \texttt{\seqsplit{admin-tests/admin-tests.test.ts}} & 5 \\
+  \texttt{\seqsplit{admin-auth/rate-limiter.test.ts}} & 4 \\
+  \texttt{\seqsplit{admin-profile/admin-profile.test.ts}} & 4 \\
+  \texttt{\seqsplit{admin-audit/admin-audit.test.ts}} & 3 \\
+  \texttt{\seqsplit{admin-results/admin-results-delete.test.ts}} & 3 \\
+  \texttt{\seqsplit{admin-accounts/admin-user-accounts.test.ts}} & 2 \\
+  \texttt{\seqsplit{schema/admin-tests-guards.test.ts}} & 2 \\
+  \texttt{schema/admin-schema.test.ts} & 2 \\
+  \texttt{smoke.test.ts} & 1 \\
   \midrule
-  \textbf{Total} & \textbf{$\sim$235} \\
+  \textbf{Total} & \textbf{191} \\
 \end{longtable}
 
-Modul \textit{scoring engine} diuji dengan 72 kasus uji yang tersebar dalam tiga \textit{file} (\texttt{engine.test.ts}, \texttt{reverseScore.test.ts}, \texttt{validation.test.ts}), mencakup skenario penjumlahan sumatif, pembalikan skor, pengelompokan dimensional, penanganan masukan kosong, validasi batas opsi, dan verifikasi kelengkapan jawaban.
+Modul \textit{scoring engine} diuji dengan 59 kasus uji yang tersebar dalam tiga \textit{file} (\texttt{engine.test.ts}, \texttt{reverseScore.test.ts}, \texttt{validation.test.ts}), mencakup skenario penjumlahan sumatif, pembalikan skor, pengelompokan dimensional, penanganan masukan kosong, validasi batas opsi, dan verifikasi kelengkapan jawaban.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Pengujian CI/CD}
@@ -244,7 +245,7 @@ Pemantauan kesalahan (\textit{error monitoring}) menggunakan Sentry versi 10.50.
 Selama pengembangan Platform Asesmen Digital CHP, dosen pemilik proyek menyampaikan 22 permintaan fungsional yang menjadi acuan pengembangan. Dari 22 permintaan tersebut, 18 permintaan telah tercapai dan 4 permintaan belum tercapai pada akhir periode kerja praktik. Tabel lengkap beserta status dan keterangan setiap butir permintaan disajikan pada Lampiran A.
 
 \textbf{A.~Instrumen Asesmen.}
-Permintaan penambahan dua instrumen baru, yaitu GPIUS-2 (\textit{Generalized Problematic Internet Use Scale 2}) dan SRS (\textit{Simplified Resilience Scale}), berhasil dipenuhi dan ditambahkan ke katalog asesmen bersama instrumen yang telah ada sebelumnya, yaitu PSS-10 dan SRQ-29. Setiap instrumen dikonfigurasi secara lengkap meliputi butir soal, opsi jawaban, pembobotan, dimensi, dan rentang interpretasi, dengan komputasi skor yang diverifikasi melalui 72 kasus uji pada \textit{scoring engine}.
+Permintaan penambahan dua instrumen baru, yaitu GPIUS-2 (\textit{Generalized Problematic Internet Use Scale 2}) dan SRS (\textit{Simplified Resilience Scale}), berhasil dipenuhi dan ditambahkan ke katalog asesmen bersama instrumen yang telah ada sebelumnya, yaitu PSS-10 dan SRQ-29. Setiap instrumen dikonfigurasi secara lengkap meliputi butir soal, opsi jawaban, pembobotan, dimensi, dan rentang interpretasi, dengan komputasi skor yang diverifikasi melalui 59 kasus uji pada \textit{scoring engine}.
 
 \textbf{B.~Alur Asesmen Peserta.}
 Alur asesmen peserta dilengkapi dengan visualisasi hasil secara \textit{real-time} yang ditampilkan segera setelah penyelesaian melalui komponen grafik Recharts (\textit{gauge}, \textit{radar}, diagram batang). Formulir demografis menyediakan pemilihan domisili bertingkat dua level (provinsi $\rightarrow$ kota/kabupaten) menggunakan dataset statis 38 provinsi yang bersumber dari klasifikasi BPS (Badan Pusat Statistik), dilengkapi opsi ``Lainnya (ketik manual)'' pada pemilihan provinsi maupun kota/kabupaten untuk mengakomodasi wilayah yang tidak terdaftar. Penyimpanan jawaban dilakukan secara otomatis pada setiap perubahan melalui prosedur \texttt{saveProgress} dengan pola \textit{upsert} idempoten, memungkinkan peserta melanjutkan sesi yang terputus.

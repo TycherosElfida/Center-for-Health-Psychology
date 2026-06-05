@@ -15,7 +15,7 @@ Berdasarkan pelaksanaan Kerja Praktik yang telah dilakukan, dapat ditarik kesimp
 
   \item Skema basis data yang terdiri atas 20 tabel dan 7 \textit{enum} PostgreSQL berhasil mengakomodasi empat instrumen psikometri dengan karakteristik yang beragam: PSS-10 (dua subskala, skala Likert 0--4), GPIUS-2 (5 subskala, skala Likert 1--5, \textit{rollup} DSR), SRS (3 subskala, skala Likert 1--6), dan SRQ-29 (4 kluster, jawaban biner). Pemisahan tabel \texttt{answers} dari \texttt{results} memungkinkan reproduktibilitas ilmiah melalui \textit{re-scoring}.
 
-  \item \textit{Scoring engine} yang terdiri atas 5 fungsi murni berhasil diimplementasikan dan diverifikasi melalui 72 kasus uji yang mencakup skenario penjumlahan sumatif, pembalikan skor, pengelompokan dimensional, dan validasi kelengkapan jawaban. Seluruh komputasi skor bersifat deterministik dan bebas efek samping.
+  \item \textit{Scoring engine} yang terdiri atas 5 fungsi murni berhasil diimplementasikan dan diverifikasi melalui 59 kasus uji yang mencakup skenario penjumlahan sumatif, pembalikan skor, pengelompokan dimensional, dan validasi kelengkapan jawaban. Seluruh komputasi skor bersifat deterministik dan bebas efek samping.
 
   \item Sistem autentikasi ganda berhasil diimplementasikan: Auth.js v5 untuk pengguna publik dan JWT mandiri melalui jose untuk administrator, dengan lima tingkat \textit{middleware} kontrol akses (\texttt{publicProcedure}, \texttt{protectedProcedure}, \texttt{adminProcedure}, \texttt{adminMutationProcedure}, \texttt{superAdminProcedure}) dan empat peran admin (\texttt{super\_admin}, \texttt{admin}, \texttt{psychiatrist}, \texttt{researcher}).
 
@@ -23,7 +23,7 @@ Berdasarkan pelaksanaan Kerja Praktik yang telah dilakukan, dapat ditarik kesimp
 
   \item Keamanan dan privasi data diimplementasikan sesuai prinsip UU PDP melalui sesi anonim, penyamaran alamat IP (\textit{hashing} satu arah), enkripsi surel AES-256-GCM, persetujuan eksplisit, \textit{rate limiting} berlapis, dan jejak audit administratif.
 
-  \item Pengujian komprehensif dengan total 235 kasus uji dalam 20 \textit{file} uji dan \textit{pipeline} CI/CD dua \textit{job} paralel berhasil menjaga kualitas kode sepanjang siklus pengembangan.
+  \item Pengujian komprehensif dengan total 191 kasus uji dalam 21 \textit{file} uji dan \textit{pipeline} CI/CD dua \textit{job} paralel berhasil menjaga kualitas kode sepanjang siklus pengembangan.
 
   \item Seluruh enam tujuan KP yang dirumuskan pada Tabel~\ref{tab:tujuan-kp} berhasil dicapai dalam batas waktu yang ditentukan.
 \end{enumerate}

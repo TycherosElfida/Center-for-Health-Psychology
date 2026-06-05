@@ -294,7 +294,7 @@ Playwright adalah \textit{framework} otomasi \textit{browser} yang dikembangkan 
   \item \textbf{\textit{Job} 2: \texttt{test}}: menjalankan \textit{unit test} (Vitest) secara paralel dengan \textit{Job} 1, sehingga hasil pengujian tersedia lebih cepat tanpa menunggu proses \textit{build} selesai.
 \end{enumerate}
 
-Sebuah \textit{pull request} tidak dapat di-\textit{merge} ke cabang utama apabila salah satu dari kedua \textit{job} tersebut gagal. Gambar~\ref{fig:cicd-pipeline} mengilustrasikan diagram alur \textit{pipeline}.
+Sebuah \textit{pull request} tidak dapat di-\textit{merge} ke cabang utama apabila salah satu dari kedua \textit{job} tersebut gagal. Setelah perubahan ter-\textit{merge} ke cabang \texttt{master}, Vercel melakukan \textit{deployment} otomatis ke lingkungan produksi melalui integrasi Git-nya, sehingga melengkapi tahap \textit{Continuous Deployment}. Gambar~\ref{fig:cicd-pipeline} mengilustrasikan diagram alur \textit{pipeline}.
 
 \begin{figure}[htbp]
   \centering
