@@ -19,7 +19,7 @@ Analisis kebutuhan fungsional mengidentifikasi fungsi-fungsi spesifik yang harus
 
 Tabel~\ref{tab:kebutuhan-pengguna} menyajikan kebutuhan dari perspektif setiap aktor pengguna.
 
-\begin{longtable}{@{}p{3cm} p{3.5cm} p{8cm}@{}}
+\begin{longtable}{@{}p{3cm} p{3.5cm} p{6.6cm}@{}}
   \caption{Kebutuhan Pengguna Platform CHP}
   \label{tab:kebutuhan-pengguna} \\
   \toprule
@@ -141,7 +141,7 @@ Tabel~\ref{tab:kebutuhan-fungsional} merinci seluruh kebutuhan fungsional.
 
 Tabel~\ref{tab:kebutuhan-nonfungsional} menyajikan kebutuhan non-fungsional Platform CHP.
 
-\begin{longtable}{@{}p{2cm} p{2.5cm} p{3.5cm} p{5.5cm}@{}}
+\begin{longtable}{@{}p{2.3cm} p{2.5cm} p{3.5cm} p{4.4cm}@{}}
   \caption{Kebutuhan Non-Fungsional Platform CHP}
   \label{tab:kebutuhan-nonfungsional} \\
   \toprule
@@ -184,7 +184,7 @@ Lapisan aplikasi terdiri atas empat modul utama:
 
 \begin{enumerate}[leftmargin=2cm]
   \item \textit{Router} tRPC (16 \textit{namespace}) yang mengekspos 69 prosedur API.
-  \item \textit{Scoring engine} (\texttt{computeScore}, \texttt{reverseScore}, \texttt{lookupInterpretation}, \texttt{validateAnswerValues}, \texttt{validateCompleteness}) yang mengandung logika komputasi skor deterministik.
+  \item \textit{Scoring engine} (\texttt{computeScore}, \texttt{reverseScore}, \texttt{\seqsplit{lookupInterpretation}}, \texttt{\seqsplit{validateAnswerValues}}, \texttt{\seqsplit{validateCompleteness}}) yang mengandung logika komputasi skor deterministik.
   \item \textit{Middleware} autentikasi yang menerapkan lima tingkat kontrol akses: \texttt{publicProcedure}, \texttt{protectedProcedure}, \texttt{adminProcedure}, \texttt{adminMutationProcedure}, dan \texttt{superAdminProcedure}.
   \item \textit{Data Access Layer} (DAL) yang menyediakan fungsi \texttt{verifySession}, \texttt{verifyAdmin}, dan \texttt{getOptionalSession}.
 \end{enumerate}
@@ -219,7 +219,7 @@ Skema basis data diorganisasi ke dalam lima domain:
 
 Seluruh tabel menggunakan UUID v4 sebagai kunci primer. Tabel~\ref{tab:inventaris-tabel} menyajikan inventaris lengkap 20 tabel.
 
-\begin{longtable}{@{}p{2.5cm} p{3cm} p{3.5cm} p{5cm}@{}}
+\begin{longtable}{@{}p{2.5cm} p{3cm} p{3cm} p{4.2cm}@{}}
   \caption{Inventaris Tabel Basis Data Platform CHP}
   \label{tab:inventaris-tabel} \\
   \toprule
@@ -236,13 +236,13 @@ Seluruh tabel menggunakan UUID v4 sebagai kunci primer. Tabel~\ref{tab:inventari
   Instrumen & \texttt{questions} & id, test\_id, type, dimension & Butir soal dengan dimensi dan pembobotan \\[0.2em]
   Instrumen & \texttt{options} & id, question\_id, label, value & Opsi jawaban per butir soal \\[0.2em]
   Instrumen & \texttt{scoring\_rules} & id, test\_id, algorithm, config & Konfigurasi algoritma penilaian \\[0.2em]
-  Instrumen & \texttt{result\_interpretations} & id, test\_id, dimension, min/max\_score & Pemetaan skor ke label interpretasi \\[0.2em]
-  Instrumen & \texttt{test\_citations} & id, test\_id, type, citation, doi & Sitasi akademik per instrumen \\[0.2em]
+  Instrumen & \texttt{\seqsplit{result\_interpretations}} & id, test\_id, dimension, min/max\_score & Pemetaan skor ke label interpretasi \\[0.2em]
+  Instrumen & \texttt{\seqsplit{test\_citations}} & id, test\_id, type, citation, doi & Sitasi akademik per instrumen \\[0.2em]
   \midrule
   Sesi & \texttt{test\_sessions} & id, test\_id, status, claim\_token & Sesi asesmen dengan mekanisme klaim \\[0.2em]
   Sesi & \texttt{answers} & id, session\_id, question\_id, value & Respons mentah yang \textit{immutable} \\[0.2em]
   Sesi & \texttt{results} & id, session\_id, total\_score, dimension\_scores & Skor terhitung terpisah dari respons mentah \\[0.2em]
-  Sesi & \texttt{session\_demographics} & session\_id, name, sex, age, province & Data demografis peserta per sesi \\[0.2em]
+  Sesi & \texttt{\seqsplit{session\_demographics}} & session\_id, name, sex, age, province & Data demografis peserta per sesi \\[0.2em]
   Sesi & \texttt{consents} & id, session\_id, tos\_accepted, consent\_version & Persetujuan eksplisit sesuai UU PDP \\[0.2em]
   \midrule
   Pengguna & \texttt{users} & id, email, password\_hash, role & Identitas pengguna terdaftar \\[0.2em]
@@ -253,10 +253,10 @@ Seluruh tabel menggunakan UUID v4 sebagai kunci primer. Tabel~\ref{tab:inventari
   Admin & \texttt{admin\_users} & id, email, role, is\_active & Pengguna administratif dengan peran \\[0.2em]
   Admin & \texttt{audit\_logs} & id, admin\_user\_id, action, entity\_type & Jejak audit \textit{append-only} \\[0.2em]
   \midrule
-  Permintaan & \texttt{report\_requests} & id, session\_id, status, requester\_type & Permintaan laporan dengan alur persetujuan \\[0.2em]
+  Permintaan & \texttt{\seqsplit{report\_requests}} & id, session\_id, status, requester\_type & Permintaan laporan dengan alur persetujuan \\[0.2em]
   Permintaan & \texttt{guest\_leads} & id, session\_id, encrypted\_email & PII terenkripsi AES-256-GCM \\[0.2em]
   \midrule
-  Auth & \texttt{verification\_tokens} & identifier, token, expires & \textit{Token} verifikasi sekali pakai \\
+  Auth & \texttt{\seqsplit{verification\_tokens}} & identifier, token, expires & \textit{Token} verifikasi sekali pakai \\
 \end{longtable}
 
 Selain 20 tabel, skema mendefinisikan tujuh \textit{enum} PostgreSQL yang memastikan integritas data. Tabel~\ref{tab:enum-postgresql} mencantumkan definisinya.
@@ -270,8 +270,8 @@ Selain 20 tabel, skema mendefinisikan tujuh \textit{enum} PostgreSQL yang memast
     \textbf{Nama Enum} & \textbf{Nilai yang Diizinkan} & \textbf{Digunakan Pada} \\
     \midrule
     \texttt{test\_status} & \texttt{draft}, \texttt{published}, \texttt{archived} & \texttt{tests.status} \\
-    \texttt{scoring\_method} & \texttt{summative}, \texttt{dimensional}, \texttt{binary\_cluster} & \texttt{tests.scoring\_method} \\
-    \texttt{question\_type} & \texttt{likert\_5}, \texttt{likert\_7}, \texttt{multiple\_choice}, \texttt{slider}, \texttt{multi\_select} & \texttt{questions.type} \\
+    \texttt{scoring\_method} & \texttt{summative}, \texttt{dimensional}, \texttt{\seqsplit{binary\_cluster}} & \texttt{tests.scoring\_method} \\
+    \texttt{question\_type} & \texttt{likert\_5}, \texttt{likert\_7}, \texttt{\seqsplit{multiple\_choice}}, \texttt{slider}, \texttt{multi\_select} & \texttt{questions.type} \\
     \texttt{scoring\_algorithm} & \texttt{summative}, \texttt{weighted}, \texttt{reversed}, \texttt{dimensional}, \texttt{percentile} & \texttt{scoring\_rules.algorithm} \\
     \texttt{severity\_level} & \texttt{low}, \texttt{moderate}, \texttt{high}, \texttt{critical} & \texttt{result\_interpretations.severity} \\
     \texttt{session\_status} & \texttt{in\_progress}, \texttt{completed}, \texttt{abandoned} & \texttt{test\_sessions.status} \\
@@ -319,7 +319,7 @@ Empat keputusan perancangan data dengan dampak arsitektur signifikan:
 
 Platform CHP menggunakan tRPC sebagai protokol komunikasi. Seluruh 69 prosedur API diorganisasi ke dalam 16 \textit{router namespace}. Tabel~\ref{tab:api-publik} hingga Tabel~\ref{tab:api-admin} menyajikan inventaris prosedur yang dikelompokkan berdasarkan area fungsional.
 
-\begin{longtable}{@{}l l c c p{5cm}@{}}
+\begin{longtable}{@{}l l c c p{4cm}@{}}
   \caption{Prosedur API Publik (Alur Asesmen)}
   \label{tab:api-publik} \\
   \toprule
@@ -342,7 +342,7 @@ Platform CHP menggunakan tRPC sebagai protokol komunikasi. Seluruh 69 prosedur A
   \texttt{requestEmailReport} & sessions & M & Publik & Buat permintaan laporan surel \\
 \end{longtable}
 
-\begin{longtable}{@{}l l c c p{5cm}@{}}
+\begin{longtable}{@{}l l c c p{4cm}@{}}
   \caption{Prosedur API Pengguna Terdaftar}
   \label{tab:api-user} \\
   \toprule
@@ -361,7 +361,7 @@ Platform CHP menggunakan tRPC sebagai protokol komunikasi. Seluruh 69 prosedur A
   \texttt{changePassword} & profile & M & Protected & Ganti kata sandi \\
 \end{longtable}
 
-\begin{longtable}{@{}l l c c p{5cm}@{}}
+\begin{longtable}{@{}l l c c p{4cm}@{}}
   \caption{Prosedur API Panel Administrasi}
   \label{tab:api-admin} \\
   \toprule
@@ -405,7 +405,7 @@ Perancangan komponen antarmuka pengguna secara visual merupakan tanggung jawab a
 Tiga alur utama:
 
 \begin{enumerate}[leftmargin=2cm]
-  \item \textbf{Alur asesmen anonim}: \texttt{/tests} $\rightarrow$ \texttt{/test/[slug]} $\rightarrow$ \texttt{/results/[scoreId]}. Seluruh alur berjalan tanpa memerlukan akun.
+  \item \textbf{Alur asesmen anonim}: \texttt{/tests} $\rightarrow$ \texttt{/test/[slug]} $\rightarrow$ \texttt{\seqsplit{/results/[scoreId]}}. Seluruh alur berjalan tanpa memerlukan akun.
   \item \textbf{Alur autentikasi dan klaim sesi}: \texttt{/signup} atau \texttt{/login} $\rightarrow$ \texttt{/dashboard}. Penjaga rute \texttt{proxy.ts} memastikan halaman terlindungi hanya diakses oleh pengguna terautentikasi.
   \item \textbf{Alur administrasi}: \texttt{/admin/login} $\rightarrow$ \texttt{/admin/dashboard} $\rightarrow$ halaman manajemen instrumen, hasil, laporan, dan akun.
 \end{enumerate}

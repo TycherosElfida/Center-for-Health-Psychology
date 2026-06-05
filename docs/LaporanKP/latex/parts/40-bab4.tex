@@ -12,7 +12,7 @@ Bab ini memaparkan implementasi sistem berdasarkan perancangan yang telah diurai
 
 Pengembangan Platform CHP dilakukan pada lingkungan lokal dengan spesifikasi perangkat lunak yang tercantum pada Tabel~\ref{tab:kebutuhan-software}. Manajer paket yang digunakan adalah pnpm versi 9, yang dipilih karena efisiensi penyimpanannya melalui mekanisme \textit{content-addressable store} yang menghindari duplikasi dependensi antar proyek.
 
-Konfigurasi TypeScript menggunakan mode \texttt{strict: true} dengan opsi tambahan \texttt{noUncheckedIndexedAccess}, \texttt{noUnusedLocals}, dan \texttt{noUnusedParameters} untuk memaksimalkan deteksi kesalahan pada waktu kompilasi. Tiga \textit{path alias} dikonfigurasi untuk menyederhanakan impor modul: \texttt{@/*} untuk direktori \texttt{src/}, \texttt{@/server/*} untuk \texttt{src/server/}, dan \texttt{@/components/*} untuk \texttt{src/components/}.
+Konfigurasi TypeScript menggunakan mode \texttt{strict: true} dengan opsi tambahan \texttt{\seqsplit{noUncheckedIndexedAccess}}, \texttt{noUnusedLocals}, dan \texttt{noUnusedParameters} untuk memaksimalkan deteksi kesalahan pada waktu kompilasi. Tiga \textit{path alias} dikonfigurasi untuk menyederhanakan impor modul: \texttt{@/*} untuk direktori \texttt{src/}, \texttt{@/server/*} untuk \texttt{src/server/}, dan \texttt{@/components/*} untuk \texttt{src/components/}.
 
 Seluruh \textit{environment variable} yang diperlukan didokumentasikan dalam \textit{file} \texttt{.env.example} yang berisi 16 variabel konfigurasi, mencakup koneksi basis data (\texttt{DATABASE\_URL}), kunci autentikasi (\texttt{AUTH\_SECRET}, \texttt{ADMIN\_JWT\_SECRET}), konfigurasi layanan pihak ketiga (Upstash Redis, Sentry, Resend), dan kunci enkripsi (\texttt{ENCRYPTION\_KEY} sepanjang 64 karakter heksadesimal untuk AES-256-GCM).
 
@@ -85,7 +85,7 @@ Seluruh 69 prosedur tRPC diimplementasikan dalam 17 \textit{file} prosedur yang 
 
 \subsection{Komposisi \textit{Router}}
 
-\textit{File} \texttt{src/server/trpc/router.ts} berfungsi sebagai \textit{barrel file} yang mengomposisikan seluruh \textit{router} menjadi satu \textit{app router}. \textit{Router} dikelompokkan berdasarkan domain: \textit{router} publik (\texttt{publicTests}, \texttt{sessions}, \texttt{results}, \texttt{health}), \textit{router} pengguna (\texttt{profile}), dan \textit{router} admin (\texttt{admin}, \texttt{adminDashboard}, \texttt{adminTests}, \texttt{adminQuestions}, \texttt{adminScales}, \texttt{adminResults}, \texttt{reportRequests}, \texttt{adminAccounts}, \texttt{adminUserAccounts}, \texttt{adminAudit}, \texttt{adminProfile}).
+\textit{File} \texttt{src/server/trpc/router.ts} berfungsi sebagai \textit{barrel file} yang mengomposisikan seluruh \textit{router} menjadi satu \textit{app router}. \textit{Router} dikelompokkan berdasarkan domain: \textit{router} publik (\texttt{publicTests}, \texttt{sessions}, \texttt{results}, \texttt{health}), \textit{router} pengguna (\texttt{profile}), dan \textit{router} admin (\texttt{admin}, \texttt{\seqsplit{adminDashboard}}, \texttt{adminTests}, \texttt{\seqsplit{adminQuestions}}, \texttt{adminScales}, \texttt{\seqsplit{adminResults}}, \texttt{\seqsplit{reportRequests}}, \texttt{\seqsplit{adminAccounts}}, \texttt{\seqsplit{adminUserAccounts}}, \texttt{adminAudit}, \texttt{\seqsplit{adminProfile}}).
 
 \subsection{\textit{Structural Lock}}
 
@@ -121,8 +121,8 @@ Subsistem autentikasi admin diimplementasikan secara mandiri menggunakan pustaka
   \item \textbf{Algoritma}: HS256 dengan kunci rahasia \texttt{ADMIN\_JWT\_SECRET} (minimal 32 karakter).
   \item \textbf{\textit{Sliding window}}: setiap permintaan admin yang valid memperpanjang masa berlaku \textit{token} 30 menit dari waktu saat ini.
   \item \textbf{Batas keras}: \textit{token} tidak dapat diperpanjang melebihi 8 jam dari waktu penerbitan awal (\texttt{originalIat}), memaksa \textit{login} ulang untuk sesi yang sangat panjang.
-  \item \textbf{Penyimpanan}: JWT disimpan dalam \textit{cookie} bernama \texttt{admin-token}, dikelola melalui modul \texttt{cookies.ts} yang menggunakan \texttt{ctx.resHeaders} (bukan \texttt{cookies()}) untuk kompatibilitas dengan konteks tRPC.
-  \item \textbf{Revokasi}: prosedur \texttt{logout} menetapkan kolom \texttt{sessionInvalidatedAt} di basis data sebelum menghapus \textit{cookie}. \textit{Middleware} \texttt{adminProcedure} memeriksa kolom ini pada setiap permintaan, sehingga \textit{token} yang dicuri setelah \textit{logout} tidak dapat digunakan.
+  \item \textbf{Penyimpanan}: JWT disimpan dalam \textit{cookie} bernama \texttt{\seqsplit{admin-token}}, dikelola melalui modul \texttt{cookies.ts} yang menggunakan \texttt{ctx.resHeaders} (bukan \texttt{cookies()}) untuk kompatibilitas dengan konteks tRPC.
+  \item \textbf{Revokasi}: prosedur \texttt{logout} menetapkan kolom \texttt{\seqsplit{sessionInvalidatedAt}} di basis data sebelum menghapus \textit{cookie}. \textit{Middleware} \texttt{\seqsplit{adminProcedure}} memeriksa kolom ini pada setiap permintaan, sehingga \textit{token} yang dicuri setelah \textit{logout} tidak dapat digunakan.
 \end{enumerate}
 
 \subsection{\textit{Rate Limiting} pada \textit{Login} Admin}
@@ -183,20 +183,20 @@ Pengujian unit dilaksanakan menggunakan Vitest versi 4.1.5 dengan konfigurasi ya
   \texttt{scoring/validation.test.ts} & $\sim$21 \\
   \texttt{data/interpretations.test.ts} & $\sim$44 \\
   \texttt{data/srq29-questions.test.ts} & $\sim$8 \\
-  \texttt{admin-questions/admin-questions.test.ts} & $\sim$18 \\
-  \texttt{admin-accounts/admin-accounts.test.ts} & $\sim$16 \\
-  \texttt{admin-scales/admin-scales.test.ts} & $\sim$12 \\
+  \texttt{\seqsplit{admin-questions/admin-questions.test.ts}} & $\sim$18 \\
+  \texttt{\seqsplit{admin-accounts/admin-accounts.test.ts}} & $\sim$16 \\
+  \texttt{\seqsplit{admin-scales/admin-scales.test.ts}} & $\sim$12 \\
   \texttt{encryption.test.ts} & $\sim$12 \\
-  \texttt{admin-auth/rate-limiter.test.ts} & $\sim$9 \\
-  \texttt{reports/report-requests.test.ts} & $\sim$7 \\
-  \texttt{admin-tests/admin-tests.test.ts} & $\sim$6 \\
+  \texttt{\seqsplit{admin-auth/rate-limiter.test.ts}} & $\sim$9 \\
+  \texttt{\seqsplit{reports/report-requests.test.ts}} & $\sim$7 \\
+  \texttt{\seqsplit{admin-tests/admin-tests.test.ts}} & $\sim$6 \\
   \texttt{admin-auth/jwt.test.ts} & $\sim$6 \\
-  \texttt{admin-profile/admin-profile.test.ts} & $\sim$6 \\
-  \texttt{admin-results/admin-results-delete.test.ts} & $\sim$5 \\
-  \texttt{admin-audit/admin-audit.test.ts} & $\sim$4 \\
-  \texttt{admin-accounts/admin-user-accounts.test.ts} & $\sim$4 \\
+  \texttt{\seqsplit{admin-profile/admin-profile.test.ts}} & $\sim$6 \\
+  \texttt{\seqsplit{admin-results/admin-results-delete.test.ts}} & $\sim$5 \\
+  \texttt{\seqsplit{admin-audit/admin-audit.test.ts}} & $\sim$4 \\
+  \texttt{\seqsplit{admin-accounts/admin-user-accounts.test.ts}} & $\sim$4 \\
   \texttt{schema/admin-schema.test.ts} & $\sim$3 \\
-  \texttt{schema/admin-tests-guards.test.ts} & $\sim$3 \\
+  \texttt{\seqsplit{schema/admin-tests-guards.test.ts}} & $\sim$3 \\
   \texttt{smoke.test.ts} & $\sim$2 \\
   \midrule
   \textbf{Total} & \textbf{$\sim$235} \\
@@ -256,7 +256,7 @@ Pengguna dapat mengajukan permintaan laporan melalui formulir tervalidasi; permi
 Panel administrasi menyajikan dasbor dengan visualisasi agregat yang mendukung filter berdasarkan jenis instrumen dan rentang tanggal pada dasbor utama, serta filter lanjutan (pencarian nama, jenis kelamin, provinsi, kota, usia, skor, kategori, dan tanggal) pada halaman data hasil per instrumen. Dasbor antrean permintaan laporan memungkinkan administrator melihat, menyetujui, atau menolak permintaan; persetujuan memicu generasi PDF dan pengiriman surel secara atomik. Komponen grafik dilengkapi fitur unduh gambar menggunakan pustaka \texttt{html-to-image} (fungsi \texttt{toPng}) yang mengkonversi elemen DOM ke format PNG dengan resolusi 2$\times$ \textit{pixel ratio}. Kolom tabel hasil mendukung pengurutan dinamis \textit{ascending} dan \textit{descending} pada enam parameter (nama, jenis kelamin, usia, skor, kategori, dan tanggal tes) baik pada sisi server melalui kueri Drizzle ORM maupun pada sisi klien.
 
 \textbf{E.~Manajemen dan Keamanan.}
-Administrator dapat melakukan operasi CRUD penuh atas tes, butir soal, opsi jawaban, dan rentang interpretasi melalui modul manajemen asesmen yang dilengkapi mekanisme \textit{structural lock}. Setiap modifikasi administratif direkam dalam tabel \texttt{audit\_logs} mencakup aktor, aksi, entitas, serta nilai sebelum dan sesudah. Sistem menerapkan RBAC empat peran (\texttt{super\_admin}, \texttt{admin}, \texttt{psychiatrist}, \texttt{researcher}) dengan lima tingkat \textit{middleware} otorisasi: \texttt{publicProcedure} tanpa autentikasi, \texttt{protectedProcedure} untuk sesi Auth.js, \texttt{adminProcedure} untuk seluruh peran admin, \texttt{adminMutationProcedure} yang membatasi operasi tulis kepada \texttt{super\_admin} dan \texttt{admin}, serta \texttt{superAdminProcedure} yang eksklusif untuk \texttt{super\_admin}. Peran \texttt{psychiatrist} dan \texttt{researcher} memperoleh akses baca saja (\textit{read-only}) terhadap data hasil dan statistik. Modul \textit{Account Management} memungkinkan \textit{Super Admin} untuk membuat, memperbarui, dan mengatur hak akses akun administrator.
+Administrator dapat melakukan operasi CRUD penuh atas tes, butir soal, opsi jawaban, dan rentang interpretasi melalui modul manajemen asesmen yang dilengkapi mekanisme \textit{structural lock}. Setiap modifikasi administratif direkam dalam tabel \texttt{audit\_logs} mencakup aktor, aksi, entitas, serta nilai sebelum dan sesudah. Sistem menerapkan RBAC empat peran (\texttt{super\_admin}, \texttt{admin}, \texttt{psychiatrist}, \texttt{researcher}) dengan lima tingkat \textit{middleware} otorisasi: \texttt{publicProcedure} tanpa autentikasi, \texttt{protectedProcedure} untuk sesi Auth.js, \texttt{\seqsplit{adminProcedure}} untuk seluruh peran admin, \texttt{adminMutationProcedure} yang membatasi operasi tulis kepada \texttt{super\_admin} dan \texttt{admin}, serta \texttt{superAdminProcedure} yang eksklusif untuk \texttt{super\_admin}. Peran \texttt{psychiatrist} dan \texttt{researcher} memperoleh akses baca saja (\textit{read-only}) terhadap data hasil dan statistik. Modul \textit{Account Management} memungkinkan \textit{Super Admin} untuk membuat, memperbarui, dan mengatur hak akses akun administrator.
 
 \subsection{Permintaan yang Belum Tercapai}
 \label{subsec:belum-tercapai}
