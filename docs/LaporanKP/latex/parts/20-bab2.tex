@@ -12,7 +12,7 @@ Bab ini memaparkan landasan teori yang menjadi dasar ilmiah dan teknis dalam per
 \section{Rekayasa Perangkat Lunak}
 \label{sec:rekayasa-pl}
 
-Rekayasa Perangkat Lunak (\textit{Software Engineering}) adalah disiplin ilmu teknik yang berkaitan dengan semua aspek produksi perangkat lunak, mulai dari tahap spesifikasi awal sistem hingga pemeliharaan sistem setelah digunakan \cite{sommerville2016}. Rekayasa perangkat lunak mencakup manajemen proyek, proses pengembangan, metode teknis, dan penggunaan alat (\textit{tools}) yang tepat guna menghasilkan perangkat lunak yang dapat diandalkan, efisien, dan memenuhi kebutuhan penggunanya.
+Rekayasa Perangkat Lunak (\textit{Software Engineering}) adalah disiplin ilmu teknik yang berkaitan dengan semua aspek produksi perangkat lunak, mulai dari tahap spesifikasi awal sistem hingga pemeliharaan sistem setelah digunakan (Sommerville 2016). Rekayasa perangkat lunak mencakup manajemen proyek, proses pengembangan, metode teknis, dan penggunaan alat (\textit{tools}) yang tepat guna menghasilkan perangkat lunak yang dapat diandalkan, efisien, dan memenuhi kebutuhan penggunanya.
 
 Proses rekayasa perangkat lunak pada umumnya melibatkan empat aktivitas fundamental yang saling berkaitan, yaitu: (1) spesifikasi perangkat lunak, yaitu pendefinisian fungsionalitas dan kendala operasi sistem; (2) pengembangan perangkat lunak, yaitu perancangan dan pemrograman sistem sesuai spesifikasi; (3) validasi perangkat lunak, yaitu pemastian bahwa sistem memenuhi kebutuhan pengguna; serta (4) evolusi perangkat lunak, yaitu modifikasi sistem sebagai respons terhadap perubahan kebutuhan. Pada proyek Platform CHP, keempat aktivitas ini dilaksanakan secara iteratif dalam kerangka metodologi Agile.
 
@@ -21,7 +21,7 @@ Proses rekayasa perangkat lunak pada umumnya melibatkan empat aktivitas fundamen
 
 Model proses perangkat lunak mendefinisikan pendekatan yang digunakan untuk mengorganisasi dan mengelola aktivitas pengembangan. Dalam proyek ini, model Agile iteratif dan inkremental dipilih sebagai kerangka kerja pengembangan. Agile adalah sekumpulan nilai dan prinsip yang diformulasikan dalam \textit{Agile Manifesto} (2001), yang menekankan respons terhadap perubahan di atas mengikuti rencana yang kaku, kolaborasi erat dengan pelanggan di atas negosiasi kontrak, dan penyerahan perangkat lunak yang berfungsi di atas dokumentasi yang ekstensif.
 
-Manifestasi Agile yang digunakan dalam proyek ini adalah Scrum, sebuah kerangka kerja manajemen proyek yang mengorganisasi pekerjaan ke dalam siklus waktu tetap yang disebut \textit{sprint} \cite{schwaber2020}. Setiap \textit{sprint} pada proyek CHP berdurasi dua minggu. Pada setiap akhir \textit{sprint}, tim menghasilkan \textit{increment} (versi perangkat lunak yang siap didemonstrasikan dan berpotensi untuk dirilis). Dalam konteks KP ini, pertemuan dua mingguan dengan Ibu Astin selaku pemilik proyek berfungsi sebagai sesi \textit{sprint review}, di mana demonstrasi fitur yang telah diimplementasikan disampaikan untuk mendapatkan umpan balik langsung.
+Manifestasi Agile yang digunakan dalam proyek ini adalah Scrum, sebuah kerangka kerja manajemen proyek yang mengorganisasi pekerjaan ke dalam siklus waktu tetap yang disebut \textit{sprint} (Schwaber dan Sutherland 2020). Setiap \textit{sprint} pada proyek CHP berdurasi dua minggu. Pada setiap akhir \textit{sprint}, tim menghasilkan \textit{increment} (versi perangkat lunak yang siap didemonstrasikan dan berpotensi untuk dirilis). Dalam konteks KP ini, pertemuan dua mingguan dengan Ibu Astin selaku pemilik proyek berfungsi sebagai sesi \textit{sprint review}, di mana demonstrasi fitur yang telah diimplementasikan disampaikan untuk mendapatkan umpan balik langsung.
 
 Pemilihan Agile untuk proyek ini didasari tiga pertimbangan utama:
 
@@ -62,7 +62,7 @@ Gambar~\ref{fig:arsitektur-3-tier} mengilustrasikan diagram arsitektur tiga lapi
 \subsection{Next.js dan \textit{React Server Components}}
 \label{subsec:nextjs}
 
-Next.js adalah \textit{meta-framework} berbasis React yang menyediakan fondasi lengkap untuk membangun aplikasi web \textit{full-stack} modern \cite{vercel2026}. Proyek ini menggunakan Next.js 16 dengan \textit{App Router} yang membawa pergeseran arsitektural signifikan melalui \textit{React Server Components} (RSC).
+Next.js adalah \textit{meta-framework} berbasis React yang menyediakan fondasi lengkap untuk membangun aplikasi web \textit{full-stack} modern (Vercel 2026). Proyek ini menggunakan Next.js 16 dengan \textit{App Router} yang membawa pergeseran arsitektural signifikan melalui \textit{React Server Components} (RSC).
 
 RSC adalah paradigma \textit{rendering} yang memungkinkan komponen React dieksekusi dan di-\textit{render} secara eksklusif di sisi server, tanpa mengirimkan kode JavaScript komponen tersebut ke \textit{browser} klien. Implikasi praktis RSC untuk Platform CHP adalah pengurangan ukuran \textit{bundle} JavaScript yang dikirim ke \textit{browser} peserta tes. Komponen yang hanya membaca data---seperti halaman katalog tes, halaman informasi, dan halaman hasil---di-\textit{render} di server tanpa mengirimkan kodenya ke klien. Hanya komponen yang memerlukan interaktivitas---seperti formulir asesmen dan tombol navigasi---yang ditandai dengan direktif \texttt{"use client"} dan dikirim ke \textit{browser}.
 
@@ -75,7 +75,7 @@ TypeScript adalah bahasa pemrograman \textit{open-source} yang dikembangkan oleh
 \subsection{Signifikansi TypeScript dalam Proyek CHP}
 \label{subsec:typescript-chp}
 
-Sebuah studi berskala besar terhadap 85 proyek web oleh Bogner dan Merkel (2022) menunjukkan bahwa penggunaan TypeScript menurunkan densitas \textit{code smell} sebesar 34\% dan mengurangi kompleksitas kognitif sebesar 28\% dibandingkan JavaScript murni \cite{bogner2022}. Studi lain \cite{arxiv2026} mengungkap bahwa pengetikan statis mengubah lanskap kegagalan pada aplikasi modern: mayoritas \textit{bug} dalam proyek ekosistem TypeScript bersumber dari kesalahan konfigurasi \textit{toolchains}, penyalahgunaan integrasi antarmuka API, dan kegagalan penanganan status asinkron.
+Sebuah studi berskala besar terhadap 85 proyek web oleh Bogner dan Merkel (2022) menunjukkan bahwa penggunaan TypeScript menurunkan densitas \textit{code smell} sebesar 34\% dan mengurangi kompleksitas kognitif sebesar 28\% dibandingkan JavaScript murni (Bogner dan Merkel 2022). Studi lain (arXiv 2026) mengungkap bahwa pengetikan statis mengubah lanskap kegagalan pada aplikasi modern: mayoritas \textit{bug} dalam proyek ekosistem TypeScript bersumber dari kesalahan konfigurasi \textit{toolchains}, penyalahgunaan integrasi antarmuka API, dan kegagalan penanganan status asinkron.
 
 Pada Platform CHP, TypeScript digunakan di seluruh \textit{codebase} dengan konfigurasi \texttt{strict: true} yang mengaktifkan pemeriksaan tipe paling ketat. Setiap prosedur tRPC mendefinisikan skema masukan dan keluaran menggunakan pustaka validasi Zod, yang secara otomatis menghasilkan tipe TypeScript.
 
@@ -86,12 +86,12 @@ Pada Platform CHP, TypeScript digunakan di seluruh \textit{codebase} dengan konf
 \subsection{PostgreSQL dan Basis Data \textit{Serverless}}
 \label{subsec:postgresql}
 
-PostgreSQL adalah sistem manajemen basis data relasional \textit{open-source} yang dikenal karena kepatuhannya terhadap standar SQL, ekstensibilitas, dan dukungan terhadap tipe data kompleks seperti JSONB \cite{postgresql2026}. Platform CHP menggunakan PostgreSQL 17 melalui layanan \textit{serverless} Neon yang memisahkan komputasi dari penyimpanan, memungkinkan basis data untuk diskalakan ke nol saat tidak ada permintaan dan aktif kembali dalam hitungan milidetik.
+PostgreSQL adalah sistem manajemen basis data relasional \textit{open-source} yang dikenal karena kepatuhannya terhadap standar SQL, ekstensibilitas, dan dukungan terhadap tipe data kompleks seperti JSONB (PostgreSQL Global Development Group 2026). Platform CHP menggunakan PostgreSQL 17 melalui layanan \textit{serverless} Neon yang memisahkan komputasi dari penyimpanan, memungkinkan basis data untuk diskalakan ke nol saat tidak ada permintaan dan aktif kembali dalam hitungan milidetik.
 
 \subsection{Drizzle ORM dan Perancangan Skema}
 \label{subsec:drizzle}
 
-Drizzle ORM adalah ORM TypeScript generasi baru yang berfilosofi ``SQL-\textit{first}'', sintaksis API-nya dirancang semirip mungkin dengan SQL namun sepenuhnya aman secara tipe \cite{drizzle2026}. Skema basis data Platform CHP dirancang untuk mendukung instrumen psikometri yang fleksibel. Tabel~\ref{tab:ringkasan-skema} menyajikan ringkasan tabel-tabel utama.
+Drizzle ORM adalah ORM TypeScript generasi baru yang berfilosofi ``SQL-\textit{first}'', sintaksis API-nya dirancang semirip mungkin dengan SQL namun sepenuhnya aman secara tipe (Drizzle Team 2026). Skema basis data Platform CHP dirancang untuk mendukung instrumen psikometri yang fleksibel. Tabel~\ref{tab:ringkasan-skema} menyajikan ringkasan tabel-tabel utama.
 
 \begin{table}[htbp]
   \centering
@@ -117,7 +117,7 @@ Keputusan arsitektur terpenting adalah pemisahan tabel \texttt{answers} dari tab
 \subsection{tRPC}
 \label{subsec:trpc}
 
-tRPC (\textit{TypeScript Remote Procedure Call}) adalah \textit{framework} yang memungkinkan pembuatan API yang sepenuhnya aman secara tipe tanpa memerlukan generasi kode atau skema terpisah \cite{trpc2026}. Pada Platform CHP, prosedur tRPC diorganisasi ke dalam \textit{router} berdasarkan domain bisnis:
+tRPC (\textit{TypeScript Remote Procedure Call}) adalah \textit{framework} yang memungkinkan pembuatan API yang sepenuhnya aman secara tipe tanpa memerlukan generasi kode atau skema terpisah (tRPC Team 2026). Pada Platform CHP, prosedur tRPC diorganisasi ke dalam \textit{router} berdasarkan domain bisnis:
 
 \begin{enumerate}[leftmargin=2cm]
   \item Router sesi asesmen: Prosedur \texttt{startSession}, \texttt{saveProgress}, dan \texttt{submitAssessment} yang mengelola siklus hidup sesi tes.
@@ -141,7 +141,7 @@ Autentikasi (\textit{authentication}) adalah proses verifikasi identitas penggun
 \subsection{JSON \textit{Web Token} (JWT)}
 \label{subsec:jwt}
 
-\textit{JSON Web Token} (JWT) adalah standar terbuka yang didefinisikan dalam RFC 7519 untuk mentransmisikan informasi secara aman antara pihak-pihak sebagai objek JSON yang ringkas dan mandiri \cite{jones2015}. Sebuah JWT terdiri atas tiga bagian: Header (metadata \textit{token}), Payload (klaim tentang pengguna), dan Signature (tanda tangan digital).
+\textit{JSON Web Token} (JWT) adalah standar terbuka yang didefinisikan dalam RFC 7519 untuk mentransmisikan informasi secara aman antara pihak-pihak sebagai objek JSON yang ringkas dan mandiri (Jones, Bradley, dan Sakimura 2015). Sebuah JWT terdiri atas tiga bagian: Header (metadata \textit{token}), Payload (klaim tentang pengguna), dan Signature (tanda tangan digital).
 
 Platform CHP mengimplementasikan sistem autentikasi ganda berbasis JWT:
 
@@ -186,7 +186,7 @@ Pengujian perangkat lunak adalah proses evaluasi dan verifikasi bahwa produk per
 \subsection{Metodologi Pengujian}
 \label{subsec:metodologi-pengujian}
 
-Dua metodologi pengujian utama digunakan dalam proyek ini. \textit{White-box testing} (pengujian kotak putih, juga dikenal sebagai pengujian struktural) adalah teknik pengujian di mana penguji memiliki akses penuh terhadap kode sumber dan struktur internal sistem \cite{capote2023, bhat2021}. Penguji merancang kasus uji berdasarkan pengetahuan tentang jalur eksekusi, kondisi percabangan, dan aliran data dalam kode. \textit{Black-box testing} (pengujian kotak hitam, juga dikenal sebagai pengujian fungsional atau pengujian perilaku) adalah teknik pengujian di mana penguji hanya mengetahui masukan dan keluaran yang diharapkan, tanpa akses terhadap implementasi internal \cite{capote2023, khan2022}.
+Dua metodologi pengujian utama digunakan dalam proyek ini. \textit{White-box testing} (pengujian kotak putih, juga dikenal sebagai pengujian struktural) adalah teknik pengujian di mana penguji memiliki akses penuh terhadap kode sumber dan struktur internal sistem (Capote 2023; Bhat dan Khan 2021). Penguji merancang kasus uji berdasarkan pengetahuan tentang jalur eksekusi, kondisi percabangan, dan aliran data dalam kode. \textit{Black-box testing} (pengujian kotak hitam, juga dikenal sebagai pengujian fungsional atau pengujian perilaku) adalah teknik pengujian di mana penguji hanya mengetahui masukan dan keluaran yang diharapkan, tanpa akses terhadap implementasi internal (Capote 2023; Khan dan Khan 2022).
 
 Platform CHP menggunakan pendekatan gabungan: \textit{white-box testing} diterapkan pada \textit{scoring engine} untuk memverifikasi setiap jalur komputasi (pembalikan skor, pengelompokan dimensional, penanganan kasus tepi), sedangkan \textit{black-box testing} diterapkan pada alur pengguna secara keseluruhan (mengisi asesmen, menerima hasil, mengelola instrumen). Tabel~\ref{tab:metodologi-testing} menyajikan pemetaan metodologi pengujian yang digunakan.
 
@@ -210,7 +210,7 @@ Platform CHP menggunakan pendekatan gabungan: \textit{white-box testing} diterap
 \subsection{Strategi Piramida Pengujian}
 \label{subsec:piramida-testing}
 
-Strategi pengujian Platform CHP mengikuti konsep piramida pengujian (\textit{testing pyramid}) yang dipopulerkan oleh Cohn (2009) \cite{cohn2009}. Piramida pengujian menempatkan \textit{unit test} pada dasar piramida (jumlah terbanyak, eksekusi tercepat, biaya terendah), \textit{integration test} di tengah, dan \textit{end-to-end test} di puncak (jumlah paling sedikit, eksekusi paling lambat, biaya tertinggi). Pendekatan ini memaksimalkan cakupan pengujian sembari meminimalkan waktu eksekusi dan biaya pemeliharaan \cite{desai2025}. Gambar~\ref{fig:piramida-testing} mengilustrasikan hierarki ini.
+Strategi pengujian Platform CHP mengikuti konsep piramida pengujian (\textit{testing pyramid}) yang dipopulerkan oleh Cohn (2009). Piramida pengujian menempatkan \textit{unit test} pada dasar piramida (jumlah terbanyak, eksekusi tercepat, biaya terendah), \textit{integration test} di tengah, dan \textit{end-to-end test} di puncak (jumlah paling sedikit, eksekusi paling lambat, biaya tertinggi). Pendekatan ini memaksimalkan cakupan pengujian sembari meminimalkan waktu eksekusi dan biaya pemeliharaan (Desai, Singh, dan Amilkanthwar 2025). Gambar~\ref{fig:piramida-testing} mengilustrasikan hierarki ini.
 
 \begin{figure}[htbp]
   \centering
@@ -235,7 +235,7 @@ Strategi pengujian Platform CHP mengikuti konsep piramida pengujian (\textit{tes
 \subsection{Pengujian Validasi: Akurasi Skor Otomatis}
 \label{subsec:validation-testing}
 
-Dalam konteks platform asesmen psikometri, pengujian validasi memiliki signifikansi yang melampaui pengujian perangkat lunak konvensional. Skor yang dihasilkan oleh \textit{scoring engine} harus identik dengan skor yang dihitung secara manual menggunakan panduan penilaian (\textit{scoring guide}) resmi masing-masing instrumen \cite{liu2016}. Pengujian validasi dilaksanakan dengan membandingkan keluaran \textit{scoring engine} terhadap tabel referensi yang dihitung secara manual untuk setiap instrumen, memverifikasi keidentikan skor (\textit{score identity accuracy}). Selain akurasi, efisiensi waktu juga diukur: komputasi skor otomatis yang sebelumnya memerlukan hitungan menit secara manual kini diselesaikan dalam hitungan milidetik.
+Dalam konteks platform asesmen psikometri, pengujian validasi memiliki signifikansi yang melampaui pengujian perangkat lunak konvensional. Skor yang dihasilkan oleh \textit{scoring engine} harus identik dengan skor yang dihitung secara manual menggunakan panduan penilaian (\textit{scoring guide}) resmi masing-masing instrumen (Liu, Chen, dan Sun 2016). Pengujian validasi dilaksanakan dengan membandingkan keluaran \textit{scoring engine} terhadap tabel referensi yang dihitung secara manual untuk setiap instrumen, memverifikasi keidentikan skor (\textit{score identity accuracy}). Selain akurasi, efisiensi waktu juga diukur: komputasi skor otomatis yang sebelumnya memerlukan hitungan menit secara manual kini diselesaikan dalam hitungan milidetik.
 
 \subsection{\textit{Unit Testing} dengan Vitest}
 \label{subsec:vitest}
@@ -312,7 +312,7 @@ Platform yang menangani data psikologis sensitif memiliki kewajiban keamanan yan
 \subsection{OWASP \textit{Top Ten}}
 \label{subsec:owasp}
 
-OWASP \textit{Top Ten} menjadi standar acuan \textit{de-facto} dalam komunitas keamanan perangkat lunak \cite{owasp2026}. Platform CHP mengimplementasikan mitigasi terhadap risiko yang paling relevan:
+OWASP \textit{Top Ten} menjadi standar acuan \textit{de-facto} dalam komunitas keamanan perangkat lunak (OWASP Foundation 2026). Platform CHP mengimplementasikan mitigasi terhadap risiko yang paling relevan:
 
 \begin{enumerate}[leftmargin=2cm]
   \item A01 \textit{Broken Access Control}: Dimitigasi melalui RBAC lima tingkat dan pemeriksaan otorisasi pada setiap prosedur tRPC yang dilindungi.
@@ -335,7 +335,7 @@ Platform CHP mengimplementasikan \textit{rate limiting} berlapis:
 \subsection{Undang-Undang Perlindungan Data Pribadi}
 \label{subsec:uu-pdp}
 
-Undang-Undang Nomor 27 Tahun 2022 tentang Perlindungan Data Pribadi (UU PDP) mengamanatkan penerapan prinsip \textit{privacy by design} dan minimisasi data \cite{rebong2025}. Platform CHP mengimplementasikan prinsip-prinsip UU PDP melalui empat mekanisme:
+Undang-Undang Nomor 27 Tahun 2022 tentang Perlindungan Data Pribadi (UU PDP) mengamanatkan penerapan prinsip \textit{privacy by design} dan minimisasi data (Rebong, Hambali, dan Timothy 2025). Platform CHP mengimplementasikan prinsip-prinsip UU PDP melalui empat mekanisme:
 
 \begin{enumerate}[leftmargin=2cm]
   \item Sesi asesmen anonim tanpa memerlukan akun pengguna.
