@@ -19,7 +19,7 @@ Analisis kebutuhan fungsional mengidentifikasi fungsi-fungsi spesifik yang harus
 
 Tabel~\ref{tab:kebutuhan-pengguna} menyajikan kebutuhan dari perspektif setiap aktor pengguna.
 
-\begin{longtable}{@{}p{3cm} p{3.5cm} p{6.6cm}@{}}
+\begin{xltabular}{\textwidth}{@{}p{3cm} p{3.5cm} >{\raggedright\arraybackslash}X@{}}
   \caption{Kebutuhan Pengguna Platform CHP}
   \label{tab:kebutuhan-pengguna} \\
   \toprule
@@ -36,7 +36,7 @@ Tabel~\ref{tab:kebutuhan-pengguna} menyajikan kebutuhan dari perspektif setiap a
   Pengguna Terdaftar & Akun \& Riwayat & Semua fitur peserta anonim, ditambah klaim sesi anonim ke akun, riwayat asesmen, dan manajemen profil \\[0.3em]
   Administrator & Manajemen & Mengelola instrumen tes (CRUD), melihat statistik dan hasil, mengelola permintaan laporan, mengekspor data riset \\[0.3em]
   Super Admin & Keamanan & Semua fitur administrator, ditambah manajemen akun admin, aktivasi/deaktivasi pengguna, dan jejak audit \\
-\end{longtable}
+\end{xltabular}
 
 \subsection{Kebutuhan Perangkat Lunak}
 
@@ -107,7 +107,7 @@ Gambar~\ref{fig:use-case} menyajikan diagram \textit{use case} yang mengilustras
 
 Tabel~\ref{tab:kebutuhan-fungsional} merinci seluruh kebutuhan fungsional.
 
-\begin{longtable}{@{}c p{5cm} p{3.5cm} c@{}}
+\begin{xltabular}{\textwidth}{@{}c >{\raggedright\arraybackslash}X p{3.5cm} c@{}}
   \caption{Kebutuhan Fungsional Platform CHP}
   \label{tab:kebutuhan-fungsional} \\
   \toprule
@@ -133,7 +133,7 @@ Tabel~\ref{tab:kebutuhan-fungsional} merinci seluruh kebutuhan fungsional.
   KF-11 & Mengonfigurasi aturan penilaian per instrumen & Administrator & Tinggi \\
   KF-12 & Melihat statistik sesi dan hasil asesmen & Administrator & Sedang \\
   KF-13 & Mengekspor data penelitian & Administrator & Sedang \\
-\end{longtable}
+\end{xltabular}
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Analisis Kebutuhan Non-Fungsional}
@@ -141,7 +141,7 @@ Tabel~\ref{tab:kebutuhan-fungsional} merinci seluruh kebutuhan fungsional.
 
 Tabel~\ref{tab:kebutuhan-nonfungsional} menyajikan kebutuhan non-fungsional Platform CHP.
 
-\begin{longtable}{@{}p{2.3cm} p{2.5cm} p{3.5cm} p{4.4cm}@{}}
+\begin{xltabular}{\textwidth}{@{}p{2.3cm} p{2.5cm} p{3.5cm} >{\raggedright\arraybackslash}X@{}}
   \caption{Kebutuhan Non-Fungsional Platform CHP}
   \label{tab:kebutuhan-nonfungsional} \\
   \toprule
@@ -164,7 +164,7 @@ Tabel~\ref{tab:kebutuhan-nonfungsional} menyajikan kebutuhan non-fungsional Plat
   Keandalan & Ketersediaan & \textit{Uptime} $\geq$ 99.9\% & Infrastruktur terkelola Vercel + Neon \\[0.3em]
   Keandalan & Integritas data & Nol kehilangan data & Properti ACID, operasi atomik \\[0.3em]
   Pemeliharaan & Kualitas kode & Nol \textit{error} ESLint + TypeScript \textit{strict} & \textit{Pipeline} CI/CD dengan \textit{quality gates} \\
-\end{longtable}
+\end{xltabular}
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Perancangan Arsitektur Sistem}
@@ -219,7 +219,7 @@ Skema basis data diorganisasi ke dalam lima domain:
 
 Seluruh tabel menggunakan UUID v4 sebagai kunci primer. Tabel~\ref{tab:inventaris-tabel} menyajikan inventaris lengkap 20 tabel.
 
-\begin{longtable}{@{}p{2.3cm} p{2.8cm} p{2.8cm} p{4cm}@{}}
+\begin{xltabular}{\textwidth}{@{}p{2.3cm} p{2.8cm} p{2.8cm} >{\raggedright\arraybackslash}X@{}}
   \caption{Inventaris Tabel Basis Data Platform CHP}
   \label{tab:inventaris-tabel} \\
   \toprule
@@ -257,7 +257,7 @@ Seluruh tabel menggunakan UUID v4 sebagai kunci primer. Tabel~\ref{tab:inventari
   Permintaan & \texttt{guest\_leads} & id, session\_id, encrypted\_email & PII terenkripsi AES-256-GCM \\[0.2em]
   \midrule
   Auth & \texttt{\seqsplit{verification\_tokens}} & identifier, token, expires & \textit{Token} verifikasi sekali pakai \\
-\end{longtable}
+\end{xltabular}
 
 Selain 20 tabel, skema mendefinisikan tujuh \textit{enum} PostgreSQL yang memastikan integritas data. Tabel~\ref{tab:enum-postgresql} mencantumkan definisinya.
 
@@ -319,7 +319,7 @@ Empat keputusan perancangan data dengan dampak arsitektur signifikan:
 
 Platform CHP menggunakan tRPC sebagai protokol komunikasi. Seluruh 69 prosedur API diorganisasi ke dalam 16 \textit{router namespace}. Tabel~\ref{tab:api-publik} hingga Tabel~\ref{tab:api-admin} menyajikan inventaris prosedur yang dikelompokkan berdasarkan area fungsional.
 
-\begin{longtable}{@{}l l c c p{4cm}@{}}
+\begin{xltabular}{\textwidth}{@{}l l c c >{\raggedright\arraybackslash}X@{}}
   \caption{Prosedur API Publik (Alur Asesmen)}
   \label{tab:api-publik} \\
   \toprule
@@ -340,9 +340,9 @@ Platform CHP menggunakan tRPC sebagai protokol komunikasi. Seluruh 69 prosedur A
   \texttt{submitAssessment} & sessions & M & Publik & Validasi, hitung skor, simpan hasil \\
   \texttt{getResult} & results & Q & Publik & Ambil hasil asesmen \\
   \texttt{requestEmailReport} & sessions & M & Publik & Buat permintaan laporan surel \\
-\end{longtable}
+\end{xltabular}
 
-\begin{longtable}{@{}l l c c p{4cm}@{}}
+\begin{xltabular}{\textwidth}{@{}l l c c >{\raggedright\arraybackslash}X@{}}
   \caption{Prosedur API Pengguna Terdaftar}
   \label{tab:api-user} \\
   \toprule
@@ -359,9 +359,9 @@ Platform CHP menggunakan tRPC sebagai protokol komunikasi. Seluruh 69 prosedur A
   \texttt{get} & profile & Q & Protected & Ambil profil pengguna \\
   \texttt{upsert} & profile & M & Protected & Simpan/perbarui profil \\
   \texttt{changePassword} & profile & M & Protected & Ganti kata sandi \\
-\end{longtable}
+\end{xltabular}
 
-\begin{longtable}{@{}l l c c p{4cm}@{}}
+\begin{xltabular}{\textwidth}{@{}l l c c >{\raggedright\arraybackslash}X@{}}
   \caption{Prosedur API Panel Administrasi}
   \label{tab:api-admin} \\
   \toprule
@@ -384,7 +384,7 @@ Platform CHP menggunakan tRPC sebagai protokol komunikasi. Seluruh 69 prosedur A
   \texttt{getTests} & adminTests & Q & Admin & Daftar instrumen \\
   \texttt{createTest} & adminTests & M & AdminMut & Buat tes baru \\
   \texttt{createAdmin} & adminAccounts & M & SuperAdmin & Buat akun admin \\
-\end{longtable}
+\end{xltabular}
 
 % [C9] Applied in middleware description
 Setiap prosedur memanfaatkan lima tingkat \textit{middleware} autentikasi: \texttt{publicProcedure} (tanpa autentikasi), \texttt{protectedProcedure} (sesi Auth.js), \texttt{adminProcedure} (JWT admin via jose dengan validasi basis data), \texttt{adminMutationProcedure} (peran \texttt{super\_admin} atau \texttt{admin}), dan \texttt{superAdminProcedure} (khusus \texttt{super\_admin}).
