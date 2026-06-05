@@ -99,7 +99,7 @@ Pengembangan komponen antarmuka pengguna (\textit{User Interface}/UI) dan desain
 Pelaksanaan KP ini memiliki enam tujuan yang dirumuskan menggunakan pendekatan SMART (\textit{Specific, Measurable, Achievable, Relevant, Time-bound}), yaitu spesifik, terukur, dapat dicapai, relevan, dan berbatas waktu. Tabel~\ref{tab:tujuan-kp} menyajikan rumusan tujuan beserta target terukur dan status implementasi pada saat laporan ini disusun.
 
 % [F2] Goals #2, #4, #5, #6 status updated
-\begin{xltabular}{\textwidth}{@{}c p{3.5cm} p{3.8cm} p{3.5cm}@{}}
+\begin{xltabular}{\textwidth}{@{}c >{\raggedright\arraybackslash}p{3.5cm} >{\raggedright\arraybackslash}p{3.8cm} >{\raggedright\arraybackslash}p{3.5cm}@{}}
   \caption{Tujuan Kerja Praktik dan Status Implementasi}
   \label{tab:tujuan-kp} \\
   \toprule
@@ -113,9 +113,9 @@ Pelaksanaan KP ini memiliki enam tujuan yang dirumuskan menggunakan pendekatan S
   \bottomrule
   \endfoot
   1 & Membangun platform asesmen modern dan responsif sesuai standar aksesibilitas & Skor \textit{Lighthouse Performance} $\geq$ 90; \textit{Accessibility} $\geq$ 95 pada semua halaman utama & Selesai: Fase 1A \& 1B (Minggu 1--6) \\[0.5em]
-  2 & Mengimplementasikan \textit{scoring engine} modular otomatis untuk perhitungan sumatif, berbobot, dimensional, dan persentil & Skor komputasi sesuai nilai referensi manual; \textit{engine} diuji dengan 72 kasus uji & Selesai: Fase 1B (Minggu 3--6) \\[0.5em]
+  2 & Meng\-implementasikan \textit{scoring engine} modular otomatis untuk perhitungan sumatif, berbobot, dimensional, dan persentil & Skor komputasi sesuai nilai referensi manual; \textit{engine} diuji dengan 72 kasus uji & Selesai: Fase 1B (Minggu 3--6) \\[0.5em]
   3 & Menyajikan umpan balik visual instan berupa skor total, \textit{breakdown} dimensi, dan grafik & Halaman hasil ter-\textit{render} dalam dua detik setelah pengiriman tes & Selesai: Fase 1B (Minggu 5--6) \\[0.5em]
-  4 & Membangun fungsionalitas ekspor data berkualitas riset dalam format CSV & Prosedur \texttt{adminResults.export} dengan batas 5000 baris, mencakup jawaban per butir soal & Selesai: Fase 1C (Minggu 7--10) \\[0.5em]
+  4 & Membangun fungsionalitas ekspor data berkualitas riset dalam format CSV & Prosedur \texttt{\seqsplit{adminResults.export}} dengan batas 5000 baris, mencakup jawaban per butir soal & Selesai: Fase 1C (Minggu 7--10) \\[0.5em]
   5 & Mengembangkan panel administrator dengan RBAC & Tim psikologi dapat membuat, mengkonfigurasi, dan mempublikasikan instrumen baru tanpa intervensi pengembang; empat peran admin & Selesai: Fase 1C (Minggu 7--10) \\[0.5em]
   6 & Memastikan serah terima sistem yang berkelanjutan dengan dokumentasi komprehensif & Pengembang baru dapat \textit{clone}, \textit{setup}, dan menjalankan proyek secara lokal dalam waktu 15 menit & Selesai: Fase 1D (Minggu 11--13) \\
 \end{xltabular}

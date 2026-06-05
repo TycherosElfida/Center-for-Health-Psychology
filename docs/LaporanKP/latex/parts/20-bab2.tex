@@ -266,7 +266,7 @@ Tabel~\ref{tab:skenario-unit-test} menampilkan contoh skenario \textit{unit test
     \texttt{computeScore} (sumatif) & 5 soal dengan nilai 4, 3, 5, 2, 4 & totalScore = 18 \\
     \texttt{computeScore} (terbalik) & Soal is\_reversed=true, skala 1--5, jawaban 2 & Skor soal menjadi 4 $(5+1-2)$ \\
     \texttt{computeScore} (dimensional) & 10 soal: 5 dimensi A, 5 dimensi B & dimensionScores terpisah per dimensi \\
-    \texttt{validateCompleteness} & Satu soal wajib belum dijawab & valid = false, missingQuestionIds berisi ID soal \\
+    \texttt{\seqsplit{validateCompleteness}} & Satu soal wajib belum dijawab & valid = false, missingQuestionIds berisi ID soal \\
     \bottomrule
   \end{tabularx}
 \end{table}
