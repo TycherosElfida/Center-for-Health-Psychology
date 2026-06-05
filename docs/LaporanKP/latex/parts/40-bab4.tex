@@ -68,13 +68,13 @@ Dua fungsi validasi, yaitu \texttt{validateAnswerValues} dan \texttt{validateCom
 
 \subsection{Instrumen yang Diimplementasikan}
 
-Empat instrumen psikometri berhasil dikonfigurasi dan divalidasi pada platform:
+Empat instrumen psikometri berhasil dikonfigurasi pada platform:
 
 \begin{enumerate}[leftmargin=2cm]
-  \item \textbf{PSS-10} (\textit{Perceived Stress Scale}): 10 butir soal, skala Likert 0--4, unidimensional, dengan 4 butir soal terbalik.
-  \item \textbf{GPIUS-2} (\textit{Generalized Problematic Internet Use Scale}): 15 butir soal, skala Likert 1--5, 5 subskala dengan \textit{rollup} DSR orde kedua.
-  \item \textbf{SRS} (\textit{Stress Response Scale}): 11 butir soal, skala Likert 1--6, 3 subskala.
-  \item \textbf{SRQ-29} (\textit{Self-Reporting Questionnaire}): 29 butir soal, jawaban biner (Ya/Tidak), 4 kluster diagnostik.
+  \item \textbf{PSS-10} (\textit{Perceived Stress Scale}): 10 butir soal, skala Likert 0--4, dua subskala (ketidakberdayaan dan efikasi diri), dengan 4 butir soal terbalik.
+  \item \textbf{GPIUS-2} (\textit{Generalized Problematic Internet Use Scale} 2): 15 butir soal, skala Likert 1--5, 5 subskala dengan \textit{rollup} DSR orde kedua.
+  \item \textbf{SRS} (\textit{Simplified Resilience Scale}): 11 butir soal, skala Likert 1--6, 3 subskala.
+  \item \textbf{SRQ-29} (\textit{Self-Reporting Questionnaire}): 29 butir soal, jawaban biner (Ya/Tidak), 4 domain skrining.
 \end{enumerate}
 
 % ─────────────────────────────────────────────────────────────────────────────
@@ -244,7 +244,7 @@ Pemantauan kesalahan (\textit{error monitoring}) menggunakan Sentry versi 10.50.
 Selama pengembangan Platform Asesmen Digital CHP, dosen pemilik proyek menyampaikan 22 permintaan fungsional yang menjadi acuan pengembangan. Dari 22 permintaan tersebut, 18 permintaan telah tercapai dan 4 permintaan belum tercapai pada akhir periode kerja praktik. Tabel lengkap beserta status dan keterangan setiap butir permintaan disajikan pada Lampiran A.
 
 \textbf{A.~Instrumen Asesmen.}
-Permintaan penambahan dua instrumen baru, yaitu GPIUS-2 (\textit{Generalized Problematic Internet Use Scale 2}) dan SRS (\textit{Stress Response Scale}), berhasil dipenuhi dan ditambahkan ke katalog asesmen bersama instrumen yang telah ada sebelumnya, yaitu PSS-10 dan SRQ-29. Setiap instrumen dikonfigurasi secara lengkap meliputi butir soal, opsi jawaban, pembobotan, dimensi, dan rentang interpretasi, seluruhnya tervalidasi melalui 72 kasus uji pada \textit{scoring engine}.
+Permintaan penambahan dua instrumen baru, yaitu GPIUS-2 (\textit{Generalized Problematic Internet Use Scale 2}) dan SRS (\textit{Simplified Resilience Scale}), berhasil dipenuhi dan ditambahkan ke katalog asesmen bersama instrumen yang telah ada sebelumnya, yaitu PSS-10 dan SRQ-29. Setiap instrumen dikonfigurasi secara lengkap meliputi butir soal, opsi jawaban, pembobotan, dimensi, dan rentang interpretasi, dengan komputasi skor yang diverifikasi melalui 72 kasus uji pada \textit{scoring engine}.
 
 \textbf{B.~Alur Asesmen Peserta.}
 Alur asesmen peserta dilengkapi dengan visualisasi hasil secara \textit{real-time} yang ditampilkan segera setelah penyelesaian melalui komponen grafik Recharts (\textit{gauge}, \textit{radar}, diagram batang). Formulir demografis menyediakan pemilihan domisili bertingkat dua level (provinsi $\rightarrow$ kota/kabupaten) menggunakan dataset statis 38 provinsi yang bersumber dari klasifikasi BPS (Badan Pusat Statistik), dilengkapi opsi ``Lainnya (ketik manual)'' pada pemilihan provinsi maupun kota/kabupaten untuk mengakomodasi wilayah yang tidak terdaftar. Penyimpanan jawaban dilakukan secara otomatis pada setiap perubahan melalui prosedur \texttt{saveProgress} dengan pola \textit{upsert} idempoten, memungkinkan peserta melanjutkan sesi yang terputus.
