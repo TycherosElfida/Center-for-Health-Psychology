@@ -5,7 +5,7 @@
  *
  * Full state machine ported from DesignReference/TestPage.tsx:
  *   - CSS keyframe injection (surveyFadeIn, surveyPulse, surveyCheckPop, surveyShake)
- *   - Keyboard navigation (1-5, ↑↓, j/k)
+ *   - Keyboard navigation (1–N / 1–0 for 10-point, ↑↓, j/k)
  *   - Scroll-focus system with questionRefs and auto-advance
  *   - Warning shake for unanswered questions
  *   - Opacity states: focused 1.0, answered 0.70, unanswered 0.45, locked 0.28
@@ -142,7 +142,6 @@ export function AssessmentForm({
   // ── Derived state ───────────────────────────────────────
   const answeredCount = mounted ? Object.keys(answers).length : 0;
   const isComplete = mounted ? answeredCount === questions.length : false;
-
   // ── Focus tracking ──────────────────────────────────────
   const [focusedQ, setFocusedQ] = useState(0);
   const firstUnansweredIdx = mounted ? questions.findIndex((q) => answers[q.id] === undefined) : 0;
@@ -237,14 +236,18 @@ export function AssessmentForm({
       const currentQ = questions[focusedQ];
       if (!currentQ) return;
 
-      if (e.key >= "1" && e.key <= "5") {
-        const keyNum = parseInt(e.key);
-        const opts = currentQ.options ?? [];
-        const targetOpt = opts[keyNum - 1];
-        if (targetOpt && keyNum <= opts.length) {
-          e.preventDefault();
-          handleAnswer(currentQ.id, targetOpt.value, focusedQ);
-        }
+      const opts = currentQ.options ?? [];
+      const optionValues = opts.map((o) => o.value);
+      const keyToValue = (key: string): number | null => {
+        if (key === "0") return 10;
+        const n = parseInt(key, 10);
+        if (n >= 1 && n <= 9) return n;
+        return null;
+      };
+      const value = keyToValue(e.key);
+      if (value !== null && optionValues.includes(value)) {
+        e.preventDefault();
+        handleAnswer(currentQ.id, value, focusedQ);
       }
 
       // Arrow Down / J: advance focus
@@ -288,6 +291,19 @@ export function AssessmentForm({
     },
   });
 
+  const focusedQuestion = questions[focusedQ];
+  const keyboardHintText =
+    focusedQuestion && focusedQuestion.options.length > 2
+      ? (() => {
+          const values = focusedQuestion.options.map((o) => o.value);
+          const minVal = Math.min(...values);
+          const maxVal = Math.max(...values);
+          const startKey = String(minVal);
+          const endKey = maxVal === 10 ? "0" : String(maxVal);
+          return `💡 Gunakan tombol keyboard ${startKey}–${endKey} untuk memilih jawaban lebih cepat`;
+        })()
+      : null;
+
   const handleSubmit = useCallback(async () => {
     if (!isComplete || submitMutation.isPending) return;
     // Flush debounced answers to the server before submitting.
@@ -330,14 +346,14 @@ export function AssessmentForm({
       {/* Keyboard hint */}
       <main className="mx-auto max-w-2xl px-4 pt-6">
         <AnimatePresence>
-          {showKeyboardHint && (
+          {showKeyboardHint && keyboardHintText && (
             <motion.div
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               className="mb-4 rounded-xl bg-[var(--brand-primary-light,#EDE9F8)] px-4 py-2 text-center text-xs text-[var(--brand-primary,#9B8EC4)]"
             >
-              💡 Gunakan tombol keyboard 1–5 untuk memilih jawaban lebih cepat
+              {keyboardHintText}
             </motion.div>
           )}
         </AnimatePresence>
