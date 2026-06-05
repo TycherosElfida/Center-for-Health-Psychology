@@ -26,7 +26,7 @@ Seluruh 20 tabel dan 7 \textit{enum} PostgreSQL berhasil di-\textit{deploy} ke l
 
 Relasi antar-tabel diimplementasikan menggunakan \texttt{defineRelations()} dari Drizzle ORM v2, yang memisahkan definisi relasi dari definisi kolom. Pola ini memungkinkan kueri relasional (\textit{relational queries}) yang menghasilkan SQL \texttt{JOIN} secara otomatis tanpa memerlukan penulisan kueri manual.
 
-Data awal (\textit{seed data}) untuk empat instrumen psikometri---PSS-10, GPIUS-2, SRS, dan SRQ-29---disiapkan melalui skrip \textit{seeding} yang memasukkan definisi tes, butir soal, opsi jawaban, dan rentang interpretasi. Skrip ini memastikan lingkungan pengembangan baru dapat langsung memiliki data yang cukup untuk pengujian.
+Data awal (\textit{seed data}) untuk empat instrumen psikometri, yaitu PSS-10, GPIUS-2, SRS, dan SRQ-29, disiapkan melalui skrip \textit{seeding} yang memasukkan definisi tes, butir soal, opsi jawaban, dan rentang interpretasi. Skrip ini memastikan lingkungan pengembangan baru dapat langsung memiliki data yang cukup untuk pengujian.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Implementasi \textit{Scoring Engine}}
@@ -64,7 +64,7 @@ Fungsi \texttt{lookupInterpretation(testId, totalScore, dimension?)} mengkueri t
 
 \subsection{Fungsi Validasi}
 
-Dua fungsi validasi---\texttt{validateAnswerValues} dan \texttt{validateCompleteness}---memastikan integritas data sebelum proses komputasi skor dimulai. Kedua fungsi bersifat murni (tanpa akses basis data), sehingga dapat diuji secara terisolasi. \texttt{validateAnswerValues} memeriksa bahwa setiap nilai jawaban berada dalam rentang opsi yang valid, sedangkan \texttt{validateCompleteness} memastikan semua butir soal wajib telah dijawab.
+Dua fungsi validasi, yaitu \texttt{validateAnswerValues} dan \texttt{validateCompleteness}, memastikan integritas data sebelum proses komputasi skor dimulai. Kedua fungsi bersifat murni (tanpa akses basis data), sehingga dapat diuji secara terisolasi. \texttt{validateAnswerValues} memeriksa bahwa setiap nilai jawaban berada dalam rentang opsi yang valid, sedangkan \texttt{validateCompleteness} memastikan semua butir soal wajib telah dijawab.
 
 \subsection{Instrumen yang Diimplementasikan}
 
@@ -89,11 +89,11 @@ Seluruh 69 prosedur tRPC diimplementasikan dalam 17 \textit{file} prosedur yang 
 
 \subsection{\textit{Structural Lock}}
 
-Fitur keamanan data yang krusial pada prosedur admin adalah mekanisme \textit{structural lock}. Ketika sebuah instrumen tes telah memiliki sesi asesmen yang tercatat (diperiksa melalui fungsi \texttt{getSessionCount}), prosedur \texttt{updateTest}, \texttt{updateQuestion}, \texttt{deleteQuestion}, \texttt{reorderQuestions}, dan \texttt{updateRange} memblokir perubahan pada kolom yang sensitif terhadap penilaian---seperti \texttt{slug}, \texttt{scoringMethod}, bobot soal (\texttt{weight}), dan nilai opsi (\texttt{value}). Mekanisme ini mencegah invalidasi retroaktif terhadap data riset yang telah terkumpul.
+Fitur keamanan data yang krusial pada prosedur admin adalah mekanisme \textit{structural lock}. Ketika sebuah instrumen tes telah memiliki sesi asesmen yang tercatat (diperiksa melalui fungsi \texttt{getSessionCount}), prosedur \texttt{updateTest}, \texttt{updateQuestion}, \texttt{deleteQuestion}, \texttt{reorderQuestions}, dan \texttt{updateRange} memblokir perubahan pada kolom yang sensitif terhadap penilaian, seperti \texttt{slug}, \texttt{scoringMethod}, bobot soal (\texttt{weight}), dan nilai opsi (\texttt{value}). Mekanisme ini mencegah invalidasi retroaktif terhadap data riset yang telah terkumpul.
 
 \subsection{Operasi Idempoten}
 
-Prosedur \texttt{saveProgress} menggunakan pola \texttt{ON CONFLICT ... DO UPDATE} (PostgreSQL \texttt{UPSERT}) pada \textit{constraint} unik komposit \texttt{(session\_id, question\_id)}, sehingga penyimpanan progres bersifat idempoten---pemanggilan berulang dengan data yang sama menghasilkan efek yang identik. Pendekatan ini menangani dengan aman skenario koneksi terputus di mana klien mungkin mengirim ulang jawaban yang sama.
+Prosedur \texttt{saveProgress} menggunakan pola \texttt{ON CONFLICT ... DO UPDATE} (PostgreSQL \texttt{UPSERT}) pada \textit{constraint} unik komposit \texttt{(session\_id, question\_id)}, sehingga penyimpanan progres bersifat idempoten: pemanggilan berulang dengan data yang sama menghasilkan efek yang identik. Pendekatan ini menangani dengan aman skenario koneksi terputus di mana klien mungkin mengirim ulang jawaban yang sama.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Implementasi Autentikasi}
@@ -141,7 +141,7 @@ Modul \texttt{rate-limiter.ts} mengimplementasikan \textit{rate limiting in-memo
 Panel administrasi diakses melalui rute \texttt{/admin/(dashboard)/*} dan dilindungi oleh penjaga rute \texttt{proxy.ts} yang memeriksa keberadaan \textit{cookie} \texttt{admin-token}. Panel terdiri atas delapan modul utama:
 
 \begin{enumerate}[leftmargin=2cm]
-  \item \textbf{\textit{Dashboard}}: statistik agregat platform---jumlah asesmen selesai, sesi aktif, tingkat penyelesaian, tes terpopuler, dan hasil terbaru.
+  \item \textbf{\textit{Dashboard}}: statistik agregat platform: jumlah asesmen selesai, sesi aktif, tingkat penyelesaian, tes terpopuler, dan hasil terbaru.
   \item \textbf{Manajemen Instrumen} (\texttt{adminTests}): CRUD tes dengan transisi status \texttt{draft} $\rightarrow$ \texttt{published} $\rightarrow$ \texttt{archived}, dilengkapi \textit{structural lock} untuk instrumen yang telah memiliki sesi.
   \item \textbf{Manajemen Soal} (\texttt{adminQuestions}): penambahan, penyuntingan, penghapusan, dan pengurutan ulang butir soal beserta opsi jawaban.
   \item \textbf{Konfigurasi Skala} (\texttt{adminScales}): pengelolaan rentang interpretasi per dimensi.
@@ -157,7 +157,7 @@ Panel administrasi diakses melalui rute \texttt{/admin/(dashboard)/*} dan dilind
 
 Generasi laporan hasil asesmen menggunakan \texttt{@react-pdf/renderer} versi 4.5.1, yang memungkinkan pembuatan dokumen PDF menggunakan komponen React. Laporan yang dihasilkan mencakup informasi tes, skor total, skor per dimensi, label interpretasi, dan rekomendasi.
 
-Pengiriman surel menggunakan layanan Resend versi 6.12.2, yang menyediakan API transaksional untuk pengiriman surel dari lingkungan \textit{serverless}. Alur lengkap---dari penerimaan permintaan melalui prosedur \texttt{approve} pada \textit{router} \texttt{reportRequests}, generasi PDF, hingga pengiriman surel---dieksekusi secara atomik dalam satu prosedur tRPC.
+Pengiriman surel menggunakan layanan Resend versi 6.12.2, yang menyediakan API transaksional untuk pengiriman surel dari lingkungan \textit{serverless}. Alur lengkap, dari penerimaan permintaan melalui prosedur \texttt{approve} pada \textit{router} \texttt{reportRequests}, generasi PDF, hingga pengiriman surel, dieksekusi secara atomik dalam satu prosedur tRPC.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Pengujian Unit}
@@ -213,9 +213,9 @@ Modul \textit{scoring engine} diuji dengan 72 kasus uji yang tersebar dalam tiga
 \begin{enumerate}[leftmargin=2cm]
   \item \textbf{\textit{Job} \texttt{build-and-test}}: menggunakan Node.js 22 dan pnpm 9, menjalankan tiga \textit{gate} berurutan:
   \begin{enumerate}
-    \item \texttt{pnpm exec eslint .} --- pemeriksaan \textit{linting}.
-    \item \texttt{pnpm tsc --noEmit} --- pemeriksaan tipe.
-    \item \texttt{pnpm build} --- \textit{build} produksi Next.js.
+    \item \texttt{pnpm exec eslint .}: pemeriksaan \textit{linting}.
+    \item \texttt{pnpm tsc --noEmit}: pemeriksaan tipe.
+    \item \texttt{pnpm build}: \textit{build} produksi Next.js.
   \end{enumerate}
   \item \textbf{\textit{Job} \texttt{test}}: menggunakan Node.js 22 dan pnpm 9, menjalankan \texttt{pnpm test} untuk mengeksekusi seluruh \textit{test suite} Vitest.
 \end{enumerate}
@@ -244,7 +244,7 @@ Pemantauan kesalahan (\textit{error monitoring}) menggunakan Sentry versi 10.50.
 Selama pengembangan Platform Asesmen Digital CHP, dosen pemilik proyek menyampaikan 22 permintaan fungsional yang menjadi acuan pengembangan. Dari 22 permintaan tersebut, 18 permintaan telah tercapai dan 4 permintaan belum tercapai pada akhir periode kerja praktik. Tabel lengkap beserta status dan keterangan setiap butir permintaan disajikan pada Lampiran A.
 
 \textbf{A.~Instrumen Asesmen.}
-Permintaan penambahan dua instrumen baru---GPIUS-2 (\textit{Generalized Problematic Internet Use Scale 2}) dan SRS (\textit{Stress Response Scale})---berhasil dipenuhi dan ditambahkan ke katalog asesmen bersama instrumen yang telah ada sebelumnya, yaitu PSS-10 dan SRQ-29. Setiap instrumen dikonfigurasi secara lengkap meliputi butir soal, opsi jawaban, pembobotan, dimensi, dan rentang interpretasi, seluruhnya tervalidasi melalui 72 kasus uji pada \textit{scoring engine}.
+Permintaan penambahan dua instrumen baru, yaitu GPIUS-2 (\textit{Generalized Problematic Internet Use Scale 2}) dan SRS (\textit{Stress Response Scale}), berhasil dipenuhi dan ditambahkan ke katalog asesmen bersama instrumen yang telah ada sebelumnya, yaitu PSS-10 dan SRQ-29. Setiap instrumen dikonfigurasi secara lengkap meliputi butir soal, opsi jawaban, pembobotan, dimensi, dan rentang interpretasi, seluruhnya tervalidasi melalui 72 kasus uji pada \textit{scoring engine}.
 
 \textbf{B.~Alur Asesmen Peserta.}
 Alur asesmen peserta dilengkapi dengan visualisasi hasil secara \textit{real-time} yang ditampilkan segera setelah penyelesaian melalui komponen grafik Recharts (\textit{gauge}, \textit{radar}, diagram batang). Formulir demografis menyediakan pemilihan domisili bertingkat dua level (provinsi $\rightarrow$ kota/kabupaten) menggunakan dataset statis 38 provinsi yang bersumber dari klasifikasi BPS (Badan Pusat Statistik), dilengkapi opsi ``Lainnya (ketik manual)'' pada pemilihan provinsi maupun kota/kabupaten untuk mengakomodasi wilayah yang tidak terdaftar. Penyimpanan jawaban dilakukan secara otomatis pada setiap perubahan melalui prosedur \texttt{saveProgress} dengan pola \textit{upsert} idempoten, memungkinkan peserta melanjutkan sesi yang terputus.

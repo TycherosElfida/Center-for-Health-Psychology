@@ -64,7 +64,7 @@ Gambar~\ref{fig:arsitektur-3-tier} mengilustrasikan diagram arsitektur tiga lapi
 
 Next.js adalah \textit{meta-framework} berbasis React yang menyediakan fondasi lengkap untuk membangun aplikasi web \textit{full-stack} modern (Vercel 2026). Proyek ini menggunakan Next.js 16 dengan \textit{App Router} yang membawa pergeseran arsitektural signifikan melalui \textit{React Server Components} (RSC).
 
-RSC adalah paradigma \textit{rendering} yang memungkinkan komponen React dieksekusi dan di-\textit{render} secara eksklusif di sisi server, tanpa mengirimkan kode JavaScript komponen tersebut ke \textit{browser} klien. Implikasi praktis RSC untuk Platform CHP adalah pengurangan ukuran \textit{bundle} JavaScript yang dikirim ke \textit{browser} peserta tes. Komponen yang hanya membaca data---seperti halaman katalog tes, halaman informasi, dan halaman hasil---di-\textit{render} di server tanpa mengirimkan kodenya ke klien. Hanya komponen yang memerlukan interaktivitas---seperti formulir asesmen dan tombol navigasi---yang ditandai dengan direktif \texttt{"use client"} dan dikirim ke \textit{browser}.
+RSC adalah paradigma \textit{rendering} yang memungkinkan komponen React dieksekusi dan di-\textit{render} secara eksklusif di sisi server, tanpa mengirimkan kode JavaScript komponen tersebut ke \textit{browser} klien. Implikasi praktis RSC untuk Platform CHP adalah pengurangan ukuran \textit{bundle} JavaScript yang dikirim ke \textit{browser} peserta tes. Komponen yang hanya membaca data, seperti halaman katalog tes, halaman informasi, dan halaman hasil, di-\textit{render} di server tanpa mengirimkan kodenya ke klien. Hanya komponen yang memerlukan interaktivitas, seperti formulir asesmen dan tombol navigasi, yang ditandai dengan direktif \texttt{"use client"} dan dikirim ke \textit{browser}.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{TypeScript dan Keamanan Tipe}
@@ -97,7 +97,7 @@ Drizzle ORM adalah ORM TypeScript generasi baru yang berfilosofi ``SQL-\textit{f
   \centering
   \caption{Ringkasan Skema Basis Data Platform CHP}
   \label{tab:ringkasan-skema}
-  \begin{tabularx}{\textwidth}{@{}l l X@{}}
+  \begin{tabularx}{\textwidth}{@{}p{3cm} p{4.5cm} X@{}}
     \toprule
     \textbf{Nama Tabel} & \textbf{Kolom Kunci} & \textbf{Tujuan} \\
     \midrule
@@ -194,7 +194,7 @@ Platform CHP menggunakan pendekatan gabungan: \textit{white-box testing} diterap
   \centering
   \caption{Pemetaan Metodologi Pengujian Platform CHP}
   \label{tab:metodologi-testing}
-  \begin{tabularx}{\textwidth}{@{}l l l l@{}}
+  \begin{tabularx}{\textwidth}{@{}p{2.5cm} p{2.5cm} X p{2cm}@{}}
     \toprule
     \textbf{Metodologi} & \textbf{Level} & \textbf{Komponen} & \textbf{Alat} \\
     \midrule
@@ -246,11 +246,11 @@ Vitest adalah \textit{framework unit testing} berbasis Vite yang dirancang khusu
 Modul \textit{scoring engine} menjadi prioritas utama \textit{unit testing} pada Platform CHP. \textit{Scoring engine} terdiri atas tiga \textit{file} dengan lima fungsi yang diekspor:
 
 \begin{enumerate}[leftmargin=2cm]
-  \item \texttt{reverseScore(rawValue, options)} --- menghitung skor terbalik secara agnostik skala: $(\text{scaleMax} - \text{rawValue}) + \text{scaleMin}$.
-  \item \texttt{computeScore(input)} --- fungsi inti yang menangani pembalikan butir soal, penjumlahan berbobot, pengelompokan dimensional, \textit{rollup} orde kedua untuk DSR (GPIUS-2), dan komputasi \texttt{maxPossibleScore}.
-  \item \texttt{lookupInterpretation(testId, totalScore, dimension?)} --- mengkueri tabel \texttt{result\_interpretations} untuk pemetaan skor ke label, deskripsi, rekomendasi, dan tingkat keparahan.
-  \item \texttt{validateAnswerValues(answers, questions)} --- memvalidasi bahwa setiap nilai jawaban berada dalam batas opsi yang valid. Fungsi murni tanpa akses basis data.
-  \item \texttt{validateCompleteness(answers, questions)} --- memvalidasi bahwa semua butir soal wajib telah dijawab. Fungsi murni tanpa akses basis data.
+  \item \texttt{reverseScore(rawValue, options)}: menghitung skor terbalik secara agnostik skala: $(\text{scaleMax} - \text{rawValue}) + \text{scaleMin}$.
+  \item \texttt{computeScore(input)}: fungsi inti yang menangani pembalikan butir soal, penjumlahan berbobot, pengelompokan dimensional, \textit{rollup} orde kedua untuk DSR (GPIUS-2), dan komputasi \texttt{maxPossibleScore}.
+  \item \texttt{lookupInterpretation(testId, totalScore, dimension?)} : mengkueri tabel \texttt{result\_interpretations} untuk pemetaan skor ke label, deskripsi, rekomendasi, dan tingkat keparahan.
+  \item \texttt{validateAnswerValues(answers, questions)} : memvalidasi bahwa setiap nilai jawaban berada dalam batas opsi yang valid. Fungsi murni tanpa akses basis data.
+  \item \texttt{validateCompleteness(answers, questions)} : memvalidasi bahwa semua butir soal wajib telah dijawab. Fungsi murni tanpa akses basis data.
 \end{enumerate}
 
 Tabel~\ref{tab:skenario-unit-test} menampilkan contoh skenario \textit{unit test} yang diimplementasikan.
@@ -259,7 +259,7 @@ Tabel~\ref{tab:skenario-unit-test} menampilkan contoh skenario \textit{unit test
   \centering
   \caption{Contoh Skenario \textit{Unit Test} pada \textit{Scoring Engine}}
   \label{tab:skenario-unit-test}
-  \begin{tabularx}{\textwidth}{@{}l X X@{}}
+  \begin{tabularx}{\textwidth}{@{}p{3.5cm} X X@{}}
     \toprule
     \textbf{Fungsi} & \textbf{Kondisi Masukan} & \textbf{Hasil yang Diharapkan} \\
     \midrule
@@ -285,13 +285,13 @@ Playwright adalah \textit{framework} otomasi \textit{browser} yang dikembangkan 
 \textit{Pipeline} terdiri atas dua \textit{job} yang berjalan secara paralel:
 
 \begin{enumerate}[leftmargin=2cm]
-  \item \textbf{\textit{Job} 1: \texttt{build-and-test}} --- menjalankan tiga \textit{gate} secara berurutan:
+  \item \textbf{\textit{Job} 1: \texttt{build-and-test}}: menjalankan tiga \textit{gate} secara berurutan:
   \begin{enumerate}
     \item Pemeriksaan \textit{linting} (ESLint): memastikan konsistensi gaya kode.
     \item Pemeriksaan \textit{type checking} (TypeScript \textit{Compiler} dengan \textit{strict mode}): memastikan tidak ada kesalahan tipe.
     \item Proses \textit{build} produksi (Next.js): memastikan aplikasi dapat dikompilasi untuk lingkungan produksi.
   \end{enumerate}
-  \item \textbf{\textit{Job} 2: \texttt{test}} --- menjalankan \textit{unit test} (Vitest) secara paralel dengan \textit{Job} 1, sehingga hasil pengujian tersedia lebih cepat tanpa menunggu proses \textit{build} selesai.
+  \item \textbf{\textit{Job} 2: \texttt{test}}: menjalankan \textit{unit test} (Vitest) secara paralel dengan \textit{Job} 1, sehingga hasil pengujian tersedia lebih cepat tanpa menunggu proses \textit{build} selesai.
 \end{enumerate}
 
 Sebuah \textit{pull request} tidak dapat di-\textit{merge} ke cabang utama apabila salah satu dari kedua \textit{job} tersebut gagal. Gambar~\ref{fig:cicd-pipeline} mengilustrasikan diagram alur \textit{pipeline}.
@@ -329,7 +329,7 @@ Platform CHP mengimplementasikan \textit{rate limiting} berlapis:
 
 \begin{enumerate}[leftmargin=2cm]
   \item \textbf{Upstash Redis} (\texttt{@upstash/ratelimit}): diterapkan pada lapisan \textit{proxy} untuk membatasi permintaan API secara global. Kompatibel dengan lingkungan \textit{serverless} Vercel.
-  \item \textbf{\textit{In-memory rate limiter}} untuk \textit{login} admin: dua tingkat pembatasan---berbasis IP (5 kegagalan dalam 5 menit) dan berbasis akun (10 kegagalan yang mengunci akun hingga dibuka oleh \texttt{super\_admin}).
+  \item \textbf{\textit{In-memory rate limiter}} untuk \textit{login} admin: dua tingkat pembatasan, yaitu berbasis IP (5 kegagalan dalam 5 menit) dan berbasis akun (10 kegagalan yang mengunci akun hingga dibuka oleh \texttt{super\_admin}).
 \end{enumerate}
 
 \subsection{Undang-Undang Perlindungan Data Pribadi}

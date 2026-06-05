@@ -11,7 +11,7 @@
 Berdasarkan pelaksanaan Kerja Praktik yang telah dilakukan, dapat ditarik kesimpulan sebagai berikut:
 
 \begin{enumerate}[leftmargin=2cm]
-  \item Platform Asesmen Psikologi Digital untuk \textit{Center for Health Psychology} (CHP) UKRIDA berhasil dirancang dan diimplementasikan sebagai aplikasi web \textit{full-stack} menggunakan Next.js 16, TypeScript 6.0.3 (\texttt{strict: true}), tRPC v11, dan Drizzle ORM di atas Neon PostgreSQL \textit{serverless}. Platform melayani tiga kelompok pengguna---peserta anonim, pengguna terdaftar, dan administrator---melalui 69 prosedur API yang diorganisasi dalam 16 \textit{router namespace}.
+  \item Platform Asesmen Psikologi Digital untuk \textit{Center for Health Psychology} (CHP) UKRIDA berhasil dirancang dan diimplementasikan sebagai aplikasi web \textit{full-stack} menggunakan Next.js 16, TypeScript 6.0.3 (\texttt{strict: true}), tRPC v11, dan Drizzle ORM di atas Neon PostgreSQL \textit{serverless}. Platform melayani tiga kelompok pengguna, yaitu peserta anonim, pengguna terdaftar, dan administrator, melalui 69 prosedur API yang diorganisasi dalam 16 \textit{router namespace}.
 
   \item Skema basis data yang terdiri atas 20 tabel dan 7 \textit{enum} PostgreSQL berhasil mengakomodasi empat instrumen psikometri dengan karakteristik yang beragam: PSS-10 (unidimensional, skala Likert 0--4), GPIUS-2 (5 subskala, skala Likert 1--5, \textit{rollup} DSR), SRS (3 subskala, skala Likert 1--6), dan SRQ-29 (4 kluster, jawaban biner). Pemisahan tabel \texttt{answers} dari \texttt{results} memungkinkan reproduktibilitas ilmiah melalui \textit{re-scoring}.
 
