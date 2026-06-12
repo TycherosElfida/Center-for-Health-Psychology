@@ -10,7 +10,7 @@
  *
  * Structural lock policy: when sessionCount > 0, only cosmetic changes
  * (questionText, option labels) are permitted. Scoring-affecting fields
- * (isReversed, weight, option values, add/remove) are frozen.
+ * (dimension, isReversed, weight, option values, add/remove) are frozen.
  */
 import { z } from "zod";
 import { eq, and, sql, max } from "drizzle-orm";
@@ -222,7 +222,9 @@ export const adminQuestionsRouter = createTRPCRouter({
    *
    * When locked (sessionCount > 0):
    * - questionText: ALLOWED (cosmetic)
-   * - dimension: ALLOWED (cosmetic)
+   * - dimension: BLOCKED when the value changes (scoring-affecting — it
+   *   alters dimensionScores/cluster flags on re-score); resending the
+   *   unchanged value is allowed because the editor always includes it
    * - isReversed: BLOCKED (scoring-affecting)
    * - weight: BLOCKED (scoring-affecting)
    * - options: only label changes allowed; value/count changes blocked
@@ -256,6 +258,12 @@ export const adminQuestionsRouter = createTRPCRouter({
           throw new TRPCError({
             code: "PRECONDITION_FAILED",
             message: "Cannot change weight: assessment has active sessions.",
+          });
+        }
+        if (input.dimension !== undefined && input.dimension !== existing.dimension) {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: "Cannot change dimension: assessment has active sessions.",
           });
         }
       }

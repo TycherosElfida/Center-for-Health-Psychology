@@ -189,11 +189,13 @@ describe("getQuestions input schema", () => {
 function validateUpdateLockGuard(
   sessionCount: number,
   input: {
+    dimension?: string | null;
     isReversed?: boolean;
     weight?: string;
     options?: Array<{ id?: string; label: string; value: number }>;
   },
-  existingOptions?: Array<{ id: string; value: number }>
+  existingOptions?: Array<{ id: string; value: number }>,
+  existingQuestion?: { dimension: string | null }
 ): { allowed: boolean; reason?: string } {
   if (sessionCount === 0) return { allowed: true };
 
@@ -203,6 +205,15 @@ function validateUpdateLockGuard(
   }
   if (input.weight !== undefined) {
     return { allowed: false, reason: "weight change blocked when locked" };
+  }
+  // FH-2: dimension changes are scoring-affecting — blocked when locked.
+  // Resending the unchanged value is allowed (editor always includes it).
+  if (
+    input.dimension !== undefined &&
+    existingQuestion &&
+    input.dimension !== existingQuestion.dimension
+  ) {
+    return { allowed: false, reason: "dimension change blocked when locked" };
   }
 
   // Option value changes blocked when locked
@@ -234,9 +245,44 @@ describe("updateQuestion lock guard (behavioral)", () => {
 
   it("12 — allows questionText change when sessionCount > 0", () => {
     // questionText is NOT checked by the lock guard — it's a cosmetic change
-    // The guard only blocks isReversed, weight, and option value/count changes.
+    // The guard only blocks isReversed, weight, dimension, and option
+    // value/count changes.
     // Passing only cosmetic fields (which the guard doesn't inspect) should pass.
     const result = validateUpdateLockGuard(5, {});
+    expect(result.allowed).toBe(true);
+  });
+
+  // ── FH-2: dimension is scoring-affecting, not cosmetic ─────────────
+  // Changing a question's dimension alters dimensionScores / cluster
+  // flags on any future re-score, so it must freeze with the structural
+  // lock. The editor always resends the current dimension on save, so
+  // only an actual CHANGE is rejected — resending the unchanged value
+  // stays allowed (mirrors the option-value compare-before-reject rule).
+
+  it("13 — rejects dimension change when sessionCount > 0", () => {
+    const result = validateUpdateLockGuard(
+      3,
+      { dimension: "MR" },
+      undefined,
+      { dimension: "POSI" } // existing question
+    );
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toContain("dimension");
+  });
+
+  it("14 — allows dimension change when sessionCount = 0", () => {
+    const result = validateUpdateLockGuard(0, { dimension: "MR" }, undefined, {
+      dimension: "POSI",
+    });
+    expect(result.allowed).toBe(true);
+  });
+
+  it("15 — allows resending the unchanged dimension when locked (cosmetic edit flow)", () => {
+    // QuestionManager always includes dimension in its update payload,
+    // even for text-only edits — an unchanged value must not be rejected.
+    const result = validateUpdateLockGuard(5, { dimension: "POSI" }, undefined, {
+      dimension: "POSI",
+    });
     expect(result.allowed).toBe(true);
   });
 });
