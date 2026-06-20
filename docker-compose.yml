@@ -1,0 +1,30 @@
+# ==============================================================================
+# CHP Digital Assessment Platform — Docker Compose (Development)
+# ==============================================================================
+# Hot-reload dev server inside a container. Bind-mounts the host source tree
+# so file edits trigger Next.js Fast Refresh automatically.
+#
+# Usage:
+#   docker compose --env-file .env.local up --build
+#
+# NOTE: --env-file .env.local is REQUIRED. Docker Compose reads ${VAR}
+# substitutions from a file named `.env` by default, but this project's
+# convention is `.env.local`. Always pass --env-file explicitly.
+# ==============================================================================
+
+services:
+  app:
+    build:
+      context: .
+      target: dev
+    volumes:
+      # Bind-mount the full project for hot reload
+      - .:/app
+      # Anonymous volume preserves the container's node_modules (installed by
+      # the deps stage) so the host's node_modules don't shadow them.
+      - /app/node_modules
+    env_file: .env.local
+    ports:
+      - "3000:3000"
+    # Ensure the container stops cleanly on Ctrl+C
+    init: true
