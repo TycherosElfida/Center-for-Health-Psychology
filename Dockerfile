@@ -13,7 +13,7 @@
 # Install production + dev dependencies with pnpm (frozen lockfile).
 FROM node:24-alpine AS deps
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
 
 WORKDIR /app
 
@@ -57,6 +57,16 @@ ENV NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}
 
 # Disable telemetry during build
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# Dummy values for modules that validate env vars at import time.
+# next-auth's route handler eagerly imports the DB driver, which throws
+# if DATABASE_URL is missing. No actual DB calls happen at build time
+# (no generateStaticParams), so these are never used for real connections.
+# Using ARG+ENV so they exist during `pnpm build` but don't persist in the image.
+ARG DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+ARG AUTH_SECRET="build-time-placeholder-not-used-at-runtime"
+ENV DATABASE_URL=${DATABASE_URL}
+ENV AUTH_SECRET=${AUTH_SECRET}
 
 RUN pnpm build
 
