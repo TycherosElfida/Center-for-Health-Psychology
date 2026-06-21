@@ -23,7 +23,8 @@ Production deployment stays on Vercel, unchanged. Docker is for local use only.
 | **Node version** | v25.8.2 on host. No `engines` or `packageManager` field in `package.json`. No `.nvmrc` file. |
 | **pnpm version** | 10.33.0 on host. No `packageManager` field. |
 | **`output: 'standalone'`** | **Missing** from `next.config.ts` — must be added for production image. |
-| **`generateStaticParams`** | **Not used** anywhere — no routes hit DB at build time. Builder stage does NOT need `DATABASE_URL`. |
+| **`generateStaticParams`** | **Not used** anywhere — no routes hit DB at build time. |
+| **Build-time env vars** | ~~Original finding: builder stage does NOT need `DATABASE_URL`.~~ **Corrected:** `next-auth`'s route handler (`/api/auth/[...nextauth]`) eagerly imports the DB driver module during Next.js page data collection. This throws `DATABASE_URL is missing` even though no queries execute. The trigger is module-level validation in the driver, not `generateStaticParams`. **Fix:** dummy `DATABASE_URL` and `AUTH_SECRET` as `ARG`+`ENV` in the builder stage. **Verified safe:** `grep -r 'localhost:5432' .next/` and `grep -r 'build-time-placeholder' .next/` inside the built runner image return zero hits — the dummy values are consumed only at import time and are not inlined into any shipped bundle. |
 | **Sentry + no `SENTRY_AUTH_TOKEN`** | Build **does NOT hard-fail**. `@sentry/nextjs` v10.50 silently skips source map upload when the token is unset. The `.env.example` comment ("build fails without it") refers to Vercel deploys where you *want* source maps, not to the build itself. |
 | **`DesignReference/` imports** | Only referenced in code **comments**, never imported. Safe to exclude in `.dockerignore`. |
 | **`README.md`** | Exists (186 lines). Will add a "Running with Docker" section. |
@@ -95,7 +96,8 @@ services:
 ## Env Var Handling
 
 - **Build arg (1):** `NEXT_PUBLIC_SENTRY_DSN` — inlined by Next.js at build time. Declared as `ARG` in the `builder` stage and passed via `build.args` in `docker-compose.prod.yml`.
-- **Runtime secrets (all others):** `DATABASE_URL`, `AUTH_SECRET`, `ADMIN_JWT_SECRET`, `UPSTASH_REDIS_REST_URL/TOKEN`, `SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `RESEND_API_KEY`, `ENCRYPTION_KEY`, `GOOGLE_CLIENT_ID/SECRET` — injected via `env_file:` only. Never as build args.
+- **Build-time dummies (2):** `DATABASE_URL` and `AUTH_SECRET` are declared as `ARG` with dummy defaults in the `builder` stage. They exist solely to satisfy module-level validation during `next build`'s page data collection phase (next-auth eagerly imports the DB driver). No actual DB connections or auth operations occur. The dummy values do NOT persist in the runner image (verified by grep), and using `ARG` scopes them to the build stage.
+- **Runtime secrets (all others):** `DATABASE_URL`, `AUTH_SECRET`, `ADMIN_JWT_SECRET`, `UPSTASH_REDIS_REST_URL/TOKEN`, `SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `RESEND_API_KEY`, `ENCRYPTION_KEY`, `GOOGLE_CLIENT_ID/SECRET` — injected via `env_file:` only. Never as build args. The real `DATABASE_URL` and `AUTH_SECRET` at runtime come from this file, overriding the build-time dummies.
 - **Compose gotcha:** Docker Compose reads `${VAR}` substitutions from a file literally named `.env` by default — not `.env.local`. Since this project uses `.env.local`, all compose commands must include `--env-file .env.local`. Documented in the README section.
 
 ---
@@ -115,6 +117,21 @@ This change is safe for Vercel — Vercel ignores `output: 'standalone'` and use
 - No local Postgres/Redis containers or Neon Local proxy.
 - No changes to LaTeX/academic report documents.
 - No automatic migration execution in any container entrypoint.
+
+---
+
+## Project-Wide Change: pnpm Overrides Migration
+
+> **This is not Docker plumbing.** Docker forced us to discover that the repo's override config was already incompatible with current pnpm.
+
+During Docker build, `pnpm install --frozen-lockfile` failed with `ERR_PNPM_LOCKFILE_CONFIG_MISMATCH` because pnpm 10.33.0 deprecated reading `overrides` from the `pnpm` field in `package.json`. On the host, this was masked because existing `node_modules` caused pnpm to skip resolution ("Lockfile is up to date, resolution step is skipped"). A fresh clone would hit the same error — Docker just found it first.
+
+**Migration performed:**
+- Moved `pnpm.overrides` (`uuid`, `postcss`, `eslint`) from `package.json` to `pnpm-workspace.yaml`
+- Removed the deprecated `pnpm` key from `package.json`
+- **Verified:** `pnpm install --frozen-lockfile` succeeds on a clean `node_modules` on the host, both before and after the migration (the pre-existing `ignoredBuiltDependencies` behavior is unchanged)
+
+This changes every contributor's dependency resolution path. The overrides are identical — only their location moved — so resolution results are unchanged. But it is a conscious, called-out decision, not a Docker side-effect.
 
 ---
 
