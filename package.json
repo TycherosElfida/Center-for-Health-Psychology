@@ -84,12 +84,5 @@
       "eslint --fix",
       "prettier --write"
     ]
-  },
-  "pnpm": {
-    "overrides": {
-      "uuid": "^14.0.0",
-      "postcss": "^8.5.10",
-      "eslint": "^9"
-    }
   }
 }

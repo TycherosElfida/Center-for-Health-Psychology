@@ -21,6 +21,7 @@ import { useAssessmentSync, restoreSessionFromStorage } from "@/hooks/useAssessm
 import { trpc } from "@/lib/trpc/client";
 
 import { AssessmentHeader } from "./AssessmentHeader";
+import { keyToOptionValue } from "./keyToOptionValue";
 import { ProgressBar } from "./ProgressBar";
 import { LikertScale } from "./LikertScale";
 import { BinaryOptions } from "./BinaryOptions";
@@ -238,14 +239,8 @@ export function AssessmentForm({
 
       const opts = currentQ.options ?? [];
       const optionValues = opts.map((o) => o.value);
-      const keyToValue = (key: string): number | null => {
-        if (key === "0") return 10;
-        const n = parseInt(key, 10);
-        if (n >= 1 && n <= 9) return n;
-        return null;
-      };
-      const value = keyToValue(e.key);
-      if (value !== null && optionValues.includes(value)) {
+      const value = keyToOptionValue(e.key, optionValues);
+      if (value !== null) {
         e.preventDefault();
         handleAnswer(currentQ.id, value, focusedQ);
       }

@@ -222,6 +222,47 @@ export const sessionsRouter = createTRPCRouter({
       return { success: true };
     }
 
+    // ── Freeze guard (FH-1): answers are immutable once a session leaves
+    // in_progress. Without this, a stray autosave could rewrite the raw
+    // answers a stored result was computed from.
+    const session = await ctx.db
+      .select()
+      .from(testSessions)
+      .where(eq(testSessions.id, sessionId))
+      .limit(1)
+      .then((res) => res[0]);
+
+    if (!session) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Session not found" });
+    }
+
+    if (session.status !== "in_progress") {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "Session is no longer in progress; answers are frozen.",
+      });
+    }
+
+    // ── Membership guard (FH-1): every answered question must belong to
+    // the session's test. FK constraints only ensure the question exists
+    // somewhere, not that it is part of this assessment.
+    const testQs = await ctx.db
+      .select({ id: questions.id })
+      .from(questions)
+      .where(eq(questions.testId, session.testId));
+
+    const validQuestionIds = new Set(testQs.map((q) => q.id));
+    const foreignQuestionIds = answerEntries
+      .map((e) => e.questionId)
+      .filter((id) => !validQuestionIds.has(id));
+
+    if (foreignQuestionIds.length > 0) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: `Question(s) do not belong to this assessment: ${foreignQuestionIds.join(", ")}`,
+      });
+    }
+
     await ctx.db
       .insert(answers)
       .values(answerEntries)

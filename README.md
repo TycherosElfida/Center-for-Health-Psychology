@@ -74,6 +74,39 @@ The seed script is idempotent — re-running it skips existing rows. Admin boots
 
 ---
 
+## Running with Docker
+
+Docker provides an alternative to the native local setup above. Two modes are available:
+
+### Prerequisites
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or Docker Engine + Compose plugin on Linux)
+- A populated `.env.local` file (see Environment Variables below)
+
+### Development (hot reload)
+
+```bash
+docker compose --env-file .env.local up --build
+```
+
+This bind-mounts the project directory into the container. Editing files under `src/` triggers Next.js Fast Refresh automatically — no restart needed.
+
+### Production-style (optimized build)
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env.local up --build
+```
+
+Builds an optimized standalone Next.js image suitable for demos and review. Not a replacement for the Vercel production deployment.
+
+### Important notes
+
+- **`--env-file .env.local` is required** on every `docker compose` command. Docker Compose defaults to reading a file named `.env`, but this project uses `.env.local`.
+- **Database migrations are not automatic.** Run `pnpm drizzle-kit migrate` on the host (or `docker compose exec app pnpm drizzle-kit migrate`) before first use.
+- The container connects to the **real Neon database and Upstash Redis** — there are no local database containers.
+
+---
+
 ## Environment Variables
 
 | Variable | Description |

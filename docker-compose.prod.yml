@@ -1,0 +1,28 @@
+# ==============================================================================
+# CHP Digital Assessment Platform — Docker Compose (Production-style)
+# ==============================================================================
+# Builds an optimized Next.js standalone image for local demos and review.
+# NOT a replacement for the Vercel production deployment.
+#
+# Usage:
+#   docker compose -f docker-compose.prod.yml --env-file .env.local up --build
+#
+# NOTE: --env-file .env.local is REQUIRED. Docker Compose reads ${VAR}
+# substitutions from a file named `.env` by default, but this project's
+# convention is `.env.local`. Always pass --env-file explicitly.
+# ==============================================================================
+
+services:
+  app:
+    build:
+      context: .
+      target: runner
+      args:
+        # The only build-time variable — Next.js inlines NEXT_PUBLIC_* at
+        # compile time. Falls back to empty string if unset (non-fatal).
+        NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
+    env_file: .env.local
+    ports:
+      - "3000:3000"
+    # Ensure the container stops cleanly on Ctrl+C
+    init: true

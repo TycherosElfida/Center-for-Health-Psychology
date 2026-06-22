@@ -1,6 +1,8 @@
 import { config } from "dotenv";
 config({ path: ".env.local" });
 
+import { shouldReseedInterpretations } from "./seed-policy";
+
 /** SRQ-29 dimension assignment by question index (0-based) */
 const SRQ29_DIMENSIONS: Record<number, string> = {
   // Q1-Q20 (indices 0-19): Neurotic / Anxiety-Depression
@@ -26,7 +28,7 @@ async function main() {
     await import("../schema/tests");
   const { QUESTIONS } = await import("@/lib/data/questions");
   const { INTERPRETATIONS } = await import("@/lib/data/interpretations");
-  const { eq, and, isNull } = await import("drizzle-orm");
+  const { eq, and, isNull, count } = await import("drizzle-orm");
   const { adminUsers } = await import("../schema/admin");
   const bcrypt = await import("bcryptjs");
 
@@ -306,42 +308,51 @@ async function main() {
     // Required when interpretation structure changes (new dimensions,
     // corrected thresholds). The old rows have different minScore/maxScore
     // values that the idempotency check below won't match.
-    const srq29TestId = slugToId.get("srq29");
-    if (srq29TestId) {
-      const purged = await db
-        .delete(resultInterpretations)
-        .where(eq(resultInterpretations.testId, srq29TestId));
-      console.log(`  🧹 Purged stale SRQ-29 interpretations (${purged.rowCount ?? 0} rows)`);
-    }
+    //
+    // FH-3 freeze guard: a test with recorded sessions is frozen — its
+    // bands are neither purged nor re-inserted, because existing results
+    // were scored against them. Override only via
+    // SEED_FORCE_INTERPRETATIONS=true (scan finding N-5).
+    const { testSessions } = await import("../schema/sessions");
+    const forceReseed = process.env.SEED_FORCE_INTERPRETATIONS === "true";
+    const frozenSlugs = new Set<string>();
 
-    const pss10TestId = slugToId.get("pss10");
-    if (pss10TestId) {
-      const purged = await db
-        .delete(resultInterpretations)
-        .where(eq(resultInterpretations.testId, pss10TestId));
-      console.log(`  🧹 Purged stale PSS-10 interpretations (${purged.rowCount ?? 0} rows)`);
-    }
+    for (const slug of ["srq29", "pss10", "gpius2", "srs"]) {
+      const testId = slugToId.get(slug);
+      if (!testId) continue;
 
-    const gpius2TestId = slugToId.get("gpius2");
-    if (gpius2TestId) {
-      const purged = await db
-        .delete(resultInterpretations)
-        .where(eq(resultInterpretations.testId, gpius2TestId));
-      console.log(`  🧹 Purged stale GPIUS-2 interpretations (${purged.rowCount ?? 0} rows)`);
-    }
+      const [sessionRow] = await db
+        .select({ n: count() })
+        .from(testSessions)
+        .where(eq(testSessions.testId, testId));
+      const sessionCount = Number(sessionRow?.n ?? 0);
 
-    const srsTestId = slugToId.get("srs");
-    if (srsTestId) {
+      if (!shouldReseedInterpretations(sessionCount, forceReseed)) {
+        frozenSlugs.add(slug);
+        console.log(
+          `  🔒 Skipped ${slug} interpretations: ${sessionCount} session(s) recorded ` +
+            `(set SEED_FORCE_INTERPRETATIONS=true to override)`
+        );
+        continue;
+      }
+
       const purged = await db
         .delete(resultInterpretations)
-        .where(eq(resultInterpretations.testId, srsTestId));
-      console.log(`  🧹 Purged stale SRS interpretations (${purged.rowCount ?? 0} rows)`);
+        .where(eq(resultInterpretations.testId, testId));
+      console.log(`  🧹 Purged stale ${slug} interpretations (${purged.rowCount ?? 0} rows)`);
     }
 
     let inserted = 0;
     let skipped = 0;
+    let frozen = 0;
 
     for (const interp of INTERPRETATIONS) {
+      // FH-3: frozen tests keep their live bands untouched.
+      if (frozenSlugs.has(interp.testSlug)) {
+        frozen++;
+        continue;
+      }
+
       const testId = slugToId.get(interp.testSlug);
       if (!testId) {
         throw new Error(
@@ -387,7 +398,10 @@ async function main() {
       inserted++;
     }
 
-    console.log(`  ✅ Interpretations: ${inserted} inserted, ${skipped} skipped (already exist)`);
+    console.log(
+      `  ✅ Interpretations: ${inserted} inserted, ${skipped} skipped (already exist)` +
+        (frozen > 0 ? `, ${frozen} untouched (frozen tests)` : "")
+    );
 
     // ── Seed test_citations ─────────────────────────────────────
     console.log("\n📚 Seeding test_citations...");

@@ -1,0 +1,73 @@
+# ==============================================================================
+# CHP Digital Assessment Platform — .dockerignore
+# ==============================================================================
+# Keep the Docker build context small and prevent secrets from leaking into
+# image layers. Only files needed by the Dockerfile stages should be included.
+# ==============================================================================
+
+# ── Dependencies (rebuilt inside container) ───────────────────────────────────
+node_modules
+.pnp.*
+.yarn
+
+# ── Build artifacts ───────────────────────────────────────────────────────────
+.next
+out
+build
+coverage
+
+# ── Version control ──────────────────────────────────────────────────────────
+.git
+.gitignore
+
+# ── Environment files (secrets — NEVER bake into an image) ───────────────────
+.env*
+!.env.example
+
+# ── IDE / Editor ──────────────────────────────────────────────────────────────
+.vscode
+.idea
+*.swp
+*.swo
+
+# ── AI agent tooling ─────────────────────────────────────────────────────────
+.claude
+.agents
+.agent
+AGENTS.md
+CLAUDE.md
+skills-lock.json
+
+# ── Design references (comments only, never imported at build time) ──────────
+DesignReference
+
+# ── Superpowers workflow docs (internal process, not needed at runtime) ───────
+docs/superpowers
+
+# ── Academic report / LaTeX (not part of the app) ────────────────────────────
+docs/LaporanKP
+
+# ── Husky git hooks (not relevant inside container) ──────────────────────────
+.husky
+
+# ── Misc build artifacts and logs ────────────────────────────────────────────
+*.log
+*.tsbuildinfo
+next-env.d.ts
+*.pem
+.DS_Store
+Thumbs.db
+
+# ── Docker files themselves ──────────────────────────────────────────────────
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# ── Scratch / maintenance scripts ────────────────────────────────────────────
+scratch
+scripts/remediate-*.ts
+scripts/migrate.ts
+scripts/test-trpc-demographics.ts
+audit.ts
+get_thumbs.ts
+scratch_*.ps1
