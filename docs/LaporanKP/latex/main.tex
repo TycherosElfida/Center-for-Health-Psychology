@@ -92,6 +92,14 @@
 \usepackage{xltabular}
 \usepackage{array}
 \usepackage{multirow}
+\usepackage{etoolbox}
+
+% Avoid pdfTeX infinite-shrink diagnostics emitted by longtable page splitting.
+\makeatletter
+\newcommand{\LTsafefill}{\vskip\z@ plus 1fil minus 20pt}
+\patchcmd{\LT@output}{\copy\LT@foot\vss}{\copy\LT@foot\LTsafefill}{}{}
+\patchcmd{\LT@output}{\copy\LT@foot\vss}{\copy\LT@foot\LTsafefill}{}{}
+\makeatother
 
 % -- Microtypography & long-token breaking --
 \usepackage{microtype}
@@ -131,6 +139,12 @@
 
 % ── Hyperlinks (load last) ────────────────────────────────────────────────────
 \usepackage[hidelinks,hypertexnames=false]{hyperref}
+
+% Wider page-number box for appendix labels such as L-10 in generated lists.
+\makeatletter
+\renewcommand{\@pnumwidth}{2.5em}
+\renewcommand{\@tocrmarg}{3em}
+\makeatother
 
 % =============================================================================
 % DOCUMENT
