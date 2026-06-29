@@ -2,6 +2,8 @@
 % 80-lampiran.tex — Lampiran
 % =============================================================================
 \clearpage
+\setcounter{page}{1}
+\renewcommand{\thepage}{L-\arabic{page}}
 \phantomsection
 \addcontentsline{toc}{chapter}{LAMPIRAN}
 
@@ -27,15 +29,15 @@ chpv2/
 |   |   |-- test/[slug]/        # Mesin asesmen
 |   |   |-- results/[scoreId]/  # Halaman hasil
 |   |   +-- tests/              # Katalog tes
-|   |-- __tests__/              # 21 file uji (191 kasus uji)
+|   |-- __tests__/              # 25 file uji (213 kasus uji)
 |   |-- lib/
-|   |   |-- auth/               # Auth.js v5 (pengguna)
+|   |   |-- auth.ts             # Auth.js v5 (pengguna)
 |   |   +-- admin-auth/         # jose JWT (administrator)
 |   +-- server/
 |       |-- schema/          # 14 skema Drizzle (20 tabel)
 |       |-- scoring/            # 3 file scoring engine
 |       +-- trpc/
-|           |-- procedures/     # 17 file prosedur (69 prosedur)
+|           |-- procedures/     # 17 file prosedur (61 prosedur)
 |           +-- router.ts       # Komposisi router
 |-- drizzle.config.ts
 |-- next.config.ts
@@ -67,8 +69,8 @@ Tabel berikut menyajikan seluruh variabel lingkungan yang diperlukan untuk menja
   \texttt{ADMIN\_JWT\_SECRET} & Kunci rahasia JWT admin (minimal 32 karakter) \\
   \texttt{ADMIN\_EMAIL} & Surel \textit{bootstrap} \texttt{super\_admin} (opsional) \\
   \texttt{ADMIN\_PASSWORD} & Kata sandi \textit{bootstrap} \texttt{super\_admin} (opsional) \\
-  \texttt{UPSTASH\_REDIS\_REST\_URL} & URL REST Upstash Redis \\
-  \texttt{UPSTASH\_REDIS\_REST\_TOKEN} & \textit{Token} autentikasi Upstash Redis \\
+%   \texttt{UPSTASH\_REDIS\_REST\_URL} & URL REST Upstash Redis \\
+%   \texttt{UPSTASH\_REDIS\_REST\_TOKEN} & \textit{Token} autentikasi Upstash Redis \\
   \texttt{SENTRY\_DSN} & DSN Sentry untuk pemantauan kesalahan \\
   \texttt{NEXT\_PUBLIC\_SENTRY\_DSN} & DSN Sentry sisi klien \\
   \texttt{SENTRY\_AUTH\_TOKEN} & \textit{Token} autentikasi \textit{build plugin} Sentry \\
@@ -94,3 +96,15 @@ Untuk menjalankan proyek secara lokal, ikuti langkah-langkah berikut:
 \end{enumerate}
 
 Target waktu \textit{setup}: $\leq$ 15 menit untuk pengembang baru (Tujuan KP \#6).
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section*{Lampiran J: ER Diagram Lengkap (20 Tabel)}
+
+Diagram \textit{Entity-Relationship} (ERD) ini menggambarkan struktur keseluruhan 20 tabel basis data Platform Asesmen Digital CHP, yang mencakup klaster utama (asesmen, instrumen, dan hasil) serta klaster administratif (audit, akun admin, dan \textit{rate limiting}).
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{figures/gambar_lampiran_j_er_lengkap.png}
+  \caption{ER Diagram Lengkap Platform Asesmen Digital CHP.}
+  \label{fig:lampiran_j_er_lengkap}
+\end{figure}

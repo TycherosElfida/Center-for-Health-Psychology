@@ -1,7 +1,7 @@
 % =============================================================================
-% 40-bab4.tex — BAB IV IMPLEMENTASI DAN TESTING
+% 40-bab4.tex — BAB IV IMPLEMENTASI DAN PENGUJIAN
 % =============================================================================
-\chapter{IMPLEMENTASI DAN TESTING}
+\chapter{IMPLEMENTASI DAN PENGUJIAN}
 \label{chap:implementasi}
 
 Bab ini memaparkan implementasi sistem berdasarkan perancangan yang telah diuraikan pada Bab~\ref{chap:analisa-perancangan}. Pembahasan mencakup lingkungan pengembangan, implementasi basis data, \textit{scoring engine}, API tRPC, sistem autentikasi, panel administrasi, generasi PDF dan pengiriman surel, pengujian unit, \textit{pipeline} CI/CD, serta \textit{deployment} ke lingkungan produksi.
@@ -14,7 +14,7 @@ Pengembangan Platform CHP dilakukan pada lingkungan lokal dengan spesifikasi per
 
 Konfigurasi TypeScript menggunakan mode \texttt{strict: true} dengan opsi tambahan \texttt{\seqsplit{noUncheckedIndexedAccess}}, \texttt{noUnusedLocals}, dan \texttt{noUnusedParameters} untuk memaksimalkan deteksi kesalahan pada waktu kompilasi. Tiga \textit{path alias} dikonfigurasi untuk menyederhanakan impor modul: \texttt{@/*} untuk direktori \texttt{src/}, \texttt{@/server/*} untuk \texttt{src/server/}, dan \texttt{@/components/*} untuk \texttt{src/components/}.
 
-Seluruh \textit{environment variable} yang diperlukan didokumentasikan dalam \textit{file} \texttt{.env.example} yang berisi 16 variabel konfigurasi, mencakup koneksi basis data (\texttt{DATABASE\_URL}), kunci autentikasi (\texttt{AUTH\_SECRET}, \texttt{ADMIN\_JWT\_SECRET}), konfigurasi layanan pihak ketiga (Upstash Redis, Sentry, Resend), dan kunci enkripsi (\texttt{ENCRYPTION\_KEY} sepanjang 64 karakter heksadesimal untuk AES-256-GCM).
+Seluruh \textit{environment variable} yang diperlukan didokumentasikan dalam \textit{file} \texttt{.env.example} yang berisi 16 variabel konfigurasi, mencakup koneksi basis data (\texttt{DATABASE\_URL}), kunci autentikasi (\texttt{AUTH\_SECRET}, \texttt{ADMIN\_JWT\_SECRET}), konfigurasi layanan pihak ketiga (Sentry, Resend), dan kunci enkripsi (\texttt{ENCRYPTION\_KEY} sepanjang 64 karakter heksadesimal untuk AES-256-GCM).
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Implementasi Basis Data}
@@ -26,7 +26,7 @@ Seluruh 20 tabel dan 7 \textit{enum} PostgreSQL berhasil di-\textit{deploy} ke l
 
 Relasi antar-tabel diimplementasikan menggunakan \texttt{defineRelations()} dari Drizzle ORM v2, yang memisahkan definisi relasi dari definisi kolom. Pola ini memungkinkan kueri relasional (\textit{relational queries}) yang menghasilkan SQL \texttt{JOIN} secara otomatis tanpa memerlukan penulisan kueri manual.
 
-Data awal (\textit{seed data}) untuk empat instrumen psikometri, yaitu PSS-10, GPIUS-2, SRS, dan SRQ-29, disiapkan melalui skrip \textit{seeding} yang memasukkan definisi tes, butir soal, opsi jawaban, dan rentang interpretasi. Skrip ini memastikan lingkungan pengembangan baru dapat langsung memiliki data yang cukup untuk pengujian.
+Data awal (\textit{seed data}) untuk empat instrumen psikometri, yaitu PSS-10, GPIUS-2, SRS, dan SRQ-29, disiapkan melalui skrip \textit{seeding} yang memasukkan definisi tes, butir soal, opsi jawaban, dan rentang interpretasi (yang diturunkan dari manual instrumen asli atau batas proporsional empiris sesuai rujukan ahli materi). Skrip ini memastikan lingkungan pengembangan baru dapat langsung memiliki data yang cukup untuk pengujian.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Implementasi \textit{Scoring Engine}}
@@ -49,14 +49,41 @@ Fungsi \texttt{reverseScore(rawValue, options)} mengimplementasikan pembalikan s
 Fungsi \texttt{computeScore(input)} adalah inti dari \textit{scoring engine}. Fungsi ini menerima masukan berupa jawaban peserta beserta metadata soal, dan menghasilkan objek hasil yang mencakup:
 
 \begin{enumerate}[leftmargin=2cm]
-  \item Skor total (\texttt{totalScore}): penjumlahan seluruh skor butir soal setelah pembalikan dan pembobotan.
-  \item Skor per dimensi (\texttt{dimensionScores}): pengelompokan skor berdasarkan kolom \texttt{dimension} pada setiap butir soal.
+  \item Skor total (\texttt{totalScore}): penjumlahan seluruh skor butir soal setelah pembalikan dan pembobotan. Formula dasarnya adalah $S_{total} = \sum_{i=1}^{n} (v_i \times w_i)$, di mana $v_i$ adalah nilai jawaban dan $w_i$ adalah bobot soal.
+  \item Skor per dimensi (\texttt{dimensionScores}): agregasi dimensional dengan menjumlahkan butir soal pada masing-masing dimensi secara terpisah.
+  \item Deteksi klaster biner (\textit{binary-cluster}): pada instrumen skrining seperti SRQ-29, komputasi dilakukan berdasarkan ambang batas jawaban ``Ya'' (misalnya, $S_{GME} \geq 6$).
   \item Skor mentah per butir soal (\texttt{rawScores}): skor sebelum pembalikan untuk keperluan audit.
   \item Skor terhitung per butir soal (\texttt{computedScores}): skor setelah pembalikan dan pembobotan.
-  \item Skor maksimum yang mungkin (\texttt{maxPossibleScore}): dihitung berdasarkan bobot dan opsi tertinggi.
+  \item Skor maksimum yang mungkin (\texttt{maxPossibleScore}): dihitung berdasarkan bobot dan nilai opsi tertinggi.
 \end{enumerate}
 
-Untuk instrumen GPIUS-2 yang menggunakan metode \textit{Deficient Self-Regulation} (DSR), \texttt{computeScore} mengimplementasikan \textit{rollup} orde kedua: setelah menghitung skor per subskala, skor total dihitung sebagai penjumlahan subskala DSR yang merupakan gabungan dari beberapa dimensi primer.
+Untuk instrumen GPIUS-2 yang menggunakan metode \textit{Deficient Self-Regulation} (DSR), \texttt{computeScore} mengimplementasikan \textit{rollup} orde kedua: skor DSR merupakan agregasi dari dua subskala primer ($S_{DSR} = S_{CP} + S_{CU}$), sedangkan skor total asesmen (\texttt{totalScore}) tetap merupakan penjumlahan keseluruhan 15 butir soal ($S_{total} = \sum_{i=1}^{15} v_i$). Penanganan jawaban kosong (\textit{missing-answer}) ditolak sebelum komputasi melalui \texttt{validateCompleteness}, sehingga mesin penskoran mengasumsikan data masukan lengkap. Batas rentang interpretasi (\textit{interpretation-boundary inclusivity}) diproses secara inklusif ($min \leq score \leq max$).
+
+Sebagai referensi untuk reproduktibilitas ilmiah, berikut adalah spesifikasi algoritma \textit{scoring engine} (Pseudocode~\ref{alg:scoring}):
+
+\begin{algorithm}[htbp]
+\caption{Algoritma Komputasi Skor (\texttt{computeScore})}
+\label{alg:scoring}
+\begin{algorithmic}[1]
+\REQUIRE $answers$ (Map ID Soal $\rightarrow$ Nilai Jawaban), $questions$ (Daftar Metadata Soal)
+\ENSURE \texttt{totalScore}, \texttt{dimensionScores}, \texttt{rawScores}, \texttt{computedScores}
+\STATE $total \gets 0$, $dimScores \gets \{\}$
+\FOR{\textbf{each} $q \in questions$}
+  \STATE $val \gets answers[q.id]$
+  \IF{$q.isReversed$}
+    \STATE $scaleMax \gets \max(q.options)$, $scaleMin \gets \min(q.options)$
+    \STATE $val \gets (scaleMax - val) + scaleMin$
+  \ENDIF
+  \STATE $finalVal \gets val \times q.weight$
+  \STATE $total \gets total + finalVal$
+  \STATE $dimScores[q.dimension] \gets dimScores[q.dimension] + finalVal$
+\ENDFOR
+\IF{instrument \textbf{is} GPIUS-2}
+  \STATE $dimScores[\text{'DSR'}] \gets dimScores[\text{'CP'}] + dimScores[\text{'CU'}]$
+\ENDIF
+\RETURN $total, dimScores$
+\end{algorithmic}
+\end{algorithm}
 
 \subsection{Fungsi \texttt{lookupInterpretation}}
 
@@ -73,7 +100,7 @@ Empat instrumen psikometri berhasil dikonfigurasi pada platform:
 \begin{enumerate}[leftmargin=2cm]
   \item \textbf{PSS-10} (\textit{Perceived Stress Scale}): 10 butir soal, skala Likert 0--4, dua subskala (ketidakberdayaan dan efikasi diri), dengan 4 butir soal terbalik.
   \item \textbf{GPIUS-2} (\textit{Generalized Problematic Internet Use Scale} 2): 15 butir soal, skala Likert 1--5, 5 subskala dengan \textit{rollup} DSR orde kedua.
-  \item \textbf{SRS} (\textit{Simplified Resilience Scale}): 11 butir soal, skala Likert 1--6, 3 subskala.
+  \item \textbf{SRS} (\textit{Simplified Resilience Scale}): 11 butir soal, skala Likert 1--6, 3 aspek deskriptif.
   \item \textbf{SRQ-29} (\textit{Self-Reporting Questionnaire}): 29 butir soal, jawaban biner (Ya/Tidak), 4 domain skrining.
 \end{enumerate}
 
@@ -81,7 +108,7 @@ Empat instrumen psikometri berhasil dikonfigurasi pada platform:
 \section{Implementasi API tRPC}
 \label{sec:impl-trpc}
 
-Seluruh 69 prosedur tRPC diimplementasikan dalam 17 \textit{file} prosedur yang diorganisasi ke dalam 16 \textit{router namespace}. Setiap prosedur mendefinisikan skema masukan menggunakan Zod dan dihubungkan ke salah satu dari lima tingkat \textit{middleware} autentikasi.
+Seluruh 61 prosedur tRPC diimplementasikan dalam 17 \textit{file} prosedur yang diorganisasi ke dalam 16 \textit{router namespace}. Setiap prosedur mendefinisikan skema masukan menggunakan Zod dan dihubungkan ke salah satu dari lima tingkat \textit{middleware} autentikasi.
 
 \subsection{Komposisi \textit{Router}}
 
@@ -127,11 +154,11 @@ Subsistem autentikasi admin diimplementasikan secara mandiri menggunakan pustaka
 
 \subsection{\textit{Rate Limiting} pada \textit{Login} Admin}
 
-Modul \texttt{rate-limiter.ts} mengimplementasikan \textit{rate limiting in-memory} berlapis dua:
+Modul \texttt{rate-limiter.ts} mengimplementasikan \textit{rate limiting in-memory} berlapis dua (dengan catatan bahwa status \textit{in-memory} bersifat volatil pada arsitektur \textit{serverless} dan dirancang sebagai pengamanan dasar sebelum implementasi Redis persisten pada iterasi masa depan):
 
 \begin{enumerate}[leftmargin=2cm]
   \item \textbf{Berbasis IP}: 5 kegagalan dalam jendela waktu 5 menit memicu penundaan (\textit{cooldown}) yang pulih secara otomatis setelah jendela berakhir.
-  \item \textbf{Berbasis akun}: 10 kegagalan kumulatif mengunci akun secara permanen, memerlukan intervensi \texttt{super\_admin} melalui prosedur \texttt{unlockAdmin}. Mekanisme ini disimpan dalam \textit{in-memory} yang memadai untuk skala kurang dari 10 pengguna admin.
+  \item \textbf{Berbasis akun}: 10 kegagalan kumulatif mengunci akun secara permanen, memerlukan intervensi \texttt{super\_admin} melalui prosedur \texttt{unlockAdmin}. Mekanisme ini disimpan dalam memori (\textit{in-memory}). Meskipun memadai pada lingkungan lokal, pendekatan ini memiliki keterbatasan pada lingkungan \textit{serverless} (seperti Vercel) karena status memori akan diatur ulang (\textit{reset}) setiap kali fungsi instansiasi baru berjalan.
 \end{enumerate}
 
 % ─────────────────────────────────────────────────────────────────────────────
@@ -157,13 +184,13 @@ Panel administrasi diakses melalui rute \texttt{/admin/(dashboard)/*} dan dilind
 
 Generasi laporan hasil asesmen menggunakan \texttt{@react-pdf/renderer} versi 4.5.1, yang memungkinkan pembuatan dokumen PDF menggunakan komponen React. Laporan yang dihasilkan mencakup informasi tes, skor total, skor per dimensi, label interpretasi, dan rekomendasi.
 
-Pengiriman surel menggunakan layanan Resend versi 6.12.2, yang menyediakan API transaksional untuk pengiriman surel dari lingkungan \textit{serverless}. Alur lengkap, dari penerimaan permintaan melalui prosedur \texttt{approve} pada \textit{router} \texttt{reportRequests}, generasi PDF, hingga pengiriman surel, dieksekusi secara atomik dalam satu prosedur tRPC.
+Pengiriman surel menggunakan layanan Resend versi 6.12.2, yang menyediakan API transaksional untuk pengiriman surel dari lingkungan \textit{serverless}. Alur lengkap, dari penerimaan permintaan melalui prosedur \texttt{approve} pada \textit{router} \texttt{reportRequests}, generasi PDF, hingga pengiriman surel, diorkestrasi secara sekuensial dalam satu prosedur tRPC (bukan atomik berbasis transaksi basis data), dengan mengandalkan penjaga idempotensi untuk mencegah pengiriman berulang.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Pengujian Unit}
 \label{sec:impl-unit-test}
 
-Pengujian unit dilaksanakan menggunakan Vitest versi 4.1.5 dengan konfigurasi yang didefinisikan dalam \texttt{vitest.config.ts}. Total 191 kasus uji (\textit{test cases}) ditulis dalam 21 \textit{file} uji yang diorganisasi berdasarkan modul. Tabel~\ref{tab:inventaris-test} menyajikan inventaris lengkap.
+Pengujian unit dilaksanakan menggunakan Vitest versi 4.1.5 dengan konfigurasi yang didefinisikan dalam \texttt{vitest.config.ts}. Total 213 kasus uji (\textit{test cases}) ditulis dalam 25 \textit{file} uji yang diorganisasi berdasarkan modul. Tabel~\ref{tab:inventaris-test} menyajikan inventaris lengkap.
 
 \begin{longtable}{@{}p{6.5cm} c@{}}
   \caption{Inventaris \textit{File} Pengujian Unit}
@@ -182,7 +209,7 @@ Pengujian unit dilaksanakan menggunakan Vitest versi 4.1.5 dengan konfigurasi ya
   \texttt{scoring/engine.test.ts} & 20 \\
   \texttt{scoring/reverseScore.test.ts} & 20 \\
   \texttt{scoring/validation.test.ts} & 19 \\
-  \texttt{\seqsplit{admin-questions/admin-questions.test.ts}} & 12 \\
+  \texttt{\seqsplit{admin-questions/admin-questions.test.ts}} & 15 \\
   \texttt{\seqsplit{admin-accounts/admin-accounts.test.ts}} & 10 \\
   \texttt{\seqsplit{scoring/lookupInterpretation.test.ts}} & 9 \\
   \texttt{encryption.test.ts} & 9 \\
@@ -198,9 +225,13 @@ Pengujian unit dilaksanakan menggunakan Vitest versi 4.1.5 dengan konfigurasi ya
   \texttt{\seqsplit{admin-accounts/admin-user-accounts.test.ts}} & 2 \\
   \texttt{\seqsplit{schema/admin-tests-guards.test.ts}} & 2 \\
   \texttt{schema/admin-schema.test.ts} & 2 \\
+  \texttt{keyToOptionValue.test.ts} & 6 \\
+  \texttt{\seqsplit{save-progress-guard.test.ts}} & 5 \\
+  \texttt{export-utils.test.ts} & 4 \\
+  \texttt{seed-policy.test.ts} & 4 \\
   \texttt{smoke.test.ts} & 1 \\
   \midrule
-  \textbf{Total} & \textbf{191} \\
+  \textbf{Total} & \textbf{213} \\
 \end{longtable}
 
 Modul \textit{scoring engine} diuji dengan 59 kasus uji yang tersebar dalam tiga \textit{file} (\texttt{engine.test.ts}, \texttt{reverseScore.test.ts}, \texttt{validation.test.ts}), mencakup skenario penjumlahan sumatif, pembalikan skor, pengelompokan dimensional, penanganan masukan kosong, validasi batas opsi, dan verifikasi kelengkapan jawaban.
@@ -254,7 +285,7 @@ Alur asesmen peserta dilengkapi dengan visualisasi hasil secara \textit{real-tim
 Pengguna dapat mengajukan permintaan laporan melalui formulir tervalidasi; permintaan tersimpan pada tabel \texttt{report\_requests} untuk diproses administrator. Sistem menyediakan ekspor data dalam format CSV dan XLSX menggunakan pustaka SheetJS, dengan mekanisme \textit{filtered download} yang memastikan data yang diunduh bersifat dinamis mengikuti filter aktif (jenis kelamin, provinsi, kota, rentang usia, rentang skor, kategori, dan rentang tanggal). Setiap pengguna memiliki laporan komprehensif mencakup visualisasi data pribadi, analisis per-dimensi, dan interpretasi mendetail. Hasil mendalam dapat diunduh dalam format PDF (melalui \texttt{@react-pdf/renderer}), XLSX, dan CSV.
 
 \textbf{D.~Dasbor dan Visualisasi Admin.}
-Panel administrasi menyajikan dasbor dengan visualisasi agregat yang mendukung filter berdasarkan jenis instrumen dan rentang tanggal pada dasbor utama, serta filter lanjutan (pencarian nama, jenis kelamin, provinsi, kota, usia, skor, kategori, dan tanggal) pada halaman data hasil per instrumen. Dasbor antrean permintaan laporan memungkinkan administrator melihat, menyetujui, atau menolak permintaan; persetujuan memicu generasi PDF dan pengiriman surel secara atomik. Komponen grafik dilengkapi fitur unduh gambar menggunakan pustaka \texttt{html-to-image} (fungsi \texttt{toPng}) yang mengkonversi elemen DOM ke format PNG dengan resolusi 2$\times$ \textit{pixel ratio}. Kolom tabel hasil mendukung pengurutan dinamis \textit{ascending} dan \textit{descending} pada enam parameter (nama, jenis kelamin, usia, skor, kategori, dan tanggal tes) baik pada sisi server melalui kueri Drizzle ORM maupun pada sisi klien.
+Panel administrasi menyajikan dasbor dengan visualisasi agregat yang mendukung filter berdasarkan jenis instrumen dan rentang tanggal pada dasbor utama, serta filter lanjutan (pencarian nama, jenis kelamin, provinsi, kota, usia, skor, kategori, dan tanggal) pada halaman data hasil per instrumen. Dasbor antrean permintaan laporan memungkinkan administrator melihat, menyetujui, atau menolak permintaan; persetujuan memicu generasi PDF dan pengiriman surel yang diorkestrasi secara sekuensial. Komponen grafik dilengkapi fitur unduh gambar menggunakan pustaka \texttt{html-to-image} (fungsi \texttt{toPng}) yang mengkonversi elemen DOM ke format PNG dengan resolusi 2$\times$ \textit{pixel ratio}. Kolom tabel hasil mendukung pengurutan dinamis \textit{ascending} dan \textit{descending} pada enam parameter (nama, jenis kelamin, usia, skor, kategori, dan tanggal tes) baik pada sisi server melalui kueri Drizzle ORM maupun pada sisi klien. Perlu dicatat bahwa data historis hasil asesmen mungkin memiliki heterogenitas skema (seperti ketiadaan \texttt{result\_label} atau \texttt{dimensionMaxScores}) akibat evolusi struktur basis data pada fase awal pengembangan, yang ditangani secara tangguh oleh antarmuka.
 
 \textbf{E.~Manajemen dan Keamanan.}
 Administrator dapat melakukan operasi CRUD penuh atas tes, butir soal, opsi jawaban, dan rentang interpretasi melalui modul manajemen asesmen yang dilengkapi mekanisme \textit{structural lock}. Setiap modifikasi administratif direkam dalam tabel \texttt{audit\_logs} mencakup aktor, aksi, entitas, serta nilai sebelum dan sesudah. Sistem menerapkan RBAC empat peran (\texttt{super\_admin}, \texttt{admin}, \texttt{psychiatrist}, \texttt{researcher}) dengan lima tingkat \textit{middleware} otorisasi: \texttt{publicProcedure} tanpa autentikasi, \texttt{protectedProcedure} untuk sesi Auth.js, \texttt{\seqsplit{adminProcedure}} untuk seluruh peran admin, \texttt{adminMutationProcedure} yang membatasi operasi tulis kepada \texttt{super\_admin} dan \texttt{admin}, serta \texttt{superAdminProcedure} yang eksklusif untuk \texttt{super\_admin}. Peran \texttt{psychiatrist} dan \texttt{researcher} memperoleh akses baca saja (\textit{read-only}) terhadap data hasil dan statistik. Modul \textit{Account Management} memungkinkan \textit{Super Admin} untuk membuat, memperbarui, dan mengatur hak akses akun administrator.
