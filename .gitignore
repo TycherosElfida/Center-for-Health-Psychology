@@ -52,13 +52,14 @@ next-env.d.ts
 /docs/**
 !/docs/keterbatasan-platform-chp.md
 !/docs/clinical-audits/
+!/docs/screenshots/
+!/docs/screenshots/**
 docs/superpowers/
 docs/LaporanKP/
 !docs/LaporanKP/
 !docs/LaporanKP/latex/
 !docs/LaporanKP/latex/**
 # Ignore compiled LaTeX build artifacts and PDFs
-docs/LaporanKP/latex/**/*.pdf
 docs/LaporanKP/latex/**/*.aux
 docs/LaporanKP/latex/**/*.log
 docs/LaporanKP/latex/**/*.out
