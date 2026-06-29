@@ -63,6 +63,8 @@ docs/LaporanKP/latex/**/*.aux
 docs/LaporanKP/latex/**/*.log
 docs/LaporanKP/latex/**/*.out
 docs/LaporanKP/latex/**/*.toc
+docs/LaporanKP/latex/**/*.lot
+docs/LaporanKP/latex/**/*.lof
 docs/LaporanKP/latex/**/*.fls
 docs/LaporanKP/latex/**/*.fdb_latexmk
 docs/LaporanKP/latex/**/*.synctex.gz
