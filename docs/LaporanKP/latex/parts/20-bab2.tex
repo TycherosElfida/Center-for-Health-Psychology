@@ -242,15 +242,22 @@ Dalam konteks platform asesmen psikometri, pengujian validasi memiliki signifika
 
 Vitest adalah \textit{framework unit testing} berbasis Vite yang dirancang khusus untuk ekosistem TypeScript/JavaScript modern. Vitest menggunakan model eksekusi yang kompatibel dengan Jest namun dengan kecepatan yang lebih tinggi berkat eksekusi langsung tanpa proses kompilasi TypeScript berulang.
 
-% [C5] Listed all 5 exported functions
-Modul \textit{scoring engine} menjadi prioritas utama \textit{unit testing} pada Platform CHP. \textit{Scoring engine} terdiri atas tiga \textit{file} dengan lima fungsi yang diekspor:
+% [C5] Listed all 5 exported functions; [R1] Separated pure/impure layers
+Modul \textit{scoring engine} menjadi prioritas utama \textit{unit testing} pada Platform CHP. Pipeline penilaian terdiri atas dua lapisan:
+
+\textbf{Inti Penilaian Murni} (4 fungsi, 0 dependensi eksternal):
 
 \begin{enumerate}[leftmargin=2cm]
   \item \texttt{reverseScore(rawValue, options)}: menghitung skor terbalik secara agnostik skala: $(\text{scaleMax} - \text{rawValue}) + \text{scaleMin}$.
   \item \texttt{computeScore(input)}: fungsi inti yang menangani pembalikan butir soal, penjumlahan berbobot, pengelompokan dimensional, \textit{rollup} orde kedua untuk DSR (GPIUS-2), dan komputasi \texttt{maxPossibleScore}.
-  \item \texttt{lookupInterpretation(testId, totalScore, dimension?)} : mengkueri tabel \texttt{result\_interpretations} untuk pemetaan skor ke label, deskripsi, rekomendasi, dan tingkat keparahan.
-  \item \texttt{validateAnswerValues(answers, questions)} : memvalidasi bahwa setiap nilai jawaban berada dalam batas opsi yang valid. Fungsi murni tanpa akses basis data.
-  \item \texttt{validateCompleteness(answers, questions)} : memvalidasi bahwa semua butir soal wajib telah dijawab. Fungsi murni tanpa akses basis data.
+  \item \texttt{validateAnswerValues(answers, questions)}: memvalidasi bahwa setiap nilai jawaban berada dalam batas opsi yang valid.
+  \item \texttt{validateCompleteness(answers, questions)}: memvalidasi bahwa semua butir soal wajib telah dijawab.
+\end{enumerate}
+
+\textbf{Lapisan Interpretasi} (1 fungsi, dependensi basis data + Sentry):
+
+\begin{enumerate}[leftmargin=2cm]
+  \item \texttt{lookupInterpretation(testId, totalScore, dimension?)}: mengkueri tabel \texttt{result\_interpretations} untuk pemetaan skor ke label, deskripsi, rekomendasi, dan tingkat keparahan. Fungsi ini \textit{tidak murni} karena mengakses basis data dan mencatat peringatan ke Sentry pada kasus \textit{interpretation miss}.
 \end{enumerate}
 
 Tabel~\ref{tab:skenario-unit-test} menampilkan contoh skenario \textit{unit test} yang diimplementasikan.

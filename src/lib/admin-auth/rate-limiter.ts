@@ -1,11 +1,23 @@
 /**
- * CHP Platform — Admin Login Rate Limiter (Hybrid)
+ * CHP Platform — Admin Login Rate Limiter (Hybrid, In-Memory)
  *
  * IP-based: 5 failures → 5 min cooldown (self-recovering)
  * Account-based: 10 failures → locked (requires super_admin unlock)
  *
- * In-memory — acceptable for <10 admin users.
- * State resets on server restart.
+ * ⚠ LIMITATION — SERVERLESS DEPLOYMENT (Reviewer Finding 10):
+ * This limiter stores state in process-local Maps. On Vercel/serverless:
+ *   - State does NOT persist across cold starts or instance restarts
+ *   - Concurrent instances maintain independent counters
+ *   - An attacker can bypass the limiter by triggering new instances
+ *
+ * This provides best-effort per-instance brute-force protection only.
+ * It is acceptable for the current admin user base (<10 users) because:
+ *   1. bcrypt cost factor + timing-safe DUMMY_HASH add ~300ms latency per attempt
+ *   2. The Upstash Redis IP-level rate limiter (middleware layer) provides a
+ *      persistent first line of defense for all API routes
+ *
+ * TODO: Migrate to Upstash Redis for persistent cross-instance account locking
+ * when the admin user base grows or the threat model requires stronger guarantees.
  */
 
 const IP_MAX_ATTEMPTS = 5;

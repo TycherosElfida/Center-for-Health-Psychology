@@ -252,6 +252,26 @@ export const reportRequestsRouter = createTRPCRouter({
 
   /**
    * Approve a report request: generate PDF, send email, update status.
+   *
+   * ⚠ NON-ATOMIC WORKFLOW (Reviewer Finding 13):
+   * Steps run sequentially without a database transaction wrapping the
+   * external email call. Known failure modes:
+   *
+   *   1. Email sent, DB update fails → Report delivered but status stays
+   *      "pending"/"reviewed". Admin can re-approve safely (idempotency
+   *      guard returns { alreadySent: true } on status === "sent").
+   *      However, if DB update failed, status won't be "sent" — admin
+   *      must manually verify delivery via Resend dashboard and re-try.
+   *
+   *   2. PDF assembly fails → No email sent, no status change. Safe to retry.
+   *
+   *   3. Email service error → No status change. Safe to retry.
+   *
+   * Current mitigation: the "sent" idempotency guard (line below) prevents
+   * duplicate sends if re-approval is attempted after a successful send.
+   *
+   * TODO: Consider an intermediate "sending" status and/or outbox pattern
+   * for stronger delivery guarantees when volume grows.
    */
   approve: adminProcedure
     .input(z.object({ requestId: z.string().uuid() }))

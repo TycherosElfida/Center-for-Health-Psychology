@@ -14,7 +14,8 @@ Pengembangan Platform CHP dilakukan pada lingkungan lokal dengan spesifikasi per
 
 Konfigurasi TypeScript menggunakan mode \texttt{strict: true} dengan opsi tambahan \texttt{\seqsplit{noUncheckedIndexedAccess}}, \texttt{noUnusedLocals}, dan \texttt{noUnusedParameters} untuk memaksimalkan deteksi kesalahan pada waktu kompilasi. Tiga \textit{path alias} dikonfigurasi untuk menyederhanakan impor modul: \texttt{@/*} untuk direktori \texttt{src/}, \texttt{@/server/*} untuk \texttt{src/server/}, dan \texttt{@/components/*} untuk \texttt{src/components/}.
 
-Seluruh \textit{environment variable} yang diperlukan didokumentasikan dalam \textit{file} \texttt{.env.example} yang berisi 16 variabel konfigurasi, mencakup koneksi basis data (\texttt{DATABASE\_URL}), kunci autentikasi (\texttt{AUTH\_SECRET}, \texttt{ADMIN\_JWT\_SECRET}), konfigurasi layanan pihak ketiga (Sentry, Resend), dan kunci enkripsi (\texttt{ENCRYPTION\_KEY} sepanjang 64 karakter heksadesimal untuk AES-256-GCM).
+% [R8] Fixed env var count: 14 active + 2 optional bootstrap
+Seluruh \textit{environment variable} yang diperlukan didokumentasikan dalam \textit{file} \texttt{.env.example} yang berisi 14 variabel konfigurasi aktif dan 2 variabel opsional untuk \textit{bootstrap} akun admin awal (dikomentari secara \textit{default}), mencakup koneksi basis data (\texttt{DATABASE\_URL}), kunci autentikasi (\texttt{AUTH\_SECRET}, \texttt{ADMIN\_JWT\_SECRET}), konfigurasi layanan pihak ketiga (Sentry, Resend), dan kunci enkripsi (\texttt{ENCRYPTION\_KEY} sepanjang 64 karakter heksadesimal untuk AES-256-GCM).
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Implementasi Basis Data}
@@ -76,7 +77,10 @@ Sebagai referensi untuk reproduktibilitas ilmiah, berikut adalah spesifikasi alg
   \ENDIF
   \STATE $finalVal \gets val \times q.weight$
   \STATE $total \gets total + finalVal$
-  \STATE $dimScores[q.dimension] \gets dimScores[q.dimension] + finalVal$
+  % [R2] Fixed: null-coalesce and null-dimension guard
+  \IF{$q.dimension \neq \text{null}$}
+    \STATE $dimScores[q.dimension] \gets (dimScores[q.dimension] \mathbin{??} 0) + finalVal$
+  \ENDIF
 \ENDFOR
 \IF{instrument \textbf{is} GPIUS-2}
   \STATE $dimScores[\text{'DSR'}] \gets dimScores[\text{'CP'}] + dimScores[\text{'CU'}]$
@@ -85,9 +89,10 @@ Sebagai referensi untuk reproduktibilitas ilmiah, berikut adalah spesifikasi alg
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{Fungsi \texttt{lookupInterpretation}}
+% [R1] Explicitly classify as impure (DB + Sentry dependency)
+\subsection{Fungsi \texttt{lookupInterpretation} (Lapisan Interpretasi)}
 
-Fungsi \texttt{lookupInterpretation(testId, totalScore, dimension?)} mengkueri tabel \texttt{result\_interpretations} untuk memetakan skor numerik ke label interpretasi yang dapat dibaca manusia. Fungsi ini mengembalikan label, deskripsi, rekomendasi, dan tingkat keparahan (\textit{severity level}). Pada kasus di mana tidak ditemukan rentang yang sesuai (\textit{interpretation miss}), fungsi mencatat peringatan ke Sentry tanpa melempar kesalahan, sehingga hasil asesmen tetap tersedia meskipun tanpa interpretasi.
+Berbeda dengan empat fungsi inti penilaian yang bersifat murni, \texttt{\seqsplit{lookupInterpretation(testId, totalScore, dimension?)}} merupakan fungsi \textit{tidak murni} yang mengkueri tabel \texttt{result\_interpretations} untuk memetakan skor numerik ke label interpretasi yang dapat dibaca manusia. Fungsi ini mengembalikan label, deskripsi, rekomendasi, dan tingkat keparahan (\textit{severity level}). Pada kasus di mana tidak ditemukan rentang yang sesuai (\textit{interpretation miss}), fungsi mencatat peringatan ke Sentry tanpa melempar kesalahan, sehingga hasil asesmen tetap tersedia meskipun tanpa interpretasi.
 
 \subsection{Fungsi Validasi}
 

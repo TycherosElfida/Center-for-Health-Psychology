@@ -116,7 +116,7 @@ Pelaksanaan KP ini memiliki enam tujuan yang dirumuskan menggunakan pendekatan S
   2 & Meng\-implementasikan \textit{scoring engine} modular otomatis untuk perhitungan sumatif, berbobot, terbalik, dimensional, klaster biner, dan agregasi hirarkis & Skor komputasi sesuai nilai referensi manual; \textit{engine} diuji dengan 59 kasus uji & Selesai: Fase 1B (Minggu 3--6) \\[0.5em]
   3 & Menyajikan umpan balik visual instan berupa skor total, \textit{breakdown} dimensi, dan grafik & Halaman hasil ter-\textit{render} dalam dua detik setelah pengiriman tes & Selesai: Fase 1B (Minggu 5--6) \\[0.5em]
   4 & Membangun fungsionalitas ekspor data berkualitas riset dalam format CSV & Prosedur \texttt{\seqsplit{adminResults.export}} dengan batas 5000 baris, mencakup jawaban per butir soal & Selesai: Fase 1C (Minggu 7--10) \\[0.5em]
-  5 & Mengembangkan panel administrator dengan RBAC & Tim psikologi dapat membuat, mengkonfigurasi, dan mempublikasikan instrumen baru tanpa intervensi pengembang; empat peran admin & Selesai: Fase 1C (Minggu 7--10) \\[0.5em]
+  5 & Mengembangkan panel administrator dengan RBAC & Tim psikologi dapat membuat, mengonfigurasi, dan mempublikasikan instrumen baru tanpa intervensi pengembang; empat peran admin & Selesai: Fase 1C (Minggu 7--10) \\[0.5em]
   6 & Memastikan serah terima sistem yang berkelanjutan dengan dokumentasi komprehensif & Pengembang baru dapat \textit{clone}, \textit{setup}, dan menjalankan proyek secara lokal dalam waktu 15 menit & Selesai: Fase 1D (Minggu 11--13) \\
 \end{xltabular}
 
@@ -143,7 +143,8 @@ Pekerjaan yang termasuk dalam ruang lingkup KP penulis adalah:
   \item Implementasi \textit{scoring engine} modular yang mendukung algoritma penilaian sumatif, berbobot, terbalik (\textit{reversed}), dimensional, klaster biner, dan agregasi hirarkis (DSR), sepenuhnya dikonfigurasi melalui basis data.
   \item Pengembangan prosedur API berbasis tRPC untuk manajemen sesi asesmen, penyimpanan jawaban, komputasi skor, autentikasi administrator, dan manajemen instrumen.
   \item Implementasi sistem autentikasi ganda: Auth.js v5 untuk pengguna publik dan JWT mandiri melalui jose untuk panel administrator, dengan \textit{Role-Based Access Control} (RBAC) lima tingkat.
-  \item Pengujian komprehensif mencakup \textit{unit test} pada \textit{scoring engine} dan prosedur API, \textit{integration test} prosedur API, serta pengujian keamanan dasar menggunakan \textit{checklist} OWASP \textit{Top Ten}.
+  % [R9] Scoped testing claim to unit and procedure level
+  \item Pengujian pada level unit dan prosedur, mencakup \textit{unit test} pada \textit{scoring engine} dan prosedur API, \textit{integration test} prosedur API, serta pengujian keamanan dasar menggunakan \textit{checklist} OWASP \textit{Top Ten}. Pengujian \textit{end-to-end} otomatis dan uji beban merupakan pekerjaan lanjutan.
 \end{enumerate}
 
 Pekerjaan yang tidak termasuk dalam ruang lingkup KP ini adalah:

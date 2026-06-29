@@ -26,7 +26,7 @@ export const consents = pgTable("consents", {
     .notNull()
     .unique(),
   tosAccepted: boolean("tos_accepted").notNull(),
-  researchOptIn: boolean("research_opt_in").default(true).notNull(),
+  researchOptIn: boolean("research_opt_in").default(false).notNull(),
   marketingOptIn: boolean("marketing_opt_in").default(false).notNull(),
   consentVersion: text("consent_version").notNull(),
   ipHash: text("ip_hash").notNull(),

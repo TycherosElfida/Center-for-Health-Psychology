@@ -186,7 +186,7 @@ Lapisan aplikasi terdiri atas empat modul utama:
 
 \begin{enumerate}[leftmargin=2cm]
   \item \textit{Router} tRPC (16 \textit{namespace}) yang mengekspos 61 prosedur API.
-  \item \textit{Scoring engine} (\texttt{computeScore}, \texttt{reverseScore}, \texttt{\seqsplit{lookupInterpretation}}, \texttt{\seqsplit{validateAnswerValues}}, \texttt{\seqsplit{validateCompleteness}}) yang mengandung logika komputasi skor deterministik.
+  \item Inti penilaian murni (\texttt{computeScore}, \texttt{reverseScore}, \texttt{\seqsplit{validateAnswerValues}}, \texttt{\seqsplit{validateCompleteness}}) yang mengandung logika komputasi skor deterministik tanpa dependensi eksternal; serta lapisan interpretasi (\texttt{\seqsplit{lookupInterpretation}}) yang mengkueri basis data untuk pemetaan skor ke label.
   \item \textit{Middleware} autentikasi yang menerapkan lima tingkat kontrol akses: \texttt{publicProcedure}, \texttt{protectedProcedure}, \texttt{adminProcedure}, \texttt{adminMutationProcedure}, dan \texttt{superAdminProcedure}.
   \item \textit{Data Access Layer} (DAL) yang menyediakan fungsi \texttt{verifySession}, \texttt{verifyAdmin}, dan \texttt{getOptionalSession}.
 \end{enumerate}
@@ -219,7 +219,8 @@ Skema basis data diorganisasi ke dalam enam domain:
 
 \subsection{Skema Tabel}
 
-Seluruh tabel menggunakan UUID v4 sebagai kunci primer. Tabel~\ref{tab:inventaris-tabel} menyajikan inventaris lengkap 20 tabel.
+% [R4] Fixed UUID v4 blanket claim — Auth.js adapter tables use different PK schemes
+Tabel domain aplikasi menggunakan UUID v4 sebagai kunci primer. Tabel adapter Auth.js (\texttt{verification\_tokens}, \texttt{accounts}, \texttt{auth\_sessions}) mengikuti kontrak kunci yang ditentukan oleh Auth.js---khususnya, \texttt{verification\_tokens} menggunakan kunci primer komposit \texttt{(identifier, token)}. Tabel~\ref{tab:inventaris-tabel} menyajikan inventaris lengkap 20 tabel.
 
 \begin{xltabular}{\textwidth}{@{}p{2.3cm} p{2.8cm} p{2.8cm} >{\raggedright\arraybackslash}X@{}}
   \caption{Inventaris Tabel Basis Data Platform CHP}
@@ -243,7 +244,7 @@ Seluruh tabel menggunakan UUID v4 sebagai kunci primer. Tabel~\ref{tab:inventari
   \midrule
   Sesi & \texttt{test\_sessions} & id, test\_id, status, claim\_token & Sesi asesmen dengan mekanisme klaim \\[0.2em]
   Sesi & \texttt{answers} & id, session\_id, question\_id, value & Respons mentah yang \textit{immutable} \\[0.2em]
-  Sesi & \texttt{results} & id, session\_id, total\_score, dimension\_scores & Skor terhitung terpisah dari respons mentah \\[0.2em]
+  Sesi & \texttt{results} & id, session\_id, total\_score, dimension\_scores, raw\_scores, computed\_scores, result\_label, scoring\_version & Skor terhitung terpisah dari respons mentah; \texttt{scoring\_version} melacak versi algoritma \\[0.2em]
   Sesi & \texttt{\seqsplit{session\_demographics}} & session\_id, name, sex, age, province & Data demografis peserta per sesi \\[0.2em]
   Sesi & \texttt{consents} & id, session\_id, tos\_accepted, consent\_version & Persetujuan eksplisit sesuai UU PDP \\[0.2em]
   \midrule

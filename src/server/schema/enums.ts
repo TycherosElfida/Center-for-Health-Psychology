@@ -23,6 +23,8 @@ export const questionTypeEnum = pgEnum("question_type", [
   "multiple_choice",
   "slider",
   "multi_select",
+  "linear_scale",
+  "binary",
 ]);
 
 export const algorithmEnum = pgEnum("scoring_algorithm", [

@@ -1,6 +1,6 @@
 import { eq, and, sql, desc, inArray, or, isNull } from "drizzle-orm";
 import { z } from "zod";
-import { randomUUID, createHash } from "crypto";
+import { randomUUID, createHmac } from "crypto";
 import { TRPCError } from "@trpc/server";
 
 import { createTRPCRouter, publicProcedure, protectedProcedure } from "../index";
@@ -99,7 +99,9 @@ export const sessionsRouter = createTRPCRouter({
     }
 
     // Step 2: Handle mandatory required constraints per DB Schema
-    // IP and UserAgent are hashed for anonymity limits as per schema definition
+    // IP and UserAgent are hashed using HMAC-SHA-256 keyed with ENCRYPTION_KEY.
+    // Keyed HMAC prevents dictionary enumeration of the ~4.3B IPv4 address space
+    // that plain SHA-256 would be vulnerable to (UU PDP / reviewer Finding 12).
     let ip = "unknown";
     let ua = "unknown";
 
@@ -108,8 +110,9 @@ export const sessionsRouter = createTRPCRouter({
       ua = ctx.headers.get("user-agent") || "unknown";
     }
 
-    const ipHash = createHash("sha256").update(ip).digest("hex");
-    const userAgentHash = createHash("sha256").update(ua).digest("hex");
+    const hmacKey = process.env.ENCRYPTION_KEY ?? "";
+    const ipHash = createHmac("sha256", hmacKey).update(ip).digest("hex");
+    const userAgentHash = createHmac("sha256", hmacKey).update(ua).digest("hex");
     let userId = ctx.session?.userId ?? null;
 
     // Verify user still exists in database to prevent FK constraint violations
@@ -155,7 +158,7 @@ export const sessionsRouter = createTRPCRouter({
       await ctx.db.insert(consents).values({
         sessionId: session.id,
         tosAccepted: true,
-        researchOptIn: true,
+        researchOptIn: false,
         marketingOptIn: false,
         consentVersion: CONSENT_VERSION,
         ipHash,
