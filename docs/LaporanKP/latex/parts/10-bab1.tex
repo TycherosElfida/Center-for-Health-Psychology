@@ -25,7 +25,7 @@ Kondisi ini menimbulkan empat masalah operasional utama:
 \end{enumerate}
 
 % --- Professor-approved: Platform capabilities ---
-Platform yang dikembangkan dalam proyek KP ini dirancang untuk mengakomodasi seluruh alur kerja asesmen. Responden dapat mengisi asesmen secara daring (\textit{online}) maupun di lokasi (\textit{on-site}). Administrator dapat mengimpor data asesmen manual, baik dari lembar \textit{paper-based} maupun Excel, ke dalam sistem. Seluruh komputasi skor dilakukan secara instan oleh \textit{scoring engine} tanpa intervensi manual. Metode tradisional (\textit{paper-based} atau Excel di lokasi terpencil) tetap dapat digunakan, dan hasilnya dapat diintegrasikan ke dalam platform ketika koneksi tersedia.
+Platform yang dikembangkan dalam proyek KP ini dirancang untuk secara bertahap mengakomodasi seluruh alur kerja asesmen. Pada iterasi saat ini, responden dapat mengisi asesmen secara daring (\textit{online}) maupun di lokasi (\textit{on-site}) melalui perangkat yang terhubung. Seluruh komputasi skor dilakukan secara instan oleh \textit{scoring engine} tanpa intervensi manual. Sebagai rancangan pengembangan lanjutan (\textit{future work}), platform ini nantinya akan memungkinkan administrator untuk mengimpor data asesmen manual (baik dari lembar \textit{paper-based} maupun format Excel) sehingga hasil metode tradisional tetap dapat diintegrasikan ke dalam basis data terpusat.
 
 Platform ini terdiri atas beberapa modul terintegrasi: modul asesmen yang mengelola siklus hidup pengerjaan tes mulai dari persetujuan peserta hingga komputasi skor; modul administrasi yang menyediakan antarmuka bagi tim psikologi untuk mengelola instrumen, memantau statistik, dan mengekspor data riset; modul autentikasi yang mengimplementasikan sistem keamanan berlapis; serta modul pelaporan yang menghasilkan dokumen hasil asesmen dan mengirimkannya melalui surel.
 
@@ -38,7 +38,7 @@ Platform ini mengimplementasikan empat instrumen psikometri yang menjadi inti pr
 
 \textit{Simplified Resilience Scale} (SRS) merupakan ukuran resiliensi psikologis yang dikembangkan oleh Manning, Carr, dan Kail (2016), yang disusun dari butir-butir \textit{Satisfaction With Life Scale} (Diener dkk., 1985) dan \textit{Pearlin Mastery Scale} (Pearlin \& Schooler, 1978) dengan mengacu pada kerangka \textit{Resilience Scale} (Wagnild \& Young, 1993). Versi asli terdiri dari dua belas butir; platform mengimplementasikan adaptasi yang menggunakan sebelas butir dengan skala Likert enam poin (1--6), dikelompokkan secara deskriptif ke dalam tiga aspek (efikasi, kepuasan, dan kontrol), dengan lima butir (1, 3, 5, 7, 11) diberi skor terbalik. Skor yang lebih tinggi menunjukkan resiliensi yang lebih baik.
 
-\textit{Self-Reporting Questionnaire} (SRQ-29) dikembangkan oleh \textit{World Health Organization} (Beusenberg \& Orley, 1994) sebagai instrumen skrining gangguan mental emosional di layanan kesehatan primer. Kuesioner ini terdiri dari dua puluh sembilan butir dengan format respons biner (Ya/Tidak) yang mencakup empat domain, yaitu gejala neurotik (butir 1--20), penggunaan zat psikoaktif (butir 21), gejala psikotik (butir 22--24), dan gejala stres pascatrauma (butir 25--29). Instrumen ini telah divalidasi dan digunakan secara nasional di Indonesia melalui Riset Kesehatan Dasar (Riskesdas) serta studi validasi terkait (Idaiani dkk., 2022).
+\textit{Self-Reporting Questionnaire} (SRQ-29) dikembangkan oleh \textit{World Health Organization} (Beusenberg \& Orley, 1994) sebagai instrumen skrining gangguan mental emosional di layanan kesehatan primer. Kuesioner ini terdiri dari dua puluh sembilan butir dengan format respons biner (Ya/Tidak) yang mencakup empat domain, yaitu gejala mental emosional atau GME (butir 1--20), penggunaan zat psikoaktif (butir 21), gejala psikotik (butir 22--24), dan gejala stres pascatrauma (butir 25--29). Validasi nasional instrumen ini dalam konteks Indonesia sebagian besar difokuskan pada versi 20 butir (SRQ-20) untuk mendeteksi gejala depresi (Idaiani dkk., 2019), namun platform ini secara operasional mengimplementasikan versi penuh 29 butir sesuai kebutuhan spesifik asesmen menyeluruh di CHP.
 
 Contoh lengkap butir untuk keempat instrumen tersebut disajikan secara berturut-turut pada Lampiran C hingga Lampiran F.
 
@@ -62,10 +62,10 @@ Evaluasi teknis mendalam terhadap sistem web CHP yang sebelumnya dikembangkan ol
   \end{tabularx}
 \end{table}
 
-Berdasarkan temuan pada Tabel~\ref{tab:defisiensi}, solusi yang dipilih adalah pembangunan ulang total (\textit{full redevelopment}) menggunakan \textit{tech stack} modern berstandar industri. Platform baru dibangun di atas Next.js 16 sebagai \textit{meta-framework} berbasis React, TypeScript sebagai bahasa pemrograman utama yang memberikan keamanan tipe (\textit{type safety}), PostgreSQL sebagai Sistem Manajemen Basis Data Relasional (\textit{Relational Database Management System}/RDBMS), tRPC untuk lapisan API yang aman secara tipe dari ujung ke ujung (\textit{end-to-end type safety}), serta Drizzle \textit{Object-Relational Mapping} (ORM) sebagai lapisan abstraksi basis data. Seluruh sistem di-\textit{deploy} pada platform \textit{serverless} Vercel dengan basis data terkelola melalui Neon PostgreSQL dan \textit{caching} melalui Upstash Redis.
+Berdasarkan temuan pada Tabel~\ref{tab:defisiensi}, solusi yang dipilih adalah pembangunan ulang total (\textit{full redevelopment}) menggunakan \textit{tech stack} modern berstandar industri. Platform baru dibangun di atas Next.js 16 sebagai \textit{meta-framework} berbasis React, TypeScript sebagai bahasa pemrograman utama yang memberikan keamanan tipe (\textit{type safety}), PostgreSQL sebagai Sistem Manajemen Basis Data Relasional (\textit{Relational Database Management System}/RDBMS), tRPC untuk lapisan API yang aman secara tipe dari ujung ke ujung (\textit{end-to-end type safety}), serta Drizzle \textit{Object-Relational Mapping} (ORM) sebagai lapisan abstraksi basis data. Seluruh sistem di-\textit{deploy} pada platform \textit{serverless} Vercel dengan basis data terkelola melalui Neon PostgreSQL.
 
 % --- Professor-approved: Updated user groups (3 groups) ---
-Sistem yang dibangun melayani tiga kelompok pengguna utama: (1) masyarakat umum termasuk mahasiswa yang membutuhkan asesmen kesehatan mental mandiri (\textit{self-assessment}); (2) administrator dan tim riset psikologi yang mengelola instrumen, memantau sesi, dan mengekspor data berkualitas riset; serta (3) super administrator yang mengelola seluruh akun admin dalam sistem. Metodologi pengembangan yang digunakan adalah Agile iteratif dengan siklus \textit{sprint} dua mingguan, memungkinkan umpan balik berkelanjutan dari pemangku kepentingan di setiap tahap pengembangan. Gambar~\ref{fig:arsitektur-umum} menampilkan gambaran umum arsitektur sistem platform CHP yang dirancang dalam proyek ini.
+Sistem yang dibangun melayani empat aktor pengguna utama: (1) peserta anonim yang mengambil asesmen secara instan; (2) pengguna terdaftar yang dapat melacak riwayat asesmen; (3) administrator (termasuk tim riset psikologi) yang mengelola instrumen dan mengekspor data; serta (4) super administrator yang mengelola keamanan dan seluruh akun dalam sistem. Metodologi pengembangan yang digunakan adalah Agile iteratif dengan siklus \textit{sprint} dua mingguan, memungkinkan umpan balik berkelanjutan dari pemangku kepentingan di setiap tahap pengembangan. Gambar~\ref{fig:arsitektur-umum} menampilkan gambaran umum arsitektur sistem platform CHP yang dirancang dalam proyek ini.
 
 \begin{figure}[htbp]
   \centering
@@ -113,17 +113,17 @@ Pelaksanaan KP ini memiliki enam tujuan yang dirumuskan menggunakan pendekatan S
   \bottomrule
   \endfoot
   1 & Membangun platform asesmen modern dan responsif sesuai standar aksesibilitas & Skor \textit{Lighthouse Performance} $\geq$ 90; \textit{Accessibility} $\geq$ 95 pada semua halaman utama & Selesai: Fase 1A \& 1B (Minggu 1--6) \\[0.5em]
-  2 & Meng\-implementasikan \textit{scoring engine} modular otomatis untuk perhitungan sumatif, berbobot, dimensional, dan persentil & Skor komputasi sesuai nilai referensi manual; \textit{engine} diuji dengan 59 kasus uji & Selesai: Fase 1B (Minggu 3--6) \\[0.5em]
+  2 & Meng\-implementasikan \textit{scoring engine} modular otomatis untuk perhitungan sumatif, berbobot, terbalik, dimensional, klaster biner, dan agregasi hirarkis & Skor komputasi sesuai nilai referensi manual; \textit{engine} diuji dengan 59 kasus uji & Selesai: Fase 1B (Minggu 3--6) \\[0.5em]
   3 & Menyajikan umpan balik visual instan berupa skor total, \textit{breakdown} dimensi, dan grafik & Halaman hasil ter-\textit{render} dalam dua detik setelah pengiriman tes & Selesai: Fase 1B (Minggu 5--6) \\[0.5em]
   4 & Membangun fungsionalitas ekspor data berkualitas riset dalam format CSV & Prosedur \texttt{\seqsplit{adminResults.export}} dengan batas 5000 baris, mencakup jawaban per butir soal & Selesai: Fase 1C (Minggu 7--10) \\[0.5em]
   5 & Mengembangkan panel administrator dengan RBAC & Tim psikologi dapat membuat, mengkonfigurasi, dan mempublikasikan instrumen baru tanpa intervensi pengembang; empat peran admin & Selesai: Fase 1C (Minggu 7--10) \\[0.5em]
   6 & Memastikan serah terima sistem yang berkelanjutan dengan dokumentasi komprehensif & Pengembang baru dapat \textit{clone}, \textit{setup}, dan menjalankan proyek secara lokal dalam waktu 15 menit & Selesai: Fase 1D (Minggu 11--13) \\
 \end{xltabular}
 
-Adapun manfaat yang diharapkan dari pengembangan Platform Asesmen Digital CHP mencakup empat dimensi utama:
+Adapun manfaat yang diharapkan dari pengembangan Platform Asesmen Digital CHP (dengan catatan bahwa sebagian target teknis masih berupa desain arsitektur yang menunggu pengujian operasional lanjutan) mencakup empat dimensi utama:
 
 \begin{enumerate}[leftmargin=2cm]
-  \item Validitas riset yang meningkat berkat penyimpanan respons mentah yang tidak dapat diubah (\textit{immutable raw responses}) disertai metadata versi instrumen dan versi algoritma penilaian untuk reprodusibilitas ilmiah.
+  \item Validitas riset yang meningkat berkat penyimpanan respons mentah yang dijaga integritasnya melalui penguncian status sesi asesmen, disertai metadata versi instrumen dan versi algoritma penilaian untuk reprodusibilitas ilmiah.
   \item Pengalaman pengguna yang profesional dan aksesibel dengan antarmuka yang menenangkan (\textit{calm design}) sehingga meminimalkan kecemasan peserta tes.
   \item Skalabilitas sistem: untuk menambahkan instrumen psikologi baru secara mandiri melalui panel admin tanpa memerlukan intervensi pengembang.
   \item Keberlanjutan operasional lintas semester: berkat arsitektur yang terdokumentasi secara komprehensif dan kode yang aman secara tipe.
@@ -140,7 +140,7 @@ Pekerjaan yang termasuk dalam ruang lingkup KP penulis adalah:
 \begin{enumerate}[leftmargin=2cm]
   \item Perancangan dan implementasi skema basis data relasional menggunakan Drizzle ORM yang mendukung instrumen psikometri multidimensional, manajemen sesi anonim, dan jejak audit administratif.
   \item Pengembangan infrastruktur CI/CD otomatis menggunakan GitHub Actions dengan dua \textit{job} paralel: \textit{job} pertama menjalankan \textit{linting} (ESLint), \textit{type checking} (TypeScript \textit{Compiler}), dan \textit{build} produksi; \textit{job} kedua menjalankan \textit{unit testing} (Vitest).
-  \item Implementasi \textit{scoring engine} modular yang mendukung algoritma penilaian sumatif, berbobot, terbalik (\textit{reversed}), dimensional, dan persentil, sepenuhnya dikonfigurasi melalui basis data.
+  \item Implementasi \textit{scoring engine} modular yang mendukung algoritma penilaian sumatif, berbobot, terbalik (\textit{reversed}), dimensional, klaster biner, dan agregasi hirarkis (DSR), sepenuhnya dikonfigurasi melalui basis data.
   \item Pengembangan prosedur API berbasis tRPC untuk manajemen sesi asesmen, penyimpanan jawaban, komputasi skor, autentikasi administrator, dan manajemen instrumen.
   \item Implementasi sistem autentikasi ganda: Auth.js v5 untuk pengguna publik dan JWT mandiri melalui jose untuk panel administrator, dengan \textit{Role-Based Access Control} (RBAC) lima tingkat.
   \item Pengujian komprehensif mencakup \textit{unit test} pada \textit{scoring engine} dan prosedur API, \textit{integration test} prosedur API, serta pengujian keamanan dasar menggunakan \textit{checklist} OWASP \textit{Top Ten}.
@@ -155,6 +155,7 @@ Pekerjaan yang tidak termasuk dalam ruang lingkup KP ini adalah:
   \item Pengembangan komponen UI dan desain UX, yang merupakan tanggung jawab anggota tim lain dalam laporan KP terpisah.
   \item Fitur aksesibilitas khusus seperti dukungan \textit{screen reader} atau teknologi asistif untuk penyandang disabilitas: fitur ini berada di luar cakupan versi ini dan dicatat sebagai batasan sistem yang dapat dikembangkan pada iterasi berikutnya.
   \item Verifikasi usia responden: sistem tidak membatasi usia pengguna dan tidak dapat memverifikasi apakah responden di bawah umur didampingi oleh orang dewasa. Ini merupakan batasan yang disadari (\textit{known limitation}) dan pengguna diasumsikan mampu membaca instruksi secara mandiri serta mengoperasikan perangkat masukan.
+  \item Fitur impor data asesmen historis: migrasi data dari sistem lama ke sistem baru direncanakan sebagai pekerjaan lanjutan (\textit{future work}) dan tidak termasuk dalam cakupan kerja praktik ini.
 \end{enumerate}
 
 Instrumen \textit{Simplified Resilience Scale} (SRS) yang digunakan merupakan adaptasi (sebelas dari dua belas butir asli, dengan skala enam poin) dari instrumen Manning dkk.\ (2016) dan belum melalui proses validasi psikometrik formal dalam konteks Bahasa Indonesia. Penggunaannya pada platform bersifat indikatif sebagai gambaran awal tingkat resiliensi, bukan sebagai alat diagnostik. Konten dan skala seluruh instrumen ditetapkan oleh dosen pemilik proyek selaku ahli domain; peran pengembang adalah mengimplementasikan spesifikasi tersebut secara akurat.
@@ -184,6 +185,6 @@ Pelaksanaan KP ini berlangsung selama kurang lebih 12 hingga 14 minggu, dimulai 
   Fase 1B: Inti Asesmen & Minggu 3--6 & Katalog tes, mesin asesmen multi-langkah, \textit{scoring engine}, prosedur tRPC, \textit{pre-test} dan \textit{post-test flow} \\[0.3em]
   Fase 2A--2C: Autentikasi & Minggu 4--7 & Infrastruktur JWT ganda, UI autentikasi (\textit{sign-up}, \textit{login}), mutasi \textit{claim session}, migrasi skema Auth.js \\[0.3em]
   Fase 1C: Admin \& \textit{Polish} & Minggu 7--10 & Panel admin dengan RBAC empat peran, CRUD instrumen tes, konfigurasi penilaian, ekspor data \\[0.3em]
-  Fase 1D: Pengujian \& Serah Terima & Minggu 11--13 & Pengujian unit (191 kasus uji), pengujian keamanan (OWASP \textit{checklist}), dokumentasi teknis, \textit{deployment} final \\[0.3em]
+  Fase 1D: Pengujian \& Serah Terima & Minggu 11--13 & Pengujian unit (213 kasus uji), pengujian keamanan (OWASP \textit{checklist}), dokumentasi teknis, \textit{deployment} final \\[0.3em]
   Sidang KP & Juni 2026 & Presentasi dan evaluasi akhir di hadapan tim penguji Program Studi Informatika UKRIDA \\
 \end{xltabular}

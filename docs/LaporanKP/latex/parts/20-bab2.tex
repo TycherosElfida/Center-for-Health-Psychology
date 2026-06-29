@@ -47,7 +47,7 @@ Pada Platform Asesmen Digital CHP, ketiga lapisan diimplementasikan sebagai beri
 \begin{enumerate}[leftmargin=2cm]
   \item Lapisan Presentasi: Komponen React dengan \textit{React Server Components} (RSC), Tailwind CSS, dan shadcn/ui yang menghasilkan antarmuka pengguna interaktif dan responsif.
   \item Lapisan Aplikasi: \textit{Router} tRPC, \textit{scoring engine}, \textit{middleware} autentikasi, dan \textit{Server Actions} yang mengandung seluruh logika bisnis sistem.
-  \item Lapisan Data: PostgreSQL yang diakses melalui Drizzle ORM sebagai sumber data utama, dengan Upstash Redis sebagai lapisan \textit{caching} dan \textit{rate limiting}.
+  \item Lapisan Data: PostgreSQL yang diakses melalui Drizzle ORM sebagai sumber data utama.
 \end{enumerate}
 
 Gambar~\ref{fig:arsitektur-3-tier} mengilustrasikan diagram arsitektur tiga lapisan Platform CHP.
@@ -103,7 +103,7 @@ Drizzle ORM adalah ORM TypeScript generasi baru yang berfilosofi ``SQL-\textit{f
     \midrule
     \texttt{tests} & id, slug, title, version & Metadata instrumen psikometri dengan kontrol versi \\
     \texttt{questions} & id, test\_id, type, dimension, is\_reversed, weight & Butir soal dengan informasi dimensi dan pembobotan \\
-    \texttt{scoring\_rules} & id, test\_id, algorithm, config & Konfigurasi algoritma penilaian \\
+    \texttt{scoring\_rules} & id, test\_id, algorithm, config & Skema placeholder (tidak digunakan) \\
     \texttt{test\_sessions} & id, test\_id, status, ip\_hash, claim\_token & Sesi asesmen dengan mekanisme klaim \\
     \texttt{answers} & id, session\_id, question\_id, value & Respons mentah yang \textit{immutable} \\
     \texttt{results} & id, session\_id, total\_score, dimension\_scores & Skor terhitung yang terpisah dari respons mentah \\
@@ -220,13 +220,13 @@ Strategi pengujian Platform CHP mengikuti konsep piramida pengujian (\textit{tes
 \end{figure}
 
 % --- Professor-approved: Integration testing (B2.3) ---
-\subsection{\textit{Integration Testing}}
+\subsection{Pengujian Prosedur (\textit{Mock DB})}
 \label{subsec:integration-testing}
 
 \textit{Integration testing} pada Platform CHP menggunakan metodologi \textit{grey-box}: penguji mengetahui arsitektur internal (skema basis data, kontrak tRPC) namun menguji prosedur sebagai unit fungsional yang utuh. Tiga area fokus integrasi:
 
 \begin{enumerate}[leftmargin=2cm]
-  \item \textbf{tRPC $\leftrightarrow$ Basis Data}: memverifikasi bahwa prosedur tRPC menulis dan membaca data yang benar dari PostgreSQL melalui Drizzle ORM, termasuk transaksi atomik dan \textit{constraint} referensial.
+  \item \textbf{tRPC $\leftrightarrow$ Basis Data}: memverifikasi bahwa prosedur tRPC berinteraksi secara benar dengan lapisan \textit{mock} basis data, memastikan logika operasional sekuensial dieksekusi tepat tanpa memodifikasi data produksi, serta memverifikasi logika kondisional secara terisolasi.
   \item \textbf{Autentikasi $\leftrightarrow$ RBAC}: memverifikasi bahwa setiap tingkat \textit{middleware} (dari \texttt{publicProcedure} hingga \texttt{superAdminProcedure}) secara benar mengizinkan atau menolak akses berdasarkan peran pengguna.
   \item \textbf{Validasi Zod $\leftrightarrow$ Logika Bisnis}: memverifikasi bahwa skema masukan Zod menolak data yang tidak valid sebelum logika bisnis dieksekusi, serta bahwa pesan kesalahan yang dikembalikan informatif dan konsisten.
 \end{enumerate}
@@ -274,7 +274,7 @@ Tabel~\ref{tab:skenario-unit-test} menampilkan contoh skenario \textit{unit test
 \subsection{\textit{End-to-End Testing} dengan Playwright}
 \label{subsec:playwright}
 
-Playwright adalah \textit{framework} otomasi \textit{browser} yang dikembangkan oleh Microsoft untuk E2E \textit{testing}. Tiga alur kritis yang menjadi prioritas E2E \textit{testing} adalah: (1) alur asesmen penuh dari katalog hingga halaman hasil; (2) alur autentikasi admin termasuk \textit{redirect} otomatis; dan (3) alur manajemen instrumen dari pembuatan hingga publikasi.
+Playwright adalah \textit{framework} otomasi \textit{browser} yang dikembangkan oleh Microsoft untuk E2E \textit{testing}. Tiga alur kritis yang direncanakan untuk E2E \textit{testing} (sebagai pekerjaan lanjutan) adalah: (1) alur asesmen penuh dari katalog hingga halaman hasil; (2) alur autentikasi admin termasuk \textit{redirect} otomatis; dan (3) alur manajemen instrumen dari pembuatan hingga publikasi. Pengujian E2E ini masih berstatus implementasi awal dan belum ditinjau secara keseluruhan maupun di-\textit{commit} ke repositori utama.
 
 % [C6] Fixed: "4 gate sequential" → 2 parallel jobs
 \subsection{CI/CD dengan GitHub Actions}
@@ -325,11 +325,10 @@ OWASP \textit{Top Ten} menjadi standar acuan \textit{de-facto} dalam komunitas k
 \subsection{\textit{Rate Limiting} dan Perlindungan API}
 \label{subsec:rate-limiting}
 
-Platform CHP mengimplementasikan \textit{rate limiting} berlapis:
+Platform CHP mengimplementasikan \textit{rate limiting} pada \textit{login} admin:
 
 \begin{enumerate}[leftmargin=2cm]
-  \item \textbf{Upstash Redis} (\texttt{@upstash/ratelimit}): diterapkan pada lapisan \textit{proxy} untuk membatasi permintaan API secara global. Kompatibel dengan lingkungan \textit{serverless} Vercel.
-  \item \textbf{\textit{In-memory rate limiter}} untuk \textit{login} admin: dua tingkat pembatasan, yaitu berbasis IP (5 kegagalan dalam 5 menit) dan berbasis akun (10 kegagalan yang mengunci akun hingga dibuka oleh \texttt{super\_admin}).
+  \item \textbf{\textit{In-memory rate limiter}} untuk \textit{login} admin: dua tingkat pembatasan, yaitu berbasis IP (5 kegagalan dalam 5 menit) dan berbasis akun (10 kegagalan yang mengunci akun hingga dibuka oleh \texttt{super\_admin}). (Catatan: mekanisme \textit{in-memory} ini pada hakikatnya tidak persisten dalam arsitektur \textit{serverless} yang bersifat \textit{stateless}. Migrasi ke layanan \textit{cache} eksternal (seperti Redis) untuk ketahanan status lintas-sesi merupakan bagian dari mitigasi lanjutan).
 \end{enumerate}
 
 \subsection{Undang-Undang Perlindungan Data Pribadi}
@@ -340,6 +339,6 @@ Undang-Undang Nomor 27 Tahun 2022 tentang Perlindungan Data Pribadi (UU PDP) men
 \begin{enumerate}[leftmargin=2cm]
   \item Sesi asesmen anonim tanpa memerlukan akun pengguna.
   \item Penyamaran alamat IP: alamat IP di-\textit{hash} satu arah sebelum disimpan.
-  \item Persetujuan eksplisit melalui modul \texttt{consents} yang terpisah.
-  \item Enkripsi surel peserta menggunakan AES-256-GCM dalam tabel \texttt{guest\_leads} yang terisolasi.
+  \item Persetujuan eksplisit melalui modul \texttt{consents} yang merekam penerimaan \textit{Terms of Service}, \textit{Research Opt-In}, dan \textit{Marketing Opt-In} secara terpadu melalui satu kotak centang pada antarmuka pengguna (\textit{frontend}). Meski secara visual disatukan untuk kenyamanan pengguna, nilai-nilai persetujuan ini direkam secara terpisah dan baku (\textit{hardcoded}) oleh sistem di sisi peladen (\textit{backend}) untuk menjamin kepatuhan audit.
+  \item Enkripsi surel peserta menggunakan AES-256-GCM dalam tabel \texttt{report\_requests} yang terisolasi.
 \end{enumerate}
