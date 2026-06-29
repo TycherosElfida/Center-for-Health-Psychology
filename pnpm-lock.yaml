@@ -128,6 +128,9 @@ importers:
       '@playwright/test':
         specifier: ^1.59.1
         version: 1.59.1
+      '@softwaretechnik/dbml-renderer':
+        specifier: ^1.0.31
+        version: 1.0.31
       '@tailwindcss/postcss':
         specifier: ^4.2.4
         version: 4.2.4
@@ -149,6 +152,9 @@ importers:
       babel-plugin-react-compiler:
         specifier: 1.0.0
         version: 1.0.0
+      drizzle-dbml-generator:
+        specifier: ^0.10.0
+        version: 0.10.0(drizzle-orm@1.0.0-beta.20(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/mssql@9.1.11(@azure/core-client@1.10.1))(@types/pg@8.15.6)(@upstash/redis@1.37.0)(mssql@11.0.1(@azure/core-client@1.10.1))(zod@4.3.6))
       drizzle-kit:
         specifier: 1.0.0-beta.20
         version: 1.0.0-beta.20
@@ -190,6 +196,9 @@ importers:
         version: 4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.5)(jsdom@29.1.0(@noble/hashes@1.8.0))(msw@2.13.6(@types/node@25.6.0)(typescript@6.0.3))(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)(yaml@2.8.3))
 
 packages:
+
+  '@aduh95/viz.js@3.4.0':
+    resolution: {integrity: sha512-KI2nVf9JdwWCXqK6RVf+9/096G7VWN4Z84mnynlyZKao2xQENW8WNEjLmvdlxS5X8PNWXFC1zqwm7tveOXw/4A==}
 
   '@alloc/quick-lru@5.2.0':
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
@@ -2113,6 +2122,10 @@ packages:
     resolution: {integrity: sha512-tlqY9xq5ukxTUZBmoOp+m61cqwQD5pHJtFY3Mn8CA8ps6yghLH/Hw8UPdqg4OLmFW3IFlcXnQNmo/dh8HzXYIQ==}
     engines: {node: '>=18'}
 
+  '@softwaretechnik/dbml-renderer@1.0.31':
+    resolution: {integrity: sha512-ThoBDBc2/ODuCtvrHKLaZNHvBhSMdgTXae7z1hOgXn+i5Qdqp1tq5nK1rrkm7THfnAIXuZ3WxAeos1iRZSKeOw==}
+    hasBin: true
+
   '@stablelib/base64@1.0.1':
     resolution: {integrity: sha512-1bnPQqSxSuc3Ii6MhBysoWCg58j97aUjuCSZrGSmDxNqtytIi0k8utUenAwTZN4V5mXXYGsVUI9zeBqy+jBOSQ==}
 
@@ -3218,6 +3231,11 @@ packages:
   dotenv@17.4.2:
     resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
     engines: {node: '>=12'}
+
+  drizzle-dbml-generator@0.10.0:
+    resolution: {integrity: sha512-cMZq9E3U3RlmE0uBeXyc6oWJ0royOkC6HiTlc9LDeMe+W87poZTzKoNYUyAxZrs4Q1RQtob+cGKiefV4ZoI8HA==}
+    peerDependencies:
+      drizzle-orm: '>=0.36.0'
 
   drizzle-kit@1.0.0-beta.20:
     resolution: {integrity: sha512-qMUBnrOQIU+H32aF80BSn7lT1IQuKmofCypmkrKMuOMqvM0bhz5hjCHim1bLcXUzXYRtTSr6U2pe0MSV79WbAg==}
@@ -5962,6 +5980,8 @@ packages:
 
 snapshots:
 
+  '@aduh95/viz.js@3.4.0': {}
+
   '@alloc/quick-lru@5.2.0': {}
 
   '@asamuzakjp/css-color@5.1.11':
@@ -7797,6 +7817,12 @@ snapshots:
 
   '@sindresorhus/merge-streams@4.0.0': {}
 
+  '@softwaretechnik/dbml-renderer@1.0.31':
+    dependencies:
+      '@aduh95/viz.js': 3.4.0
+      yargs: 17.7.2
+      zod: 3.25.76
+
   '@stablelib/base64@1.0.1': {}
 
   '@standard-schema/spec@1.1.0': {}
@@ -8869,6 +8895,10 @@ snapshots:
   dotenv@16.6.1: {}
 
   dotenv@17.4.2: {}
+
+  drizzle-dbml-generator@0.10.0(drizzle-orm@1.0.0-beta.20(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/mssql@9.1.11(@azure/core-client@1.10.1))(@types/pg@8.15.6)(@upstash/redis@1.37.0)(mssql@11.0.1(@azure/core-client@1.10.1))(zod@4.3.6)):
+    dependencies:
+      drizzle-orm: 1.0.0-beta.20(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/mssql@9.1.11(@azure/core-client@1.10.1))(@types/pg@8.15.6)(@upstash/redis@1.37.0)(mssql@11.0.1(@azure/core-client@1.10.1))(zod@4.3.6)
 
   drizzle-kit@1.0.0-beta.20:
     dependencies:

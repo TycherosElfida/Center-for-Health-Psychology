@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+package-lock.json
 /.pnp
 .pnp.*
 .yarn/*
@@ -12,6 +13,11 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
+/blob-report/
+/.playwright/
+*.junit.xml
 
 # next.js
 /.next/
@@ -19,6 +25,7 @@
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
@@ -50,6 +57,17 @@ docs/LaporanKP/
 !docs/LaporanKP/
 !docs/LaporanKP/latex/
 !docs/LaporanKP/latex/**
+# Ignore compiled LaTeX build artifacts and PDFs
+docs/LaporanKP/latex/**/*.pdf
+docs/LaporanKP/latex/**/*.aux
+docs/LaporanKP/latex/**/*.log
+docs/LaporanKP/latex/**/*.out
+docs/LaporanKP/latex/**/*.toc
+docs/LaporanKP/latex/**/*.fls
+docs/LaporanKP/latex/**/*.fdb_latexmk
+docs/LaporanKP/latex/**/*.synctex.gz
+docs/LaporanKP/latex/**/*.bbl
+docs/LaporanKP/latex/**/*.blg
 docs/plans/
 
 # Sentry Config File
@@ -74,6 +92,7 @@ scripts/migrate.ts
 scripts/test-trpc-demographics.ts
 audit.ts
 get_thumbs.ts
+reset-pw.ts
 scratch_*.ps1
 # Logs
 *.log

@@ -19,6 +19,7 @@ export default defineConfig({
       "**/dist/**",
       "**/.next/**",
       "**/cypress/**",
+      "**/e2e/**",
       "**/.{idea,git,cache,output,temp}/**",
       "**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*",
       "**/.worktrees/**",
