@@ -10,7 +10,6 @@ test.describe("Assessment Flow", () => {
     // Look for the first test card and click its start button
     // The button might say "Mulai Tes" or "Mulai Asesmen"
     const firstTestLink = page.locator('a[href^="/test/"]').first();
-    const href = await firstTestLink.getAttribute("href");
     await firstTestLink.click();
 
     // 2. Expected to redirect to briefing
