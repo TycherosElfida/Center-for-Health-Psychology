@@ -1,6 +1,6 @@
 import { eq, and, sql, desc, inArray, or, isNull } from "drizzle-orm";
 import { z } from "zod";
-import { randomUUID } from "crypto";
+import { randomUUID, createHash } from "crypto";
 import { TRPCError } from "@trpc/server";
 
 import { createTRPCRouter, publicProcedure, protectedProcedure } from "../index";
@@ -108,8 +108,8 @@ export const sessionsRouter = createTRPCRouter({
       ua = ctx.headers.get("user-agent") || "unknown";
     }
 
-    const ipHash = btoa(ip);
-    const userAgentHash = btoa(ua);
+    const ipHash = createHash("sha256").update(ip).digest("hex");
+    const userAgentHash = createHash("sha256").update(ua).digest("hex");
     let userId = ctx.session?.userId ?? null;
 
     // Verify user still exists in database to prevent FK constraint violations

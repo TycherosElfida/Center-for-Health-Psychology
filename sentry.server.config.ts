@@ -16,4 +16,7 @@ Sentry.init({
   // UU PDP Compliance: Do not send raw PII (IP, cookies) to third-party services.
   // Use Sentry.setUser() with pseudonymized IDs if user context is needed.
   sendDefaultPii: false,
+
+  // Ignore noisy connection aborted errors caused by client disconnects / Playwright tests
+  ignoreErrors: ["aborted", "ECONNRESET"],
 });
