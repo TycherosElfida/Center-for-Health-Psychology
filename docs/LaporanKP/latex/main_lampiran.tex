@@ -1,5 +1,6 @@
 % =============================================================================
 % Laporan Kerja Praktik — Platform Asesmen Psikologi Digital CHP
+% Lampiran Terpisah
 % Sanders · 412023020 · Informatika · FTC · UKRIDA · 2025
 % =============================================================================
 \documentclass[12pt,a4paper,oneside]{report}
@@ -151,64 +152,9 @@
 % =============================================================================
 \begin{document}
 
-% ═══════════════════════════════════════════════════════════════════════════════
-% FRONT MATTER — Roman numerals, bottom-right
-% ═══════════════════════════════════════════════════════════════════════════════
-\pagenumbering{roman}
-\pagestyle{frontmatter}
-
-% ── Halaman Judul (counted but NOT printed) ───────────────────────────────────
-\input{parts/00-title}
-
-% ── Halaman Persetujuan (counted but NOT printed) ─────────────────────────────
-\input{parts/01-persetujuan}
-
-% ── Halaman Pengesahan (counted but NOT printed) ──────────────────────────────
-\input{parts/02-pengesahan}
-
-% ── Kata Pengantar (first printed Roman numeral) ──────────────────────────────
-\input{parts/03-kata-pengantar}
-
-% ── Daftar Isi ────────────────────────────────────────────────────────────────
-\input{parts/04-daftar-isi}
-
-% ── Daftar Tabel ──────────────────────────────────────────────────────────────
-\input{parts/05-daftar-tabel}
-
-% ── Daftar Gambar ─────────────────────────────────────────────────────────────
-\input{parts/06-daftar-gambar}
-
-% ═══════════════════════════════════════════════════════════════════════════════
-% BODY — Arabic numerals, bottom-right
-% BAB numbering: I → II → III → IV → V (sequential)
-% ═══════════════════════════════════════════════════════════════════════════════
-\clearpage
-\pagenumbering{arabic}
 \pagestyle{body}
 
-% ── BAB I: Pendahuluan ──────────────────────────────────────────────────────
-\input{parts/10-bab1}
-
-% ── BAB II: Landasan Teori ──────────────────────────────────────────────────
-\input{parts/20-bab2}
-
-% ── BAB III: Analisa dan Perancangan ────────────────────────────────────────
-\input{parts/30-bab3}
-
-% ── BAB IV: Implementasi dan Testing ────────────────────────────────────────
-\input{parts/40-bab4}
-
-% ── BAB V: Penutup ──────────────────────────────────────────────────────────
-\input{parts/50-bab5}
-
-% ═══════════════════════════════════════════════════════════════════════════════
-% BACK MATTER
-% ═══════════════════════════════════════════════════════════════════════════════
-
-% ── Daftar Pustaka ────────────────────────────────────────────────────────────
-\input{parts/70-daftar-pustaka}
-
 % ── Lampiran ──────────────────────────────────────────────────────────────────
-% \input{parts/80-lampiran} % Dipisah ke main_lampiran.tex
+\input{parts/80-lampiran}
 
 \end{document}
