@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Outfit, Geist_Mono } from "next/font/google";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { TRPCProvider } from "@/lib/trpc/provider";
 import "./globals.css";
 
@@ -41,6 +42,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <TRPCProvider>{children}</TRPCProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
