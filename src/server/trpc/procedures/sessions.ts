@@ -188,6 +188,28 @@ export const sessionsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      // ── Freeze guard (S-2): demographics are immutable once a session
+      // leaves in_progress, mirroring the FH-1 answer guard in saveProgress.
+      // Without this, an unauthenticated caller (sessionId is the only token)
+      // could rewrite respondent PII on an already-scored, frozen session.
+      const session = await ctx.db
+        .select()
+        .from(testSessions)
+        .where(eq(testSessions.id, input.sessionId))
+        .limit(1)
+        .then((res) => res[0]);
+
+      if (!session) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Session not found" });
+      }
+
+      if (session.status !== "in_progress") {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Session is no longer in progress; demographics are frozen.",
+        });
+      }
+
       await ctx.db
         .insert(sessionDemographics)
         .values({
