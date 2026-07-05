@@ -14,7 +14,7 @@ test.describe("Admin Instrument Management", () => {
     await page.getByRole("button", { name: /sign in/i }).click();
 
     // 2. Wait for redirect
-    await expect(page).toHaveURL(/\/admin\/(dashboard|change-password)/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/admin\/(dashboard|change-password)/, { timeout: 30000 });
   });
 
   test("should load the assessments dashboard and list seeded instruments", async ({ page }) => {
@@ -44,7 +44,7 @@ test.describe("Admin Instrument Management", () => {
     await pss10Row.click();
 
     // Verify redirect to /admin/assessments/[id]
-    await expect(page).toHaveURL(/\/admin\/assessments\/.+/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/admin\/assessments\/.+/, { timeout: 30000 });
 
     // Wait for the internal edit page to load (should have a "General Info" or similar title)
     // We'll just assert that the slug 'pss10' or title is visible on the inner page

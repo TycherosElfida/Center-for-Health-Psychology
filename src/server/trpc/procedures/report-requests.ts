@@ -4,13 +4,16 @@
  * Backend-only tRPC procedures for managing the report request queue.
  * Admin UI (EmailRequestsPage) renders at /admin/reports (Phase 1D.3).
  *
- * All procedures use `adminProcedure` — requires authenticated admin role.
+ * Read procedures (list, getDetail, stats) use `adminProcedure` — any
+ * authenticated admin role. Mutations (markReviewed, approve, reject,
+ * batchApprove) use `adminMutationProcedure` — super_admin/admin only;
+ * psychiatrist and researcher are read-only (audit finding S-4).
  */
 import { eq, and, sql, desc, gte, lte } from "drizzle-orm";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
-import { createTRPCRouter, adminProcedure } from "../index";
+import { createTRPCRouter, adminProcedure, adminMutationProcedure } from "../index";
 import { reportRequests } from "@/server/schema/report-requests";
 import { tests } from "@/server/schema/tests";
 import { results } from "@/server/schema/sessions";
@@ -217,7 +220,7 @@ export const reportRequestsRouter = createTRPCRouter({
   /**
    * Mark a report request as reviewed (optional step before approve/reject).
    */
-  markReviewed: adminProcedure
+  markReviewed: adminMutationProcedure
     .input(z.object({ requestId: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
       const request = await ctx.db
@@ -273,7 +276,7 @@ export const reportRequestsRouter = createTRPCRouter({
    * TODO: Consider an intermediate "sending" status and/or outbox pattern
    * for stronger delivery guarantees when volume grows.
    */
-  approve: adminProcedure
+  approve: adminMutationProcedure
     .input(z.object({ requestId: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
       const request = await ctx.db
@@ -323,7 +326,7 @@ export const reportRequestsRouter = createTRPCRouter({
   /**
    * Reject a report request with an optional reason.
    */
-  reject: adminProcedure
+  reject: adminMutationProcedure
     .input(
       z.object({
         requestId: z.string().uuid(),
@@ -366,7 +369,7 @@ export const reportRequestsRouter = createTRPCRouter({
    * Batch approve multiple report requests.
    * Processes sequentially — partial failures are reported per item.
    */
-  batchApprove: adminProcedure
+  batchApprove: adminMutationProcedure
     .input(z.object({ requestIds: z.array(z.string().uuid()).min(1).max(50) }))
     .mutation(async ({ input, ctx }) => {
       const batchResults: Array<{

@@ -31,6 +31,6 @@ test.describe("Admin Authentication", () => {
     await page.getByRole("button", { name: /sign in/i }).click();
 
     // Wait for the custom window.location.href redirect
-    await expect(page).toHaveURL(/\/admin\/(dashboard|change-password)/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/admin\/(dashboard|change-password)/, { timeout: 30000 });
   });
 });

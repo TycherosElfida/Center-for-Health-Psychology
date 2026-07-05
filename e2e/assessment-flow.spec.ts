@@ -19,9 +19,7 @@ test.describe("Assessment Flow", () => {
     // Click "I agree" or next button
     // Often there's a checkbox for consent
     const consentCheckbox = page.getByRole("checkbox").first();
-    if (await consentCheckbox.isVisible()) {
-      await consentCheckbox.check();
-    }
+    await consentCheckbox.check();
 
     const nextBtn = page.getByRole("button", { name: /Mulai Asesmen|Lanjutkan/i }).first();
     await nextBtn.click();
@@ -61,12 +59,19 @@ test.describe("Assessment Flow", () => {
     await expect(page.locator("main").first()).toBeVisible();
 
     // Answer all questions
-    const questionCards = await page.locator("main .survey-fade-in").all();
-    for (const card of questionCards) {
+    const questionCards = page.locator("main .survey-fade-in:not(section)");
+    const count = await questionCards.count();
+    for (let i = 0; i < count; i++) {
+      const card = questionCards.nth(i);
       const firstRadio = card.locator('button[role="radio"]').first();
+
+      // Some cards might not have a radio if they are informational, but tests should have them
       if ((await firstRadio.count()) > 0) {
-        await firstRadio.click({ force: true });
-        await page.waitForTimeout(50); // slight delay to allow React state updates
+        await firstRadio.scrollIntoViewIfNeeded();
+        // Use regular click without force so it ensures actionability
+        await firstRadio.click();
+        // Wait for React to process the state and update the DOM
+        await expect(firstRadio).toHaveAttribute("aria-checked", "true", { timeout: 5000 });
       }
     }
 
