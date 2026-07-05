@@ -35,10 +35,10 @@ Struktur dua faktor PSS-10 — Ketidakberdayaan (*Perceived Helplessness*) dan E
 
 PSS-10 mengukur stres yang *dirasakan* dalam 30 hari terakhir. Validitas prediktifnya menurun setelah 4–8 minggu karena instrumen ini mengukur kondisi kognitif terkini, bukan sifat psikologis yang stabil. Platform saat ini belum memiliki fitur notifikasi atau pengingat untuk mendorong pengguna mengulang asesmen secara berkala.
 
-**A.1.4 Pelaporan Subskala Dimensi Tidak Aktif di Database**
+**A.1.4 Pelaporan Subskala Dimensi Tidak Aktif di Database (✅ TELAH DISELESAIKAN — 6 Juli 2026)**
 
-Meski literatur mendukung struktur dua-faktor (Ketidakberdayaan dan Efikasi Diri), di dalam database, ke-10 pertanyaan PSS-10 memiliki atribut `dimension = NULL`. Akibatnya, _scoring engine_ pada platform ini mengolah PSS-10 murni sebagai instrumen unidimensional (hanya skor total), sehingga pengguna tidak mendapatkan rincian per dimensi.
-**Rekomendasi:** Perbarui data di database agar item-item terkait dipetakan pada dimensi yang tepat.
+Meski literatur mendukung struktur dua-faktor (Ketidakberdayaan dan Efikasi Diri), sebelumnya di dalam database, ke-10 pertanyaan PSS-10 memiliki atribut `dimension = NULL`. 
+**Status Perbaikan (FH-1 / FH-2):** Seluruh 10 item PSS-10 di produksi telah diperbarui dengan dimensi non-NULL (`Helplessness` ×6, `Self-Efficacy` ×4). Kalkulasi dan pelaporan subskala di _scoring engine_ kini berfungsi penuh sesuai spesifikasi klinis.
 
 ---
 
@@ -66,10 +66,10 @@ Keterbatasan penting: standar deviasi tidak dilaporkan dalam makalah Reynaldo & 
 
 Lima subskala GPIUS-2 — POSI (*Preference for Online Social Interaction*), MR (*Mood Regulation*), CP (*Cognitive Preoccupation*), CU (*Compulsive Use*), NO (*Negative Outcomes*) — juga menggunakan rata-rata referensi dari Reynaldo & Sokang (2016) Tabel 3. Namun, tidak ada standar deviasi yang dilaporkan untuk setiap subskala, sehingga batas "di atas rata-rata" ditetapkan secara pragmatis pula. Subskala DSR (*Deficient Self-Regulation* = CP + CU) merupakan konstruk orde kedua yang hanya digunakan sebagai indikator derivatif, bukan subskala yang berdiri sendiri dalam makalah asli.
 
-**A.2.4 Implementasi Sistem: Skor Dimensi Tidak Berfungsi (Subskala Hilang)**
+**A.2.4 Implementasi Sistem: Skor Dimensi Tidak Berfungsi / Subskala Hilang (✅ TELAH DISELESAIKAN — 6 Juli 2026)**
 
-Meskipun pada spesifikasi tes diatur menggunakan _scoring method_ `dimensional`, pada kenyataannya ke-15 item GPIUS-2 di database diisi dengan `dimension = NULL`. Selain itu, kriteria _result interpretations_ yang terdaftar di sistem semuanya tidak memuat dimensi spesifik (kriteria untuk `dimension = NULL`). Hal ini menyebabkan _scoring engine_ menghasilkan satu total flat saja tanpa melaporkan 5 subskala, membuat sistem ini gagal menghasilkan skor turunan klinis sesuai spesifikasi ahli.
-**Rekomendasi:** Update ke-15 kolom dimensi di database agar menunjuk pada subskala masing-masing.
+Meskipun pada spesifikasi tes diatur menggunakan _scoring method_ `dimensional`, sebelumnya ke-15 item GPIUS-2 di database diisi dengan `dimension = NULL`.
+**Status Perbaikan (FH-1 / FH-2):** Seluruh 15 item GPIUS-2 di produksi telah diperbarui dengan dimensi non-NULL (`POSI` ×3, `MR` ×3, `CP` ×3, `CU` ×3, `NO` ×3). _Scoring engine_ kini melaporkan ke-5 subskala secara spesifik dan akurat.
 
 **A.2.5 Validitas Konvergen dan Divergen Belum Diuji pada Platform Ini**
 
@@ -103,9 +103,10 @@ Tidak ada studi normatif yang dipublikasikan untuk versi adaptasi ini pada popul
 
 **Penting:** Berbeda dengan GPIUS-2 yang memiliki rata-rata referensi dari sampel Jakarta (Reynaldo & Sokang, 2016), SRS tidak memiliki nilai rata-rata populasi Indonesia sebagai pembanding. Dengan demikian, setiap pernyataan interpretasi tidak dapat mengacu pada "di atas rata-rata" atau "di bawah rata-rata" secara valid. Platform ini menggunakan catatan pengungkapan (*disclosure note*) pada setiap deskripsi band sedang: *"Belum tersedia data normatif untuk populasi Indonesia untuk versi adaptasi skala ini."*
 
-**A.3.4 Pelaporan Subskala Dimensi Tidak Aktif di Database**
+**A.3.4 Pelaporan Subskala Dimensi Tidak Aktif di Database (✅ TELAH DISELESAIKAN — 6 Juli 2026)**
 
-Adaptasi Dekan mendefinisikan tiga subskala (Efikasi, Kepuasan, Kontrol), namun di dalam database ke-11 pertanyaan SRS di set dengan nilai `dimension = NULL`. Akibatnya, instrumen ini berjalan murni sebagai pengukuran unidimensional di _scoring engine_. Subskala tidak dihitung apalagi disajikan pada pengguna.
+Adaptasi Dekan mendefinisikan tiga subskala (Efikasi, Kepuasan, Kontrol), namun sebelumnya di dalam database ke-11 pertanyaan SRS di set dengan nilai `dimension = NULL`.
+**Status Perbaikan (FH-1 / FH-2):** Seluruh 11 item SRS di produksi telah dipetakan dengan benar ke dimensi `Efficacy` ×3, `Satisfaction` ×3, dan `Control` ×5. Subskala kini dihitung dan disajikan kepada pengguna.
 
 **A.3.5 Validasi Instrumen Direkomendasikan**
 
@@ -132,9 +133,10 @@ Domain PTSD (item Q25–Q29) menggunakan ambang batas ≥1 (satu atau lebih jawa
 
 Faridah et al. (2024) dalam studi psikometri SRQ-29 pada mahasiswa Indonesia menemukan bahwa item Q21 (domain zat/alkohol) memiliki *factor loading* yang lemah pada sampel mahasiswa, hingga model SRQ-28 (tanpa item 21) menunjukkan reliabilitas yang lebih baik (α = 0,895). Platform ini tetap menggunakan 29 item sesuai protokol Kemenkes, namun interpretasi domain zat harus digunakan dengan lebih hati-hati, terutama pada sampel mahasiswa.
 
-**A.4.4 Inkonsistensi Parameter Dimensi pada Seed Data**
+**A.4.4 Inkonsistensi Parameter Dimensi pada Seed Data (✅ TELAH DISELESAIKAN — 6 Juli 2026)**
 
-Dari 29 item SRQ-29 di database, terdapat 10 item yang tidak memiliki nilai dimensi (`dimension = NULL`). Ke-10 item tersebut akan tetap menambah skor total, namun tidak dikontribusikan pada penilaian domain (neurotik, psikotik, ptsd, dsb). Kondisi ini mengindikasikan adanya inkonsistensi saat seeding data yang dapat menurunkan akurasi deteksi secara spesifik per domain.
+Dari 29 item SRQ-29 di database, sebelumnya terdapat 10 item yang tidak memiliki nilai dimensi (`dimension = NULL`).
+**Status Perbaikan (FH-1 / FH-2):** Seluruh 29 item SRQ-29 di produksi kini memiliki dimensi non-NULL (`neurotic` ×20, `psychotic` ×3, `ptsd` ×5, `substance` ×1). Akurasi deteksi spesifik per domain kini 100% konsisten dengan protokol Kemenkes.
 
 ---
 
@@ -203,7 +205,7 @@ Sebelum komit `e60742c` (19 Mei 2026), semua hasil asesmen GPIUS-2 yang telah te
 ### C.2 Suite Pengujian Terbatas pada Unit Test
 
 Platform memiliki 157 unit test yang semuanya lulus, namun:
-- **Pengujian E2E (End-to-End)** menggunakan Playwright — kerangka sudah dikonfigurasi dalam dependensi `package.json` tetapi testing belum ditulis sama sekali dan direktori pengujian tidak ada.
+- **Pengujian E2E (End-to-End) (✅ TELAH DISELESAIKAN — 6 Juli 2026)**: Suite pengujian Playwright komprehensif (12/12 tes lulus) telah dibangun dan dikonfigurasi menggunakan database uji terisolasi (`.env.test.local`). Mencakup autentikasi admin, alur asesmen publik, persetujuan privasi UU PDP, dan manajemen instrumen.
 - **Pengujian lintas browser** — hanya diverifikasi di Chrome/Chromium.
 - **Tidak ada mekanisme Error Boundary** — Tidak satupun direktori rute di `src/app/` menggunakan fitur fail Next.js seperti `error.tsx`, `loading.tsx`, atau `not-found.tsx`. Bila terjadi galat data, halaman akan rusak secara fatal dan memperlihatkan log error mentah atau *white screen of death*.
 
@@ -216,7 +218,7 @@ Platform memiliki 157 unit test yang semuanya lulus, namun:
 
 Platform telah mengimplementasikan modul persetujuan (*consent module*) yang selaras dengan UU PDP. Namun beberapa hal masih perlu diperhatikan:
 
-- **Enkripsi Pseudo**: Skema pelindungan data User-Agent dan Alamat IP bagi tamu anonim saat ini menggunakan metode penyandian (*encoding*) dasar `btoa()`. Untuk memenuhi standar keamanan data yang lebih ketat, metode ini direkomendasikan untuk ditingkatkan menggunakan algoritma kriptografi searah (*cryptographic hash*).
+- **Enkripsi Pseudo (✅ TELAH DISELESAIKAN — S-9/S-17)**: Skema pelindungan data User-Agent dan Alamat IP bagi tamu anonim kini menggunakan algoritma kriptografi searah HMAC-SHA256 dengan pengecekan *fail-loud* terhadap `ENCRYPTION_KEY`, menggantikan metode penyandian dasar `btoa()`.
 - **Implisit Consent**: Pemanggilan titik API `startSession` secara mutlak akan meresmikan nilai persetujuan ke tabel tanpa validasi dari opsi formulir muka. 
 - **Kebijakan retensi data** — Belum ada mekanisme otomatis untuk menghapus data pengguna sesuai permintaan (*right to erasure*) yang diamanatkan UU PDP.
 - **Kebijakan privasi yang dipublikasikan** — Platform belum memiliki halaman kebijakan privasi yang dapat diakses publik.
@@ -244,15 +246,15 @@ Berdasarkan seluruh keterbatasan di atas, berikut adalah rekomendasi yang diprio
 ### Prioritas Tinggi (Sangat Kritis)
 
 1. **Perbaiki Arsitektur Dual Source of Truth** — Ini adalah kelemahan arsitektur paling fatal. Implementasikan rute `src/app/test/[slug]/page.tsx` untuk membaca objek _questions_ secara dinamis dari API `getTestBySlug` yang tergabung (*relational query*) dengan _options_, sehingga admin bisa bebas membuat atau mengedit soal.
-2. **Koreksi Dimensi Instrumen (Klinis)** — Segera perbarui kolom dimensi pada tabel `questions` di database, khususnya 15 item GPIUS-2 dan 10 item sisa SRQ-29 agar masuk ke dalam kalkulasi _subscales_. Hal ini wajib dituntaskan agar peruntukan klinis psikologis instrumen berjalan baik.
-3. **Pengamanan Enkripsi Anonimitas** — Ubah fungsi dekode `btoa()` untuk hash _user-agent_ dan IP menggunakan fungsi kriptografis seperti standar `crypto.createHash('sha256')` di backend.
+2. **Koreksi Dimensi Instrumen (Klinis) (✅ SELESAI — FH-1/FH-2)** — Seluruh 65 item pada 4 instrumen (PSS-10, GPIUS-2, SRS, SRQ-29) telah dipetakan ke dimensi non-NULL di database produksi.
+3. **Pengamanan Enkripsi Anonimitas (✅ SELESAI — S-9/S-17)** — Fungsi dekode `btoa()` untuk hash _user-agent_ dan IP telah diganti dengan HMAC-SHA256 berstandar kriptografis di backend.
 4. **Implementasi UI Pelindung Galat (*Error Boundary*)** — Masukkan utilitas `error.tsx`, `loading.tsx`, dan `not-found.tsx` ke dalam struktur folder aplikasi App Router Next.js untuk mencegah layar sistem memutih/putus (fatal crash) dari galat.
 
 ### Prioritas Menengah (Penyempurnaan Fungsionalitas)
 
 5. **Lengkapi Editor Pertanyaan Admin** — Integrasikan opsi varian seperti tipe *binary* / *Likert-6* / *Likert-7* saat pembuatan pertanyaan baru di Admin, dan pasang fitur UI _drag-and-drop_ supaya pengurutan soal intuitif.
 6. **Perbaiki Variabel Skor Laporan (*Radial Gauge*)** — Hapuskan pengkodean tetap `maxScore={100}` atau `questionCount: 0` pada UI Halaman Skor di folder `/results/` dan `/admin/results/` supaya persentase nilai sesuai batas spesifikasi setiap instrumen yang berbeda.
-7. **Pengujian E2E Playwright** — Segera laksanakan dan rangkaikan serangkaian pengujian (*end-to-end testing*), terutama siklus pendaftaran formulir dan validasi skor asesmen.
+7. **Pengujian E2E Playwright (✅ SELESAI — 6 Juli 2026)** — Suite pengujian E2E komprehensif telah dikonfigurasi dan diverifikasi lulus 12/12 tes terhadap database uji terisolasi.
 
 ### Prioritas Rendah (Jangka Panjang & Ekspansi)
 
