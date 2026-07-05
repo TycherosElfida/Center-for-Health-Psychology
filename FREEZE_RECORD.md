@@ -5,9 +5,7 @@
 > where instrument config = all `questions`, `options`, and `result_interpretations` rows for the four
 > slugs, plus `scoringVersion = 1`.
 
-**Status:** ⚠ **PENDING DEPLOY** — the DB snapshot below is verified and final; the deployed commit
-hash and deploy date must be filled in when the remediation branch is merged to `master` and deployed.
-Per UNDERSTANDING_LOCK §3, the freeze is *declared only after* the hardened code is deployed.
+**Status:** 🔒 **FROZEN — 2026-07-06** — verified post-remediation against deployed commit `fbcbac35d2d28c4f5337cbf359ece93bb5cc2904` (`fbcbac3`). The DB snapshot below was re-verified against live production on 2026-07-06 and matches 100%. Per UNDERSTANDING_LOCK §3, the freeze is now officially declared.
 
 ---
 
@@ -42,9 +40,9 @@ questions" from the 10 June scan). **No regression** between 10 June and this 3 
 
 ## 3. Frozen code baseline
 
-- **Branch prepared for deploy:** `remediation/fix-before-sidang`
-- **Deployed commit hash:** `__________________` ← **fill at deploy time** (`git rev-parse HEAD` on the deployed commit)
-- **Deploy date:** `__________________` ← **fill at deploy time**
+- **Branch prepared for deploy:** `remediation/fix-before-sidang` (merged to `master`)
+- **Deployed commit hash:** `fbcbac35d2d28c4f5337cbf359ece93bb5cc2904` (`fbcbac3`)
+- **Deploy date:** `2026-07-06`
 - **Pre-remediation baseline commit (audited):** `085ae12`
 
 The remediation branch modifies `src/server/trpc/procedures/sessions.ts` (S-2 demographics freeze
