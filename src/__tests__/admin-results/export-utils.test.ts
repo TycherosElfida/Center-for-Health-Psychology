@@ -78,4 +78,31 @@ describe("buildExportRows (FH-4)", () => {
     const dimKeys = Object.keys(row!).filter((k) => k.startsWith("DIM "));
     expect(dimKeys).toEqual([]);
   });
+
+  // ── S-10: CSV/Excel formula-injection escaping ──────────────────────
+  it("5 — neutralizes a formula payload in a guest-controlled name cell", () => {
+    const [row] = buildExportRows(
+      [makeRow({ name: '=HYPERLINK("http://evil","click")' })],
+      QUESTION_HEADERS
+    );
+    // Leading '=' must be defused so Excel/Sheets treats it as text.
+    expect(row!["Name"] as string).toBe('\'=HYPERLINK("http://evil","click")');
+  });
+
+  it("6 — escapes +, -, @ formula leads across guest-controlled fields", () => {
+    const [row] = buildExportRows(
+      [makeRow({ name: "+1+1", province: "@SUM(A1:A9)", city: "-2" })],
+      QUESTION_HEADERS
+    );
+    expect(row!["Name"] as string).toBe("'+1+1");
+    // Province/City is composed into one cell: "@SUM(A1:A9) -2"
+    expect(row!["Province/City"] as string).toBe("'@SUM(A1:A9) -2");
+  });
+
+  it("7 — leaves ordinary text and numeric cells untouched", () => {
+    const [row] = buildExportRows([makeRow()], QUESTION_HEADERS);
+    expect(row!["Name"]).toBe("Responden A");
+    expect(row!["Total (Computed)"]).toBe(25);
+    expect(row!["Q1 - First question"]).toBe(2);
+  });
 });

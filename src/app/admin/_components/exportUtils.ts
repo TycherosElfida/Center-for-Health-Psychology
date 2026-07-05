@@ -1,5 +1,17 @@
 import * as XLSX from "xlsx";
 
+/**
+ * Neutralize spreadsheet formula injection (S-10). A cell whose text begins
+ * with =, +, -, @, or a tab/CR is executed as a formula when the exported
+ * CSV/XLSX is opened in Excel or Google Sheets. Guest-controlled fields
+ * (name, province, city) flow into cells unmodified, so a respondent named
+ * `=HYPERLINK(...)` could run code on an admin's machine. Prefixing with an
+ * apostrophe forces the value to be treated as literal text.
+ */
+function escapeFormula(value: string): string {
+  return /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+}
+
 /** Sorted union of dimensionScores keys across all rows (FH-4). */
 function collectDimensionKeys(rows: Array<Record<string, unknown>>): string[] {
   const keys = new Set<string>();
@@ -51,6 +63,13 @@ export function buildExportRows(
 
     row["Score Version"] = r.scoringVersion ?? "";
     row["Date"] = r.createdAt ? new Date(r.createdAt as string).toLocaleDateString("en-GB") : "";
+
+    // S-10: defuse formula injection in every string cell before it reaches
+    // a spreadsheet. Numeric cells (scores, answers) are left as-is.
+    for (const key of Object.keys(row)) {
+      const v = row[key];
+      if (typeof v === "string") row[key] = escapeFormula(v);
+    }
 
     return row;
   });
