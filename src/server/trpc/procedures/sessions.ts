@@ -1,6 +1,6 @@
 import { eq, and, sql, desc, inArray, or, isNull } from "drizzle-orm";
 import { z } from "zod";
-import { randomUUID, createHmac } from "crypto";
+import { randomUUID } from "crypto";
 import { TRPCError } from "@trpc/server";
 
 import { createTRPCRouter, publicProcedure, protectedProcedure } from "../index";
@@ -22,6 +22,7 @@ import { userProfiles } from "@/server/schema/user-profiles";
 import { users } from "@/server/schema/users";
 import { consents } from "@/server/schema/consents";
 import { CONSENT_VERSION } from "@/lib/constants/consent";
+import { hashIdentifier } from "@/server/utils/encryption";
 import { computeScore } from "@/server/scoring/engine";
 import { lookupInterpretation } from "@/server/scoring/interpretation";
 import { validateAnswerValues, validateCompleteness } from "@/server/scoring/validation";
@@ -102,6 +103,7 @@ export const sessionsRouter = createTRPCRouter({
     // IP and UserAgent are hashed using HMAC-SHA-256 keyed with ENCRYPTION_KEY.
     // Keyed HMAC prevents dictionary enumeration of the ~4.3B IPv4 address space
     // that plain SHA-256 would be vulnerable to (UU PDP / reviewer Finding 12).
+    // hashIdentifier fails loud on a missing/malformed key (audit finding S-9).
     let ip = "unknown";
     let ua = "unknown";
 
@@ -110,9 +112,8 @@ export const sessionsRouter = createTRPCRouter({
       ua = ctx.headers.get("user-agent") || "unknown";
     }
 
-    const hmacKey = process.env.ENCRYPTION_KEY ?? "";
-    const ipHash = createHmac("sha256", hmacKey).update(ip).digest("hex");
-    const userAgentHash = createHmac("sha256", hmacKey).update(ua).digest("hex");
+    const ipHash = hashIdentifier(ip);
+    const userAgentHash = hashIdentifier(ua);
     let userId = ctx.session?.userId ?? null;
 
     // Verify user still exists in database to prevent FK constraint violations

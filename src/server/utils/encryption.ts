@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
+import { createCipheriv, createDecipheriv, createHmac, randomBytes } from "crypto";
 
 /**
  * AES-256-GCM encryption utilities for UU PDP compliance.
@@ -29,6 +29,29 @@ function getKey(): Buffer {
     );
   }
   return Buffer.from(hex, "hex");
+}
+
+/**
+ * Keyed one-way hash for pseudonymised identifiers (IP, User-Agent) — UU PDP.
+ *
+ * HMAC-SHA-256 keyed with ENCRYPTION_KEY. The keyed HMAC (vs plain SHA-256)
+ * prevents dictionary enumeration of the ~4.3B IPv4 space.
+ *
+ * Fails loud if ENCRYPTION_KEY is missing/malformed, mirroring getKey().
+ * The previous inline call site used `ENCRYPTION_KEY ?? ""`, which silently
+ * hashed with an empty key when the var was unset (audit finding S-9).
+ *
+ * The raw hex string is used as the HMAC key (not a decoded Buffer) so output
+ * is byte-identical to the pre-remediation inline implementation.
+ */
+export function hashIdentifier(value: string): string {
+  const hex = process.env.ENCRYPTION_KEY;
+  if (!hex || hex.length !== 64) {
+    throw new Error(
+      "ENCRYPTION_KEY must be a 64-character hex string (32 bytes) for identifier hashing."
+    );
+  }
+  return createHmac("sha256", hex).update(value).digest("hex");
 }
 
 /**
