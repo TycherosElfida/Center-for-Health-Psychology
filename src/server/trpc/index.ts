@@ -43,19 +43,26 @@ export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
 
-  // Double check the user actually exists in the DB (wasn't deleted)
-  // to prevent foreign key violations on protected endpoints
+  // Double check the user actually exists in the DB (wasn't deleted) to
+  // prevent foreign key violations, and is still active. Auth.js JWT
+  // sessions have no server-side revocation, so a user deactivated via
+  // adminUserAccounts.toggleUserActive must be rejected on every request,
+  // not just at login (audit finding S-5).
   const { users } = await import("../schema/users");
   const { eq } = await import("drizzle-orm");
-  const userExists = await ctx.db
-    .select({ id: users.id })
+  const user = await ctx.db
+    .select({ id: users.id, isActive: users.isActive })
     .from(users)
     .where(eq(users.id, ctx.session.userId))
     .limit(1)
     .then((r) => r[0]);
 
-  if (!userExists) {
+  if (!user) {
     throw new TRPCError({ code: "UNAUTHORIZED", message: "User not found" });
+  }
+
+  if (!user.isActive) {
+    throw new TRPCError({ code: "UNAUTHORIZED", message: "Account is deactivated" });
   }
 
   return next({
