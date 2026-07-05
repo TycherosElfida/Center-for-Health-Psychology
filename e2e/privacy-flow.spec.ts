@@ -18,9 +18,7 @@ test.describe("Privacy & UU PDP Compliance", () => {
 
     // 3. Accept Consent (Explicit consent requirement in UU PDP)
     const consentCheckbox = page.getByRole("checkbox").first();
-    if (await consentCheckbox.isVisible()) {
-      await consentCheckbox.check();
-    }
+    await consentCheckbox.check();
     await page
       .getByRole("button", { name: /Mulai Asesmen|Lanjutkan/i })
       .first()
