@@ -204,14 +204,14 @@ Sebelum komit `e60742c` (19 Mei 2026), semua hasil asesmen GPIUS-2 yang telah te
 
 ### C.2 Suite Pengujian Terbatas pada Unit Test
 
-Platform memiliki 157 unit test yang semuanya lulus, namun:
+Platform memiliki 231 unit test yang semuanya lulus, namun:
 - **Pengujian E2E (End-to-End) (✅ TELAH DISELESAIKAN — 6 Juli 2026)**: Suite pengujian Playwright komprehensif (12/12 tes lulus) telah dibangun dan dikonfigurasi menggunakan database uji terisolasi (`.env.test.local`). Mencakup autentikasi admin, alur asesmen publik, persetujuan privasi UU PDP, dan manajemen instrumen.
 - **Pengujian lintas browser** — hanya diverifikasi di Chrome/Chromium.
 - **Tidak ada mekanisme Error Boundary** — Tidak satupun direktori rute di `src/app/` menggunakan fitur fail Next.js seperti `error.tsx`, `loading.tsx`, atau `not-found.tsx`. Bila terjadi galat data, halaman akan rusak secara fatal dan memperlihatkan log error mentah atau *white screen of death*.
 
 ### C.3 Persoalan Teknis Integritas Transaksi dan Logika Database
 
-- **Atomicity Pengiriman Hasil**: Penyimpanan tes (`submitAssessment`) mencatat perubahan status di tabel `test_sessions` sebelum mencatatkan hasil kalkulasi ke `results`. Karena arsitektur `drizzle-orm/neon-http` tidak mendukung konsep Transaction secara natif, hal ini meninggalkan risiko *orphan-session* bila koneksi terputus di tengah proses, meskipun hingga kini 27 sesi tes masuk tanpa cacat.
+- **Atomicity Pengiriman Hasil**: Penyimpanan tes (`submitAssessment`) mencatat perubahan status di tabel `test_sessions` sebelum mencatatkan hasil kalkulasi ke `results`. Karena arsitektur `drizzle-orm/neon-http` tidak mendukung konsep Transaction secara natif, hal ini meninggalkan risiko *orphan-session* bila koneksi terputus di tengah proses, meskipun sistem telah menangani puluhan sesi tes tanpa cacat di produksi (catatan historis eksplisit: status data bersifat dinamis dan terpisah dari unit kode yang dibekukan; tercatat 63 sesi pasca-pembersihan data uji sintetis pada 6 Juli 2026 — lihat `FREEZE_RECORD.md` untuk status data terkini).
 - **Tabel `scoring_rules` Tidak Terpakai**: Modul kalkulasi logika lebih terintegrasi pada TypeScript code murni dan kolom _result_interpretations_, menyebabkan tabel `scoring_rules` ditinggalkan kosong (unused). Begitu juga dengan `guest_leads`, `accounts`, `verification_tokens`.
 
 ### C.4 Penyimpanan Data Sensitif dan Kepatuhan UU PDP
@@ -230,12 +230,28 @@ Platform bergantung pada beberapa layanan eksternal yang memiliki implikasi kebe
 | Layanan | Fungsi | Risiko |
 |---|---|---|
 | Neon PostgreSQL | Database utama | Jika langganan tidak diperpanjang, data tidak dapat diakses |
-| Upstash Redis | Rate limiting API | Jika tidak aktif, perlindungan API berkurang |
+| Upstash Redis | Rate limiting API (Non-aktif / Dead Code) | Saat ini merupakan *dead code* yang tidak aktif di layer middleware/API; sistem tidak memiliki proteksi aktif terhadap *brute-force* atau *spam* submission |
 | Resend | Pengiriman email | Jika tidak aktif, fitur laporan email berhenti |
 | Sentry | Pemantauan error | Jika tidak aktif, error produksi tidak terpantau |
 | Vercel | Hosting | Jika tidak aktif, platform tidak dapat diakses |
 
-**Rekomendasi:** Pastikan semua akun layanan ini dipindahkan ke email institusional UKRIDA sebelum atau segera setelah serah terima, untuk menghindari kehilangan akses jika akun personal mahasiswa tidak aktif.
+**Rekomendasi:** Pastikan semua akun layanan ini dipindahkan ke email institusional UKRIDA sebelum atau segera setelah serah terima, untuk menghindari kehilangan akses jika akun personal mahasiswa tidak aktif. Segera aktifkan kembali atau gantikan konfigurasi Upstash Redis untuk proteksi *rate limiting*.
+
+### C.6 Temuan Audit Keamanan & Infrastruktur Menyeluruh (S-6 s/d S-18 & Isolasi DB)
+
+Berdasarkan audit keamanan sistem dan infrastruktur menyeluruh, teridentifikasi beberapa celah teknis dan arsitektural yang memerlukan mitigasi pada fase pengembangan berikutnya:
+
+- **C.6.1 Rotasi Rahasia Autentikasi (S-6):** Ketiadaan mekanisme rotasi otomatis atau validasi cadangan (*fallback validation*) untuk variabel `AUTH_SECRET` / `NEXTAUTH_SECRET` di lingkungan produksi.
+- **C.6.2 Konfigurasi CORS & Proteksi CSRF (S-7):** Titik akhir tRPC dan API bergantung pada header standar Next.js/Auth.js tanpa penegakan daftar putih (*whitelist*) CORS yang ketat khusus untuk endpoint publik.
+- **C.6.3 Absensinya Rate Limiting pada Rute Kritis (S-8):** Karena Upstash Redis saat ini tidak aktif (*dead code*), rute publik yang sensitif (`startSession`, `submitAssessment`, login admin) tidak memiliki proteksi aktif terhadap serangan *brute-force*, *spam*, atau *Denial-of-Service* (DoS).
+- **C.6.4 Batasan Sanitasi & Validasi Input (S-11):** Meskipun Zod memvalidasi tipe skema dasar, kontrol batasan terhadap potensi XSS pada field teks bebas atau pembatasan ukuran payload (*payload size limit*) pada permintaan laporan belum diterapkan secara ketat.
+- **C.6.5 Penanganan & Potensi Kebocoran Galat (S-12):** Pelacakan tumpukan (*stack traces*) atau pesan error internal database berisiko bocor pada lingkungan non-produksi atau pada kasus batas tRPC yang tidak ditangani dengan pemotongan (*stripping*) universal di produksi.
+- **C.6.6 Pembatalan Sesi & Masa Aktif Token (S-13):** Token sesi / JWT tidak diikat dengan Alamat IP atau *User-Agent*, sehingga tidak otomatis kedaluwarsa jika terjadi perubahan identitas jaringan, serta kurangnya mekanisme pencabutan sesi (*session revocation*) aktif.
+- **C.6.7 Proteksi Eskalasi Hak Akses Admin (S-14):** Pengecekan peran Admin bergantung pada klaim JWT tanpa verifikasi ulang ke database secara real-time per permintaan atau kewajiban *Multi-Factor Authentication* (MFA) untuk tindakan administratif berisiko tinggi.
+- **C.6.8 Cakupan Log Audit (S-15):** Tabel `auditLogs` mencatat tindakan CRUD pada tes dan skala, namun akses bersifat baca (*read-only access*) seperti melihat demografi responden yang sensitif atau mengunduh hasil massal belum tercatat dalam log audit.
+- **C.6.9 Header Keamanan HTTP / HSTS / CSP (S-16):** Ketiadaan konfigurasi *Content Security Policy* (CSP) yang ketat, *HTTP Strict Transport Security* (HSTS), serta header `X-Frame-Options` pada konfigurasi Next.js.
+- **C.6.10 Enkripsi Data Field-Level di Database (S-18):** Sementara data anonim (IP/User-Agent) telah diamankan dengan HMAC-SHA256, data demografis sensitif pengguna terdaftar (nama, usia, domisili) masih disimpan dalam bentuk teks terang (*plaintext*) di PostgreSQL tanpa enkripsi tingkat kolom (*field-level encryption*).
+- **C.6.11 Isolasi Kredensial & Pemisahan Database Dev/Prod:** Risiko kontaminasi silang atau *schema drift* antar lingkungan akibat berbagi variabel lingkungan atau salah konfigurasi (`DATABASE_URL` vs `.env.local` vs `.env.test.local`), menuntut pemisahan kredensial database yang ketat antara pengembangan, pengujian, dan produksi.
 
 ---
 

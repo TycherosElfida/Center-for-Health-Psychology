@@ -22,6 +22,28 @@
 | `srq29`  | 29 | 58 | 8  | 0 | published | 1 |
 | **Total** | **65** | **249** | **50** | **0** | — | — |
 
+**Raw SQL Verification Query & Output (2026-07-06):**
+```sql
+SELECT t.slug,
+       (SELECT count(*) FROM questions q WHERE q.test_id = t.id)::int AS questions,
+       (SELECT count(*) FROM options o JOIN questions q ON o.question_id = q.id WHERE q.test_id = t.id)::int AS options,
+       (SELECT count(*) FROM result_interpretations ri WHERE ri.test_id = t.id)::int AS result_interpretations,
+       (SELECT count(*) FROM questions q WHERE q.test_id = t.id AND q.dimension IS NULL)::int AS dimension_nulls,
+       t.status,
+       t.version AS scoring_version
+FROM tests t
+WHERE t.slug IN ('pss10', 'gpius2', 'srs', 'srq29')
+ORDER BY t.slug;
+```
+```json
+[
+  { "slug": "gpius2", "questions": 15, "options": 75, "result_interpretations": 21, "dimension_nulls": 0, "status": "published", "scoring_version": 1 },
+  { "slug": "pss10",  "questions": 10, "options": 50, "result_interpretations": 9,  "dimension_nulls": 0, "status": "published", "scoring_version": 1 },
+  { "slug": "srq29",  "questions": 29, "options": 58, "result_interpretations": 8,  "dimension_nulls": 0, "status": "published", "scoring_version": 1 },
+  { "slug": "srs",    "questions": 11, "options": 66, "result_interpretations": 12, "dimension_nulls": 0, "status": "published", "scoring_version": 1 }
+]
+```
+
 Any future `count(*)` that diverges from this table means the frozen instrument config was mutated —
 investigate before trusting any results scored after the divergence.
 
@@ -54,9 +76,13 @@ not the 085ae12 audit baseline. That is why this record is finalized at deploy, 
 ## 4. Data state at freeze preparation (informational, not part of the frozen unit)
 
 Snapshot 2026-07-03: 80 sessions · 69 completed · 69 results · 1077 answers · **0 orphans** (completed = results).
+*(Note: Following the 6 July 2026 synthetic test data cleanup, the informational data state stands at 63 sessions · 58 completed · 58 results · 883 answers).*
 
 These pre-freeze rows are **not** the study sample (UNDERSTANDING_LOCK D3). The study sample is
 post-freeze respondents only; `in_progress` sessions are excluded.
+
+> [!IMPORTANT]
+> **JTIIK / Study Sampling Guidance:** Because there is a 3-day gap between the initial data snapshot (3 July) and the actual freeze deploy date (6 July), any data extraction or JTIIK sampling script MUST filter by a precise post-deploy timestamp (e.g., `test_sessions.started_at >= '2026-07-06T00:00:00Z'` or the exact deploy timestamp of commit `fbcbac3`) or explicitly exclude pre-deploy session IDs. Relying merely on a date cutoff of `2026-07-03` will improperly include pre-freeze sessions collected during the intervening window.
 
 ## 5. Operational freeze protocol (active during the study window)
 
@@ -69,7 +95,7 @@ Per UNDERSTANDING_LOCK §4, once this record is finalized:
 4. Weekly integrity query during collection: answers count vs expected per completed session; flag any
    `answers.answered_at > test_sessions.completed_at` (should be impossible after FH-1, and now also
    for demographics after S-2).
-5. Study sample = post-freeze respondents only.
+5. Study sample = post-freeze respondents only (filtered strictly by deploy timestamp as noted in §4).
 
 ## 6. How to finalize this record (deploy checklist)
 
