@@ -4,7 +4,7 @@
 \chapter{IMPLEMENTASI DAN PENGUJIAN}
 \label{chap:implementasi}
 
-Bab ini memaparkan implementasi sistem berdasarkan perancangan yang telah diuraikan pada Bab~\ref{chap:analisa-perancangan}. Pembahasan mencakup lingkungan pengembangan, implementasi basis data, \textit{scoring engine}, API tRPC, sistem autentikasi, panel administrasi, generasi PDF dan pengiriman surel, pengujian unit, \textit{pipeline} CI/CD, serta \textit{deployment} ke lingkungan produksi.
+Bab ini memaparkan implementasi sistem berdasarkan perancangan yang telah diuraikan pada Bab~\ref{chap:analisa-perancangan}. Pembahasan mencakup lingkungan pengembangan, implementasi basis data, \textit{scoring engine}, API tRPC, sistem autentikasi, panel administrasi, generasi PDF dan pengiriman surel, pengujian unit, \textit{pipeline} CI/CD, serta \textit{deployment} ke lingkungan produksi beserta opsi instalasi mandiri (\textit{on-premise}) pada server institusi.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Lingkungan Pengembangan}
@@ -88,6 +88,8 @@ Sebagai referensi untuk reproduktibilitas ilmiah, berikut adalah spesifikasi alg
 \RETURN $total, dimScores$
 \end{algorithmic}
 \end{algorithm}
+
+Algoritma pada Pseudocode~\ref{alg:scoring} di atas hanya menghasilkan skor numerik; pemetaan skor tersebut menjadi label yang dapat dipahami pengguna awam dilakukan oleh fungsi terpisah berikut.
 
 % [R1] Explicitly classify as impure (DB + Sentry dependency)
 \subsection{Fungsi \texttt{lookupInterpretation} (Lapisan Interpretasi)}
@@ -260,10 +262,15 @@ Modul \textit{scoring engine} diuji dengan 59 kasus uji yang tersebar dalam tiga
 Kedua \textit{job} menggunakan \textit{caching} pnpm untuk mempercepat instalasi dependensi. Sebuah \textit{pull request} tidak dapat di-\textit{merge} apabila salah satu \textit{job} gagal.
 
 % ─────────────────────────────────────────────────────────────────────────────
-\section{\textit{Deployment}}
+\section{\textit{Deployment} dan Opsi Instalasi Mandiri}
 \label{sec:impl-deployment}
 
-Platform CHP di-\textit{deploy} pada infrastruktur \textit{serverless} menggunakan dua layanan terkelola:
+Platform CHP dirancang agar dapat dioperasikan melalui dua jalur yang menjalankan basis kode yang sama persis: (1) \textit{deployment cloud serverless}, yang menjadi jalur produksi saat ini, dan (2) instalasi mandiri (\textit{on-premise}) pada server milik institusi, baik secara manual maupun melalui kontainer Docker. Seluruh perbedaan lingkungan (lokasi basis data, kunci rahasia, layanan pihak ketiga) ditangani melalui variabel konfigurasi pada berkas \texttt{.env}, tanpa perubahan kode. Dokumentasi teknis kedua jalur tersedia pada repositori GitHub publik proyek ini.
+
+\subsection{\textit{Deployment Cloud} (Vercel dan Neon)}
+\label{subsec:deploy-cloud}
+
+Jalur produksi saat ini menggunakan dua layanan terkelola:
 
 \begin{enumerate}[leftmargin=2cm]
   \item \textbf{Vercel} untuk komputasi: setiap \textit{push} ke cabang \texttt{master} secara otomatis memicu \textit{deployment} produksi. Setiap \textit{pull request} mendapatkan \textit{preview deployment} dengan URL unik untuk pengujian.
@@ -273,6 +280,96 @@ Platform CHP di-\textit{deploy} pada infrastruktur \textit{serverless} menggunak
 Seluruh 16 \textit{environment variable} dikonfigurasi melalui \textit{dashboard} Vercel dan tidak disimpan dalam repositori kode sumber. Kunci rahasia (\texttt{AUTH\_SECRET}, \texttt{ADMIN\_JWT\_SECRET}, \texttt{ENCRYPTION\_KEY}) dihasilkan menggunakan generator kriptografis yang aman dan disimpan secara terenkripsi oleh Vercel.
 
 Pemantauan kesalahan (\textit{error monitoring}) menggunakan Sentry versi 10.50.0, yang terintegrasi baik pada sisi \textit{server} (\texttt{sentry.server.config.ts}) maupun sisi \textit{edge} (\texttt{sentry.edge.config.ts}). Setiap kesalahan yang tidak tertangani pada produksi secara otomatis dilaporkan ke \textit{dashboard} Sentry dengan konteks \textit{stack trace} dan metadata permintaan.
+
+\subsection{Instalasi Manual (\textit{On-Premise})}
+\label{subsec:instalasi-manual}
+
+Apabila institusi menghendaki sistem berjalan sepenuhnya pada server sendiri, instalasi manual dilakukan melalui langkah-langkah berikut:
+
+\begin{enumerate}[leftmargin=2cm]
+  \item \textbf{Penyiapan prasyarat}: Node.js versi 22 (LTS) atau lebih baru, pnpm versi 9 atau lebih baru, Git, serta sebuah \textit{instance} PostgreSQL 17 (dapat berupa PostgreSQL yang dipasang langsung pada server institusi maupun layanan terkelola).
+  \item \textbf{Pengambilan kode sumber}: \texttt{git clone} dari repositori GitHub proyek, dilanjutkan \texttt{pnpm install} untuk memasang seluruh dependensi sesuai \textit{lockfile}.
+  \item \textbf{Konfigurasi lingkungan}: menyalin \texttt{.env.example} menjadi \texttt{.env.local}, lalu mengisi 14 variabel konfigurasi aktif (termasuk \texttt{DATABASE\_URL} yang diarahkan ke PostgreSQL institusi) beserta dua variabel \textit{bootstrap} akun admin awal (\texttt{ADMIN\_EMAIL}, \texttt{ADMIN\_PASSWORD}).
+  \item \textbf{Inisialisasi basis data}: \texttt{pnpm db:push} menerapkan seluruh skema (20 tabel dan 7 \textit{enum}) ke basis data tujuan, dilanjutkan \texttt{pnpm db:seed} yang bersifat idempoten untuk mengisi empat instrumen psikometri, rentang interpretasi, sitasi, dan akun \texttt{super\_admin} pertama.
+  \item \textbf{\textit{Build} dan eksekusi}: \texttt{pnpm build} menghasilkan \textit{build} produksi, lalu \texttt{pnpm start} menjalankan aplikasi pada \textit{port} 3000 (dapat diubah).
+  \item \textbf{Publikasi}: untuk akses melalui HTTPS, aplikasi ditempatkan di belakang \textit{reverse proxy} (misalnya Nginx) yang menangani sertifikat TLS dan meneruskan permintaan ke \textit{port} aplikasi.
+\end{enumerate}
+
+\subsection{Instalasi Berbasis Kontainer (Docker)}
+\label{subsec:instalasi-docker}
+
+Sebagai alternatif yang lebih terisolasi, repositori menyediakan \textit{Dockerfile} multi-tahap (\textit{multi-stage}) beserta dua berkas Docker Compose. \textit{Dockerfile} tersusun atas empat tahap:
+
+\begin{enumerate}[leftmargin=2cm]
+  \item \textbf{\texttt{deps}}: berbasis citra \texttt{node:24-alpine}, memasang dependensi menggunakan pnpm dengan \textit{lockfile} beku (\textit{frozen lockfile}) agar versi dependensi identik di mesin mana pun.
+  \item \textbf{\texttt{dev}}: tahap pengembangan yang memetakan (\textit{bind-mount}) direktori proyek ke dalam kontainer, sehingga perubahan kode langsung termuat ulang (\textit{hot reload}).
+  \item \textbf{\texttt{builder}}: menjalankan \textit{build} produksi Next.js di dalam kontainer; kunci rahasia tidak pernah disertakan pada tahap ini.
+  \item \textbf{\texttt{runner}}: citra produksi minimal yang hanya berisi keluaran \textit{standalone} Next.js, dijalankan sebagai pengguna \textit{non-root} demi keamanan, dan mengekspos \textit{port} 3000.
+\end{enumerate}
+
+Pengoperasiannya cukup satu perintah: \texttt{docker compose --env-file .env.local up --build} untuk mode pengembangan, atau \texttt{docker compose -f docker-compose.prod.yml --env-file .env.local up --build} untuk citra produksi teroptimasi. Seluruh konfigurasi tetap bersumber dari berkas \texttt{.env.local} yang sama dengan instalasi manual; inisialisasi basis data (langkah 4 pada Subbab~\ref{subsec:instalasi-manual}) tetap dijalankan satu kali sebelum penggunaan pertama.
+
+\subsection{Kebutuhan Perangkat untuk Instalasi Mandiri}
+\label{subsec:kebutuhan-onprem}
+
+Tabel~\ref{tab:kebutuhan-onprem} merinci kebutuhan perangkat keras dan perangkat lunak server untuk instalasi mandiri. Spesifikasi ini tergolong ringan karena aplikasi Next.js \textit{standalone} berukuran kecil dan beban kerja platform lebih bersifat \textit{I/O-bound} (menunggu basis data) daripada \textit{CPU-bound}.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Kebutuhan Perangkat Server untuk Instalasi Mandiri}
+  \label{tab:kebutuhan-onprem}
+  \begin{tabularx}{\textwidth}{@{}l X X@{}}
+    \toprule
+    \textbf{Komponen} & \textbf{Minimum} & \textbf{Direkomendasikan} \\
+    \midrule
+    CPU & 2 \textit{core} x86-64 & 4 \textit{core} \\
+    RAM & 4 GB & 8 GB (aplikasi + PostgreSQL + sistem operasi) \\
+    Penyimpanan & 20 GB SSD & 40 GB SSD \\
+    Sistem operasi & Linux \textit{server} 64-bit (mis.\ Ubuntu Server 22.04 LTS) & sama; Windows/macOS didukung melalui Docker Desktop untuk kebutuhan pengembangan \\
+    Perangkat lunak (jalur Docker) & Docker Engine v24+ dengan Compose v2 & sama \\
+    Perangkat lunak (jalur manual) & Node.js 22 LTS, pnpm 9+, PostgreSQL 17 & sama \\
+    Jaringan & Satu \textit{port} TCP untuk aplikasi (bawaan 3000, dapat diubah) & \textit{reverse proxy} dengan TLS untuk akses HTTPS publik \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Ringan atau tidaknya kebutuhan pada Tabel~\ref{tab:kebutuhan-onprem} tersebut turut dipengaruhi oleh sifat kontainer itu sendiri, sebagaimana diuraikan berikut.
+
+\subsection{Isolasi Kontainer dan Koeksistensi dengan Aplikasi Lain}
+\label{subsec:isolasi-kontainer}
+
+Pertanyaan yang wajar muncul ketika institusi mempertimbangkan instalasi mandiri adalah: apakah server institusi (beserta aplikasi-aplikasi lain yang sudah berjalan di dalamnya) harus menyesuaikan diri terhadap kebutuhan platform ini? Jawabannya tidak, dan justru inilah alasan utama dukungan Docker disediakan. Sebuah kontainer mengemas aplikasi beserta seluruh lingkungan eksekusinya (versi Node.js, dependensi, konfigurasi) menjadi satu unit yang terisolasi dari sistem operasi induk. Konsekuensinya:
+
+\begin{enumerate}[leftmargin=2cm]
+  \item Server tidak perlu memasang Node.js, pnpm, atau dependensi apa pun secara global; semuanya berada di dalam citra kontainer.
+  \item Aplikasi lain pada server yang sama tidak terpengaruh dan tidak perlu diubah, karena tidak ada dependensi yang dibagi-pakai; konflik versi pustaka antar-aplikasi tidak dapat terjadi.
+  \item Satu-satunya sumber daya yang berpotensi bersinggungan adalah nomor \textit{port} jaringan, dan pemetaannya sepenuhnya dapat dikonfigurasi (misalnya \texttt{8080:3000} apabila \textit{port} 3000 telah terpakai aplikasi lain).
+  \item Basis data pun dapat dijalankan sebagai kontainer PostgreSQL tersendiri, sehingga seluruh tumpukan berdiri sendiri di atas server institusi tanpa ketergantungan eksternal.
+\end{enumerate}
+
+Tabel~\ref{tab:cloud-vs-onprem} membandingkan kedua jalur operasional secara ringkas sebagai dasar pengambilan keputusan institusi.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Perbandingan Jalur \textit{Deployment Cloud} dan Instalasi Mandiri}
+  \label{tab:cloud-vs-onprem}
+  \begin{tabularx}{\textwidth}{@{}p{3.2cm} X X@{}}
+    \toprule
+    \textbf{Aspek} & \textbf{\textit{Cloud} (Vercel + Neon)} & \textbf{\textit{On-Premise} (Docker + PostgreSQL mandiri)} \\
+    \midrule
+    Komputasi & \textit{Serverless}, skala otomatis & Kapasitas tetap sesuai spesifikasi server \\
+    Basis data & Neon PostgreSQL terkelola & PostgreSQL yang dikelola institusi \\
+    Lokasi data & Pusat data penyedia \textit{cloud} & Sepenuhnya di server institusi \\
+    Pembaruan sistem & Otomatis pada setiap \textit{push} ke \texttt{master} & Manual (\texttt{git pull} dan \textit{build} ulang citra) \\
+    TLS dan domain & Dikelola otomatis oleh Vercel & Dikelola institusi melalui \textit{reverse proxy} \\
+    Keamanan infrastruktur & Tanggung jawab penyedia tersertifikasi (SOC 2, ISO 27001) & Tanggung jawab tim TI institusi \\
+    Biaya & Langganan layanan (tersedia tingkat gratis) & Perangkat keras, listrik, dan tenaga pengelola \\
+    Kesesuaian & Operasional publik dengan pemeliharaan minimal & Kebutuhan kedaulatan data internal institusi \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Karena kedua jalur menjalankan basis kode dan skema basis data yang identik, perpindahan dari satu jalur ke jalur lain tidak memerlukan modifikasi kode, cukup penyesuaian variabel lingkungan dan migrasi isi basis data. Dengan demikian, apabila di kemudian hari UKRIDA mensyaratkan seluruh data berada pada infrastruktur sendiri, jalur instalasi mandiri pada Subbab~\ref{subsec:instalasi-manual} dan~\ref{subsec:instalasi-docker} dapat ditempuh tanpa menyentuh satu baris kode pun.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Pemenuhan Permintaan Dosen Pemilik Proyek}

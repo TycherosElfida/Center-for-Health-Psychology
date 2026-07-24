@@ -11,7 +11,7 @@
 Berdasarkan pelaksanaan Kerja Praktik yang telah dilakukan, dapat ditarik kesimpulan sebagai berikut:
 
 \begin{enumerate}[leftmargin=2cm]
-  \item Platform Asesmen Psikologi Digital untuk \textit{Center for Health Psychology} (CHP) UKRIDA berhasil dirancang dan diimplementasikan sebagai aplikasi web \textit{full-stack} menggunakan Next.js 16, TypeScript 6.0.3 (\texttt{strict: true}), tRPC v11, dan Drizzle ORM di atas Neon PostgreSQL \textit{serverless}. Platform melayani empat aktor pengguna utama, yaitu peserta anonim, pengguna terdaftar, administrator, dan super admin, melalui 61 prosedur API yang diorganisasi dalam 16 \textit{router namespace}.
+  \item Platform Asesmen Psikologi Digital untuk \textit{Center for Health Psychology} (CHP) UKRIDA berhasil dirancang dan diimplementasikan sebagai aplikasi web \textit{full-stack} menggunakan Next.js 16, TypeScript 6.0.3 (\texttt{strict: true}), tRPC v11, dan Drizzle ORM di atas Neon PostgreSQL \textit{serverless}. Platform melayani empat aktor pengguna utama, yaitu peserta anonim, pengguna terdaftar, administrator, dan super admin, melalui 61 prosedur API yang diorganisasi dalam 16 \textit{router namespace}. Selain jalur \textit{cloud} tersebut, platform juga dapat diinstalasi secara mandiri (\textit{on-premise}) pada server institusi, baik manual maupun melalui kontainer Docker, tanpa perubahan kode (Subbab~\ref{sec:impl-deployment}).
 
   \item Skema basis data yang terdiri atas 20 tabel dan 7 \textit{enum} PostgreSQL berhasil mengakomodasi empat instrumen psikometri dengan karakteristik yang beragam: PSS-10 (dua subskala, skala Likert 0--4), GPIUS-2 (5 subskala, skala Likert 1--5, \textit{rollup} DSR), SRS (3 aspek deskriptif, skala Likert 1--6), dan SRQ-29 (4 kluster, jawaban biner). Pemisahan tabel \texttt{answers} dari \texttt{results} memungkinkan reproduktibilitas ilmiah melalui \textit{re-scoring}.
 
@@ -22,7 +22,7 @@ Berdasarkan pelaksanaan Kerja Praktik yang telah dilakukan, dapat ditarik kesimp
 
   \item Panel administrasi dengan delapan modul (termasuk \textit{dashboard}, manajemen instrumen, konfigurasi skala, data hasil, permintaan laporan, manajemen akun, dan jejak audit) berhasil diimplementasikan, memungkinkan tim psikologi mengelola instrumen dan mengekspor data riset secara mandiri tanpa intervensi pengembang.
 
-  \item Keamanan dan privasi data diimplementasikan sesuai prinsip UU PDP melalui sesi anonim, penyamaran alamat IP (\textit{hashing} satu arah), enkripsi surel AES-256-GCM, persetujuan eksplisit, \textit{rate limiting} berlapis, dan jejak audit administratif.
+  \item Keamanan dan privasi data diimplementasikan sesuai prinsip UU PDP melalui strategi perlindungan bertingkat yang mengikuti fungsi data: \textit{hashing} satu arah untuk alamat IP dan \textit{user agent}, enkripsi surel AES-256-GCM, serta kontrol akses berbasis peran, jejak audit administratif, dan pembekuan pasca-sesi untuk data demografis yang dikonsumsi fungsional, dilengkapi sesi anonim, persetujuan eksplisit, dan \textit{rate limiting} berlapis. Batasan pendekatan ini dinyatakan secara eksplisit pada Subbab~\ref{sec:batasan-kp}.
 
   % [R9] Scoped "komprehensif" to unit and procedure level
   \item Pengujian pada level unit dan prosedur dengan total 213 kasus uji dalam 25 \textit{file} uji dan \textit{pipeline} CI/CD dua \textit{job} paralel berhasil menjaga kualitas kode sepanjang siklus pengembangan. Pengujian \textit{end-to-end} otomatis dan uji beban/performa merupakan pekerjaan lanjutan.
@@ -50,4 +50,8 @@ Untuk pengembangan Platform CHP di masa mendatang, penulis menyarankan beberapa 
   \item \textbf{Antarmuka migrasi sesi tamu ke akun}: Meskipun prosedur \texttt{claimSession} telah diimplementasikan di sisi \textit{backend}, antarmuka pengguna untuk memandu peserta anonim dalam mengklaim sesi mereka ke akun baru perlu dirancang dan diimplementasikan.
 
   \item \textbf{Ambang batas cakupan kode dalam CI}: \textit{Pipeline} CI saat ini tidak menerapkan ambang batas minimum cakupan kode. Disarankan untuk mengonfigurasi Vitest agar \textit{build} gagal apabila cakupan kode pada modul \textit{scoring engine} turun di bawah 95\%.
+
+  \item \textbf{Uji coba instalasi mandiri pada server UKRIDA}: Panduan instalasi manual dan berbasis Docker beserta kebutuhan perangkatnya telah didokumentasikan pada Subbab~\ref{sec:impl-deployment}. Disarankan untuk melaksanakan proyek percontohan (\textit{pilot}) instalasi pada server institusi guna memverifikasi panduan tersebut terhadap lingkungan nyata dan mengukur kebutuhan sumber daya aktual di bawah beban penggunaan sesungguhnya.
+
+  \item \textbf{Pseudonimisasi data demografis}: Kolom nama pada tabel \texttt{session\_demographics} saat ini disimpan terbaca karena dibutuhkan secara fungsional (Subbab~\ref{sec:perancangan-db}). Apabila kebutuhan riset di masa mendatang tidak lagi menuntut identifikasi langsung, disarankan mengganti nama dengan pengenal pseudonim dan menyimpan tabel pemetaannya secara terpisah dengan kontrol akses yang lebih ketat, atau mengevaluasi enkripsi per kolom apabila kemampuan pencarian atas nama bersedia dikorbankan.
 \end{enumerate}

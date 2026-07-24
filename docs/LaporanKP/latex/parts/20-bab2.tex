@@ -31,11 +31,18 @@ Pemilihan Agile untuk proyek ini didasari tiga pertimbangan utama:
   \item Tim kecil yang terdiri atas dua pengembang cocok dengan prinsip Agile yang mengutamakan komunikasi langsung dan minimalisasi birokrasi proses.
 \end{enumerate}
 
+\subsection{Pengembangan Perangkat Lunak Berbantuan Kecerdasan Buatan}
+\label{subsec:ai-assisted}
+
+Perkembangan model bahasa besar (\textit{Large Language Model}/LLM) dalam beberapa tahun terakhir melahirkan praktik baru dalam rekayasa perangkat lunak, yaitu pengembangan berbantuan kecerdasan buatan (AI). Spektrum praktik ini membentang dari asisten pelengkap kode (\textit{code completion}) hingga pendekatan yang lebih menyeluruh yang dikenal sebagai \textit{agentic engineering}: pengembang mendelegasikan tugas implementasi yang terdefinisi jelas kepada agen AI, kemudian meninjau, menguji, dan mengoreksi keluarannya secara sistematis. Bukti empiris menunjukkan pendekatan ini berdampak nyata terhadap produktivitas; eksperimen terkontrol oleh Peng dkk.\ (2023) mencatat bahwa pengembang yang dibantu AI menyelesaikan tugas implementasi 55,8\% lebih cepat dibandingkan kelompok kontrol.
+
+Namun, literatur yang sama menegaskan bahwa percepatan tersebut tidak menghilangkan peran pengembang, melainkan menggesernya. Keluaran model bahasa bersifat probabilistik: kode yang dihasilkan dapat mengandung kesalahan logika yang halus, asumsi yang tidak berdasar, atau referensi yang tidak dapat ditelusuri sumbernya. Oleh karena itu, penggunaan AI dalam pengembangan perangkat lunak yang bertanggung jawab menuntut tiga prasyarat: (1) spesifikasi dan dekomposisi tugas yang jelas dari pengembang; (2) jalur verifikasi otomatis (pengujian unit, pemeriksaan tipe, \textit{linting}) yang menyaring keluaran sebelum diintegrasikan; dan (3) tinjauan manual oleh pengembang yang memahami domain masalah. Dalam kerangka empat aktivitas fundamental Sommerville (2016), AI mengambil porsi terbesar pada aktivitas pengembangan (pemrograman), sementara spesifikasi dan validasi justru semakin bertumpu pada kompetensi pengembang. Penerapan konkret prinsip ini pada proyek CHP, beserta pembagian peran antara penulis dan agen AI, diuraikan pada Subbab~\ref{sec:metodologi-ai}.
+
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Arsitektur Sistem Web Modern}
 \label{sec:arsitektur-web}
 
-Arsitektur sistem web mengacu pada struktur tingkat tinggi dari sebuah aplikasi web yang mendefinisikan bagaimana komponen-komponen penyusunnya diorganisasi, berinteraksi, dan berkomunikasi satu sama lain.
+Setelah model proses pengembangan ditetapkan, keputusan fundamental berikutnya adalah arsitektur sistem. Arsitektur sistem web mengacu pada struktur tingkat tinggi dari sebuah aplikasi web yang mendefinisikan bagaimana komponen-komponen penyusunnya diorganisasi, berinteraksi, dan berkomunikasi satu sama lain. Bagi platform asesmen yang harus menjaga integritas data riset, pilihan arsitektur menentukan seberapa mudah sistem diuji, diamankan, dan dipelihara dalam jangka panjang.
 
 \subsection{Arsitektur Tiga Lapisan}
 \label{subsec:three-tier}
@@ -59,6 +66,8 @@ Gambar~\ref{fig:arsitektur-3-tier} mengilustrasikan diagram arsitektur tiga lapi
   \label{fig:arsitektur-3-tier}
 \end{figure}
 
+Lapisan mana yang benar-benar dieksekusi di server dan mana yang dikirim ke \textit{browser} klien ditentukan oleh pilihan \textit{meta-framework}; pada Platform CHP, keputusan ini jatuh pada Next.js.
+
 \subsection{Next.js dan \textit{React Server Components}}
 \label{subsec:nextjs}
 
@@ -70,7 +79,7 @@ RSC adalah paradigma \textit{rendering} yang memungkinkan komponen React dieksek
 \section{TypeScript dan Keamanan Tipe}
 \label{sec:typescript}
 
-TypeScript adalah bahasa pemrograman \textit{open-source} yang dikembangkan oleh Microsoft sebagai \textit{superset} dari JavaScript. TypeScript menambahkan sistem pengetikan statis (\textit{static type system}) di atas JavaScript, sehingga setiap variabel, parameter fungsi, dan nilai kembalian dapat diberikan anotasi tipe eksplisit.
+Arsitektur yang baik tidak banyak berarti bila kode yang mengisinya rapuh; di sinilah pemilihan bahasa pemrograman berperan. TypeScript adalah bahasa pemrograman \textit{open-source} yang dikembangkan oleh Microsoft sebagai \textit{superset} dari JavaScript. TypeScript menambahkan sistem pengetikan statis (\textit{static type system}) di atas JavaScript, sehingga setiap variabel, parameter fungsi, dan nilai kembalian dapat diberikan anotasi tipe eksplisit.
 
 \subsection{Signifikansi TypeScript dalam Proyek CHP}
 \label{subsec:typescript-chp}
@@ -141,7 +150,7 @@ Autentikasi (\textit{authentication}) adalah proses verifikasi identitas penggun
 \subsection{JSON \textit{Web Token} (JWT)}
 \label{subsec:jwt}
 
-\textit{JSON Web Token} (JWT) adalah standar terbuka yang didefinisikan dalam RFC 7519 untuk mentransmisikan informasi secara aman antara pihak-pihak sebagai objek JSON yang ringkas dan mandiri (Jones, Bradley, dan Sakimura 2015). Sebuah JWT terdiri atas tiga bagian: Header (metadata \textit{token}), Payload (klaim tentang pengguna), dan Signature (tanda tangan digital).
+Komponen kunci yang membawa identitas pengguna di sepanjang alur pada Gambar~\ref{fig:auth-flow} adalah \textit{token}. \textit{JSON Web Token} (JWT) adalah standar terbuka yang didefinisikan dalam RFC 7519 untuk mentransmisikan informasi secara aman antara pihak-pihak sebagai objek JSON yang ringkas dan mandiri (Jones, Bradley, dan Sakimura 2015). Sebuah JWT terdiri atas tiga bagian: Header (metadata \textit{token}), Payload (klaim tentang pengguna), dan Signature (tanda tangan digital).
 
 Platform CHP mengimplementasikan sistem autentikasi ganda berbasis JWT:
 
@@ -206,6 +215,8 @@ Platform CHP menggunakan pendekatan gabungan: \textit{white-box testing} diterap
   \end{tabularx}
 \end{table}
 
+Pemetaan pada Tabel~\ref{tab:metodologi-testing} memperlihatkan bahwa kedua metodologi tidak saling menggantikan, melainkan saling melengkapi: \textit{white-box} menjamin kebenaran internal komputasi skor, sedangkan \textit{black-box} menjamin bahwa pengalaman pengguna dari awal hingga akhir berperilaku sesuai harapan.
+
 % --- Professor-approved: Testing pyramid (B2.2) ---
 \subsection{Strategi Piramida Pengujian}
 \label{subsec:piramida-testing}
@@ -218,6 +229,8 @@ Strategi pengujian Platform CHP mengikuti konsep piramida pengujian (\textit{tes
   \caption{Piramida Pengujian Platform Asesmen Digital CHP}
   \label{fig:piramida-testing}
 \end{figure}
+
+Lapisan \textit{integration test} di tengah piramida pada Gambar~\ref{fig:piramida-testing} itulah yang diuraikan lebih rinci berikut ini.
 
 % --- Professor-approved: Integration testing (B2.3) ---
 \subsection{Pengujian Prosedur (\textit{Mock DB})}
@@ -278,6 +291,8 @@ Tabel~\ref{tab:skenario-unit-test} menampilkan contoh skenario \textit{unit test
   \end{tabularx}
 \end{table}
 
+Skenario-skenario pada Tabel~\ref{tab:skenario-unit-test} dipilih untuk mewakili setiap jalur komputasi yang mungkin dilalui sebuah jawaban, sehingga kesalahan pada satu jalur (misalnya pembalikan skor) akan terdeteksi tanpa tertutupi oleh jalur lain yang benar.
+
 \subsection{\textit{End-to-End Testing} dengan Playwright}
 \label{subsec:playwright}
 
@@ -310,11 +325,13 @@ Sebuah \textit{pull request} tidak dapat di-\textit{merge} ke cabang utama apabi
   \label{fig:cicd-pipeline}
 \end{figure}
 
+Dengan \textit{pipeline} ini, kualitas kode terjaga secara otomatis sebelum kode mencapai pengguna akhir. Lapisan pertahanan berikutnya berada pada data itu sendiri.
+
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Keamanan dan Privasi Data}
 \label{sec:keamanan}
 
-Platform yang menangani data psikologis sensitif memiliki kewajiban keamanan yang lebih tinggi dibandingkan aplikasi umum.
+Platform yang menangani data psikologis sensitif memiliki kewajiban keamanan yang lebih tinggi dibandingkan aplikasi umum: hasil asesmen kesehatan mental adalah data pribadi yang bila bocor dapat merugikan pengisi secara langsung. Bagian ini meletakkan landasan teori keamanan yang digunakan platform, mulai dari standar risiko aplikasi (OWASP), mekanisme perlindungan tingkat aplikasi, strategi perlindungan data bertingkat, tanggung jawab keamanan infrastruktur pihak ketiga, hingga payung regulasi perlindungan data pribadi di Indonesia.
 
 \subsection{OWASP \textit{Top Ten}}
 \label{subsec:owasp}
@@ -337,6 +354,26 @@ Platform CHP mengimplementasikan \textit{rate limiting} pada \textit{login} admi
 \begin{enumerate}[leftmargin=2cm]
   \item \textbf{\textit{In-memory rate limiter}} untuk \textit{login} admin: dua tingkat pembatasan, yaitu berbasis IP (5 kegagalan dalam 5 menit) dan berbasis akun (10 kegagalan yang mengunci akun hingga dibuka oleh \texttt{super\_admin}). (Catatan: mekanisme \textit{in-memory} ini pada hakikatnya tidak persisten dalam arsitektur \textit{serverless} yang bersifat \textit{stateless}. Migrasi ke layanan \textit{cache} eksternal (seperti Redis) untuk ketahanan status lintas-sesi merupakan bagian dari mitigasi lanjutan).
 \end{enumerate}
+
+\subsection{Strategi Perlindungan Data Bertingkat}
+\label{subsec:perlindungan-bertingkat}
+
+Tidak semua data dalam sebuah sistem membutuhkan (atau dapat menerima) mekanisme perlindungan yang sama. Prinsip yang menjadi acuan adalah bahwa tingkat perlindungan mengikuti fungsi data: mekanisme kriptografi dipilih berdasarkan apakah nilai asli data masih perlu dibaca kembali oleh sistem. Tiga tingkat perlindungan yang relevan bagi platform asesmen adalah sebagai berikut.
+
+\begin{enumerate}[leftmargin=2cm]
+  \item \textbf{\textit{Hashing} satu arah}: fungsi kriptografis (misalnya SHA-256) yang mengubah data menjadi sidik digital yang tidak dapat dibalikkan. Teknik ini tepat untuk data yang kegunaannya hanya perbandingan kesamaan (misalnya mendeteksi pengiriman ganda dari alamat IP yang sama), karena sistem tidak pernah perlu mengetahui nilai aslinya.
+  \item \textbf{Enkripsi dua arah}: algoritma seperti AES-256-GCM yang menyandikan data namun dapat dipulihkan dengan kunci rahasia. Teknik ini tepat untuk data identitas yang jarang diakses tetapi sesekali harus dibaca kembali, misalnya alamat surel yang diperlukan saat pengiriman laporan.
+  \item \textbf{Penyimpanan terbaca dengan kontrol akses}: data yang dikonsumsi secara fungsional oleh aplikasi (ditampilkan di antarmuka, difilter, diurutkan, atau diekspor melalui kueri SQL) tidak dapat di-\textit{hash} (nilainya hilang) dan menjadi tidak praktis bila dienkripsi per kolom (kueri \texttt{WHERE}, \texttt{ORDER BY}, dan agregasi tidak dapat bekerja pada \textit{ciphertext}). Perlindungannya bertumpu pada lapisan lain: kontrol akses berbasis peran (RBAC), jejak audit, dan enkripsi \textit{at rest} pada tingkat infrastruktur.
+\end{enumerate}
+
+Di atas ketiga tingkat tersebut terdapat konsep pseudonimisasi yang diamanatkan semangat UU PDP: memisahkan data identitas dari data sensitif sedemikian rupa sehingga keduanya hanya terhubung melalui pengenal buatan (misalnya UUID sesi), bukan identitas langsung. Penerapan ketiga tingkat perlindungan ini pada skema basis data Platform CHP (kolom mana yang di-\textit{hash}, mana yang dienkripsi, dan mana yang disimpan terbaca beserta justifikasinya) diuraikan sebagai keputusan perancangan pada Subbab~\ref{sec:perancangan-db}.
+
+\subsection{Model Tanggung Jawab Bersama pada Infrastruktur \textit{Cloud}}
+\label{subsec:shared-responsibility}
+
+Ketika sistem berjalan di atas layanan \textit{cloud} terkelola, keamanan menjadi tanggung jawab bersama (\textit{shared responsibility model}): penyedia layanan bertanggung jawab atas keamanan infrastruktur (fisik, jaringan, penyimpanan), sedangkan pemilik aplikasi bertanggung jawab atas keamanan pada tingkat aplikasi (kontrol akses, validasi masukan, pengelolaan kunci rahasia). Untuk lapisan infrastruktur, Platform CHP mengandalkan jaminan keamanan Neon selaku penyedia basis data terkelola: seluruh data dienkripsi \textit{at rest} serta \textit{in transit} melalui TLS, dan kepatuhan penyedia diverifikasi secara independen melalui sertifikasi SOC 2 Type 2 serta ISO 27001 (Neon 2026). Jaminan pihak ketiga ini melengkapi, bukan menggantikan, kontrol tingkat aplikasi yang diimplementasikan penulis.
+
+Perlu diakui secara jujur bahwa tidak ada arsitektur yang dapat menjamin keamanan data secara absolut. Lanskap ancaman terus berevolusi, termasuk serangan yang semakin otomatis dan canggih di era AI. Posisi yang diambil dalam proyek ini adalah pertahanan berlapis (\textit{defense in depth}): meminimalkan permukaan serangan pada tingkat aplikasi, menyerahkan keamanan infrastruktur kepada penyedia yang tersertifikasi, dan menyatakan risiko residual secara eksplisit sebagai batasan sistem (lih.\ Subbab~\ref{sec:batasan-kp}).
 
 \subsection{Undang-Undang Perlindungan Data Pribadi}
 \label{subsec:uu-pdp}

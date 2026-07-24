@@ -74,6 +74,8 @@ Sistem yang dibangun melayani empat aktor pengguna utama: (1) peserta anonim yan
   \label{fig:arsitektur-umum}
 \end{figure}
 
+Gambar~\ref{fig:arsitektur-umum} memperlihatkan bagaimana keempat aktor mengakses satu basis kode yang sama melalui lapisan-lapisan yang terpisah; rincian teoretis setiap lapisan dibahas pada Bab~\ref{chap:landasan-teori}, sedangkan penjabaran rancangannya diuraikan pada Bab~\ref{chap:analisa-perancangan}.
+
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Skema Kerja Praktik}
 \label{sec:skema-kp}
@@ -91,6 +93,25 @@ Dalam kerangka proyek ini, penulis bertanggung jawab atas tiga ranah pengembanga
 \end{enumerate}
 
 Pengembangan komponen antarmuka pengguna (\textit{User Interface}/UI) dan desain pengalaman pengguna (\textit{User Experience}/UX) dikerjakan secara terpisah oleh anggota tim lain dalam laporan KP tersendiri, sehingga kedua laporan saling melengkapi untuk menggambarkan sistem secara menyeluruh.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Metodologi Pengembangan Berbantuan Kecerdasan Buatan}
+\label{sec:metodologi-ai}
+
+Perlu dinyatakan secara transparan sejak awal bahwa seluruh proses pengembangan dalam proyek KP ini dilaksanakan dengan pendekatan \textit{agentic engineering}: penulis mengarahkan agen kecerdasan buatan (AI) berbasis model bahasa besar untuk menghasilkan sebagian besar kode implementasi, sementara arah pengembangan, spesifikasi, keputusan teknis, dan verifikasi hasil sepenuhnya berada di tangan penulis. Pendekatan ini dipilih secara sadar sebagai strategi untuk mencapai target platform berkualitas produksi dalam batas waktu 12--14 minggu; landasan teori dan bukti empiris produktivitasnya diuraikan pada Subbab~\ref{subsec:ai-assisted}.
+
+Dalam pola kerja ini, AI berperan sebagai alat produksi kode, bukan pengganti proses rekayasa. Kompetensi dan kontribusi teknis penulis terkonsentrasi pada empat ranah yang justru tidak dapat didelegasikan kepada AI:
+
+\begin{enumerate}[leftmargin=2cm]
+  \item \textbf{Keputusan arsitektur dan desain}. Pemilihan \textit{tech stack} (Next.js, TypeScript, tRPC, Drizzle ORM, PostgreSQL), perancangan skema basis data 20 tabel (termasuk pemisahan \texttt{answers} dari \texttt{results} demi reproduktibilitas ilmiah, isolasi PII, dan strategi perlindungan data bertingkat), serta arsitektur autentikasi ganda yang memisahkan total sistem admin dari pengguna publik, seluruhnya merupakan keputusan penulis yang ditetapkan \textit{sebelum} kode dihasilkan (lih.\ Bab~\ref{chap:analisa-perancangan}).
+  \item \textbf{Dekomposisi tugas} (\textit{task decomposition}). Proyek dipecah menjadi fase-fase berjenjang (Tabel~\ref{tab:jadwal-kp}) dan setiap fase dipecah lagi menjadi unit tugas yang berbatas jelas, dapat diverifikasi, dan berukuran cukup kecil untuk ditinjau menyeluruh. Kualitas dekomposisi ini menentukan kualitas keluaran agen; tugas yang ambigu menghasilkan kode yang salah arah.
+  \item \textbf{Tinjauan dan validasi keluaran AI}. Tidak ada satu pun perubahan yang diintegrasikan tanpa melewati gerbang verifikasi otomatis (ESLint, pemeriksaan tipe \textit{strict}, \textit{build} produksi, dan 213 kasus uji unit pada \textit{pipeline} CI) serta tinjauan manual penulis. Untuk aspek klinis, penulis menyusun dokumen audit per instrumen yang memeriksa kesesuaian implementasi terhadap spesifikasi psikometri dan literatur sumber.
+  \item \textbf{Deteksi dan koreksi kesalahan AI}. Proses audit pada ranah ketiga berulang kali menemukan keluaran AI yang keliru dan harus dikoreksi oleh penulis; contoh-contoh konkretnya diuraikan di bawah.
+\end{enumerate}
+
+Tiga temuan audit berikut menjadi bukti bahwa keluaran AI tidak pernah diterima tanpa verifikasi. \textbf{Pertama}, ambang batas interpretasi GPIUS-2 yang semula dihasilkan AI (15--34/35--52/53--75) ternyata tidak memiliki sumber publikasi yang dapat ditelusuri pada studi validasi mana pun; penulis menggugurkan ambang tersebut dan menggantinya dengan skema berjangkar rata-rata (\textit{mean-anchored}) yang merujuk sampel Jakarta pada Reynaldo dan Sokang (2016). \textbf{Kedua}, audit visualisasi menemukan komponen hasil menampilkan skor subskala turunan DSR dengan penyebut yang salah (18/18, seolah 100\%, alih-alih 18/30) karena nilai maksimum teoretis per dimensi tidak dipersistensi; koreksinya menuntut penelusuran rantai data lintas enam berkas dari \textit{scoring engine} hingga komponen grafik. \textbf{Ketiga}, audit keamanan menyeluruh menemukan celah injeksi formula \textit{spreadsheet} pada fitur ekspor CSV/XLSX serta prosedur mutasi permintaan laporan yang belum dibatasi peran; keduanya diperbaiki dan dilindungi uji regresi. Ketiganya adalah kelas kesalahan yang hanya terdeteksi oleh pemahaman domain (psikometri, aliran data, dan keamanan) yang menjadi tanggung jawab penulis, bukan agen.
+
+Dengan demikian, penggunaan AI dalam proyek ini memindahkan titik berat kompetensi dari penulisan kode baris demi baris menuju perancangan sistem, dekomposisi masalah, dan penjaminan mutu. Meski demikian, tanggung jawab akhir atas kebenaran, keamanan, dan kualitas sistem tetap sepenuhnya berada pada penulis.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Tujuan dan Manfaat}
@@ -120,7 +141,7 @@ Pelaksanaan KP ini memiliki enam tujuan yang dirumuskan menggunakan pendekatan S
   6 & Memastikan serah terima sistem yang berkelanjutan dengan dokumentasi komprehensif & Pengembang baru dapat \textit{clone}, \textit{setup}, dan menjalankan proyek secara lokal dalam waktu 15 menit & Selesai: Fase 1D (Minggu 11--13) \\
 \end{xltabular}
 
-Adapun manfaat yang diharapkan dari pengembangan Platform Asesmen Digital CHP (dengan catatan bahwa sebagian target teknis masih berupa desain arsitektur yang menunggu pengujian operasional lanjutan) mencakup empat dimensi utama:
+Tercapainya sebagian besar tujuan pada Tabel~\ref{tab:tujuan-kp} tersebut membawa manfaat yang diharapkan dari pengembangan Platform Asesmen Digital CHP (dengan catatan bahwa sebagian target teknis masih berupa desain arsitektur yang menunggu pengujian operasional lanjutan), mencakup empat dimensi utama:
 
 \begin{enumerate}[leftmargin=2cm]
   \item Validitas riset yang meningkat berkat penyimpanan respons mentah yang dijaga integritasnya melalui penguncian status sesi asesmen, disertai metadata versi instrumen dan versi algoritma penilaian untuk reprodusibilitas ilmiah.
@@ -161,11 +182,18 @@ Pekerjaan yang tidak termasuk dalam ruang lingkup KP ini adalah:
 
 Instrumen \textit{Simplified Resilience Scale} (SRS) yang digunakan merupakan adaptasi (sebelas dari dua belas butir asli, dengan skala enam poin) dari instrumen Manning dkk.\ (2016) dan belum melalui proses validasi psikometrik formal dalam konteks Bahasa Indonesia. Penggunaannya pada platform bersifat indikatif sebagai gambaran awal tingkat resiliensi, bukan sebagai alat diagnostik. Konten dan skala seluruh instrumen ditetapkan oleh dosen pemilik proyek selaku ahli domain; peran pengembang adalah mengimplementasikan spesifikasi tersebut secara akurat.
 
+Selain batasan ruang lingkup di atas, dua batasan sistem pada aspek keamanan dan privasi data perlu dinyatakan secara eksplisit:
+
+\begin{enumerate}[leftmargin=2cm]
+  \item \textbf{Data demografis disimpan terbaca (tidak dienkripsi per kolom)}. Kolom nama, jenis kelamin, usia, dan domisili pada tabel \texttt{session\_demographics} dikonsumsi secara fungsional oleh aplikasi: ditampilkan pada laporan hasil individual, serta dicari, difilter, diurutkan, dan diekspor melalui kueri SQL di panel admin. \textit{Hashing} satu arah akan menghilangkan nilainya, dan enkripsi per kolom akan mematahkan kemampuan kueri tersebut. Perlindungannya karena itu bertumpu pada kontrol akses berbasis peran, jejak audit, pembekuan data setelah sesi selesai, dan enkripsi \textit{at rest} pada infrastruktur Neon, bukan pada kriptografi per kolom. Justifikasi desain selengkapnya diuraikan pada Subbab~\ref{sec:perancangan-db}, dan pseudonimisasi data demografis dicatat sebagai pekerjaan lanjutan pada Subbab~\ref{sec:saran}.
+  \item \textbf{Jaminan keamanan data bersifat relatif, bukan absolut}. Platform menerapkan pertahanan berlapis pada tingkat aplikasi (RBAC, \textit{hashing} IP, enkripsi surel AES-256-GCM, \textit{rate limiting}, jejak audit) dan mengandalkan jaminan keamanan infrastruktur dari penyedia layanan tersertifikasi (Neon: enkripsi \textit{at rest} dan \textit{in transit}, SOC 2 Type 2, ISO 27001). Namun, di tengah lanskap ancaman yang terus berevolusi (termasuk serangan otomatis berbasis AI), tidak ada sistem yang dapat menjamin kerahasiaan data secara mutlak. Pengujian penetrasi formal dan audit keamanan oleh pihak ketiga berada di luar cakupan KP ini; risiko residual tersebut diakui sebagai batasan sistem (landasan teorinya pada Subbab~\ref{subsec:shared-responsibility}).
+\end{enumerate}
+
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Waktu Pelaksanaan}
 \label{sec:waktu-pelaksanaan}
 
-Pelaksanaan KP ini berlangsung selama kurang lebih 12 hingga 14 minggu, dimulai pada 11 Februari 2026 melalui koordinasi perdana dengan dosen pemilik proyek hingga direncanakan selesai pada awal Juni 2026 dengan sidang KP. Tabel~\ref{tab:jadwal-kp} menyajikan rincian jadwal pelaksanaan per fase beserta kegiatan utama masing-masing.
+Pelaksanaan KP ini berlangsung selama kurang lebih 12 hingga 14 minggu, dimulai pada 11 Februari 2026 melalui koordinasi perdana dengan dosen pemilik proyek. Pengembangan dan serah terima sistem diselesaikan pada akhir Mei 2026, dan rangkaian KP ditutup dengan sidang yang dilaksanakan pada 22 Juli 2026. Tabel~\ref{tab:jadwal-kp} menyajikan rincian jadwal pelaksanaan per fase beserta kegiatan utama masing-masing.
 
 % [C1] Changed "16 tabel" → "20 tabel"
 \begin{xltabular}{\textwidth}{@{}p{3.2cm} p{3cm} p{6.9cm}@{}}
@@ -187,5 +215,7 @@ Pelaksanaan KP ini berlangsung selama kurang lebih 12 hingga 14 minggu, dimulai 
   Fase 2A--2C: Autentikasi & Minggu 4--7 & Infrastruktur JWT ganda, UI autentikasi (\textit{sign-up}, \textit{login}), mutasi \textit{claim session}, migrasi skema Auth.js \\[0.3em]
   Fase 1C: Admin \& \textit{Polish} & Minggu 7--10 & Panel admin dengan RBAC empat peran, CRUD instrumen tes, konfigurasi penilaian, ekspor data \\[0.3em]
   Fase 1D: Pengujian \& Serah Terima & Minggu 11--13 & Pengujian unit (213 kasus uji), pengujian keamanan (OWASP \textit{checklist}), dokumentasi teknis, \textit{deployment} final \\[0.3em]
-  Sidang KP & Juni 2026 & Presentasi dan evaluasi akhir di hadapan tim penguji Program Studi Informatika UKRIDA \\
+  Sidang KP & 22 Juli 2026 & Presentasi dan evaluasi akhir di hadapan tim penguji Program Studi Informatika UKRIDA \\
 \end{xltabular}
+
+Fase-fase pada Tabel~\ref{tab:jadwal-kp} sengaja disusun tumpang-tindih (misalnya fase autentikasi berjalan paralel dengan fase inti asesmen) mengikuti pola \textit{sprint} Agile dua mingguan yang diuraikan pada Bab~\ref{chap:landasan-teori}. Bab berikutnya memaparkan landasan teori yang mendasari seluruh keputusan teknis dalam fase-fase tersebut.
